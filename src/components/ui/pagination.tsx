@@ -5,19 +5,22 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+const Pagination = React.forwardRef<
+  HTMLElement,
+  React.ComponentPropsWithoutRef<"nav">
+>(({ className, ...props }, ref) => (
   <nav
-    role="navigation"
+    ref={ref}
     aria-label="pagination"
     className={cn("mx-auto flex w-full justify-center", className)}
     {...props}
   />
-)
+))
 Pagination.displayName = "Pagination"
 
 const PaginationContent = React.forwardRef<
   HTMLUListElement,
-  React.ComponentProps<"ul">
+  React.ComponentPropsWithoutRef<"ul">
 >(({ className, ...props }, ref) => (
   <ul
     ref={ref}
@@ -29,7 +32,7 @@ PaginationContent.displayName = "PaginationContent"
 
 const PaginationItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li">
+  React.ComponentPropsWithoutRef<"li">
 >(({ className, ...props }, ref) => (
   <li ref={ref} className={cn("", className)} {...props} />
 ))
@@ -39,30 +42,14 @@ type PaginationLinkProps = {
   isActive?: boolean
   disabled?: boolean
 } & Pick<ButtonProps, "size"> &
-  React.ComponentProps<"a">
+  React.ComponentPropsWithoutRef<"a">
 
-const PaginationLink = ({
-  className,
-  isActive,
-  disabled,
-  size = "icon",
-  ...props
-}: PaginationLinkProps) => {
-  // If disabled, prevent click events and style accordingly
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (disabled) {
-      e.preventDefault()
-    }
-    
-    if (props.onClick && !disabled) {
-      props.onClick(e)
-    }
-  }
-  
-  return (
+const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
+  ({ className, isActive, disabled, size = "icon", ...props }, ref) => (
     <a
+      ref={ref}
       aria-current={isActive ? "page" : undefined}
-      aria-disabled={disabled ? true : undefined}
+      aria-disabled={disabled}
       className={cn(
         buttonVariants({
           variant: isActive ? "outline" : "ghost",
@@ -71,18 +58,24 @@ const PaginationLink = ({
         disabled && "pointer-events-none opacity-50",
         className
       )}
-      onClick={handleClick}
+      onClick={(e) => {
+        if (disabled) {
+          e.preventDefault()
+        }
+        props.onClick?.(e)
+      }}
       {...props}
     />
   )
-}
+)
 PaginationLink.displayName = "PaginationLink"
 
-const PaginationPrevious = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+const PaginationPrevious = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef<typeof PaginationLink>
+>(({ className, ...props }, ref) => (
   <PaginationLink
+    ref={ref}
     aria-label="Go to previous page"
     size="default"
     className={cn("gap-1 pl-2.5", className)}
@@ -91,14 +84,15 @@ const PaginationPrevious = ({
     <ChevronLeft className="h-4 w-4" />
     <span>Previous</span>
   </PaginationLink>
-)
+))
 PaginationPrevious.displayName = "PaginationPrevious"
 
-const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+const PaginationNext = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef<typeof PaginationLink>
+>(({ className, ...props }, ref) => (
   <PaginationLink
+    ref={ref}
     aria-label="Go to next page"
     size="default"
     className={cn("gap-1 pr-2.5", className)}
@@ -107,14 +101,15 @@ const PaginationNext = ({
     <span>Next</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
-)
+))
 PaginationNext.displayName = "PaginationNext"
 
-const PaginationEllipsis = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
+const PaginationEllipsis = React.forwardRef<
+  HTMLSpanElement,
+  React.ComponentPropsWithoutRef<"span">
+>(({ className, ...props }, ref) => (
   <span
+    ref={ref}
     aria-hidden
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
@@ -122,7 +117,7 @@ const PaginationEllipsis = ({
     <MoreHorizontal className="h-4 w-4" />
     <span className="sr-only">More pages</span>
   </span>
-)
+))
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
 export {

@@ -18,6 +18,7 @@ import {
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TemplateEditForm from '@/components/templates/TemplateEditForm';
+import { toast } from "sonner";
 
 const TemplateDetails: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
@@ -25,7 +26,7 @@ const TemplateDetails: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   
   // Fetch template data
-  const { data: template, isLoading: isLoadingTemplate } = useQuery({
+  const { data: template, isLoading: isLoadingTemplate, error } = useQuery({
     queryKey: ['template', templateId],
     queryFn: () => getTemplate(templateId!),
     enabled: !!templateId,
@@ -63,6 +64,12 @@ const TemplateDetails: React.FC = () => {
     if (!template || !clients) return [];
     return clients.filter((client) => template.clientIds.includes(client.id));
   };
+  
+  // Handle error
+  if (error) {
+    toast.error("Failed to load template details");
+    console.error("Template loading error:", error);
+  }
   
   if (isLoadingTemplate) {
     return (
@@ -232,13 +239,13 @@ const TemplateDetails: React.FC = () => {
                         <Pagination>
                           <PaginationContent>
                             <PaginationItem>
-                              <PaginationLink disabled>Previous</PaginationLink>
+                              <PaginationLink aria-disabled="true">Previous</PaginationLink>
                             </PaginationItem>
                             <PaginationItem>
                               <PaginationLink isActive>1</PaginationLink>
                             </PaginationItem>
                             <PaginationItem>
-                              <PaginationLink disabled>Next</PaginationLink>
+                              <PaginationLink aria-disabled="true">Next</PaginationLink>
                             </PaginationItem>
                           </PaginationContent>
                         </Pagination>
