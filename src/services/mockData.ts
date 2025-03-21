@@ -134,7 +134,7 @@ export const mockComments: Comment[] = [
     id: 'comment-2',
     projectId: 'proj-1',
     authorId: 'user-3',
-    content: 'I've finished reconciling all the accounts. Everything looks good.',
+    content: 'I\'ve finished reconciling all the accounts. Everything looks good.',
     createdAt: '2024-06-11T09:50:00Z'
   },
   {
