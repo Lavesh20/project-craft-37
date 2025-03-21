@@ -12,14 +12,17 @@ import {
   CreateTemplateTaskFormData,
   CreateClientFormData,
   Comment,
-  TemplateTask
+  TemplateTask,
+  FilterOptions
 } from '@/types';
 import { mockData } from './mockData';
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-export const fetchProjects = async (): Promise<Project[]> => {
+export const fetchProjects = async (filter?: FilterOptions): Promise<Project[]> => {
   await delay(500);
+  // In a real implementation, we would filter the projects based on the filter options
+  // For now, just return all projects
   return mockData.projects;
 };
 
