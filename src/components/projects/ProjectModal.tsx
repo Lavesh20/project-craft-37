@@ -89,9 +89,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
     try {
       setSubmitting(true);
       
-      // Create project object from form data
+      // Create project object from form data and ensure frequency is typed correctly
       const newProject = {
         ...formData,
+        // Convert the string frequency to a properly typed frequency or undefined
+        frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
         status: 'Not Started' as const
       };
       

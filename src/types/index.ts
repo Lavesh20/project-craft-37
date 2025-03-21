@@ -35,7 +35,7 @@ export interface CreateProjectFormData {
   assigneeId?: string;
   teamMemberIds: string[];
   repeating: boolean;
-  frequency?: string;
+  frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
   dueDate: string;
 }
 
