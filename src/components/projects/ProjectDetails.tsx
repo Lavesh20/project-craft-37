@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { fetchProject, fetchTemplate, updateProject } from '@/services/api';
-import { Project, Template } from '@/types';
+import { fetchProject, fetchTemplate, fetchClient, fetchTeamMembers, updateProject } from '@/services/api';
+import { Project, Template, Client, TeamMember } from '@/types';
 import ProjectHeader from './ProjectHeader';
 import ProjectInfo from './ProjectInfo';
 import TaskList from './TaskList';
@@ -11,49 +11,37 @@ import CommentsSection from './CommentsSection';
 import ProjectModal from './ProjectModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
-  const [template, setTemplate] = useState<Template | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (projectId) {
-      loadProject(projectId);
-    }
-  }, [projectId]);
+  // Use tanstack query for data fetching
+  const { data: projectData, isLoading: projectLoading } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => projectId ? fetchProject(projectId) : undefined,
+    enabled: !!projectId,
+  });
 
-  const loadProject = async (id: string) => {
-    try {
-      setLoading(true);
-      const data = await fetchProject(id);
-      
-      if (!data) {
-        navigate('/projects', { replace: true });
-        return;
-      }
-      
-      setProject(data);
-      
-      // If the project has a templateId, fetch the template
-      if (data.templateId) {
-        try {
-          const templateData = await fetchTemplate(data.templateId);
-          setTemplate(templateData || null);
-        } catch (error) {
-          console.error('Failed to fetch template:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch project:', error);
+  // Fetch template if project has a templateId
+  const { data: template, isLoading: templateLoading } = useQuery({
+    queryKey: ['template', projectData?.templateId],
+    queryFn: () => projectData?.templateId ? fetchTemplate(projectData.templateId) : undefined,
+    enabled: !!projectData?.templateId,
+  });
+
+  // Effect to update local state when query data changes
+  useEffect(() => {
+    if (projectData) {
+      setProject(projectData);
+    } else if (!projectLoading && projectId) {
+      // If not loading and no data, redirect to projects page
       navigate('/projects', { replace: true });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [projectData, projectLoading, navigate, projectId]);
 
   const handleEditClick = () => {
     setIsEditModalOpen(true);
@@ -61,14 +49,13 @@ const ProjectDetails: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsEditModalOpen(false);
-    if (projectId) {
-      loadProject(projectId);
-    }
   };
 
   const handleProjectUpdate = (updatedProject: Project) => {
     setProject(updatedProject);
   };
+
+  const loading = projectLoading || templateLoading;
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 interface ProjectInfoProps {
   project: Project;
@@ -15,6 +16,8 @@ interface ProjectInfoProps {
 }
 
 const ProjectInfo: React.FC<ProjectInfoProps> = ({ project, onProjectUpdate }) => {
+  const navigate = useNavigate();
+
   // Fetch clients for displaying client name
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
@@ -54,6 +57,13 @@ const ProjectInfo: React.FC<ProjectInfoProps> = ({ project, onProjectUpdate }) =
   const projectTeamMembers = project.teamMemberIds
     .map(id => getTeamMemberById(id))
     .filter(member => member !== undefined) as TeamMember[];
+
+  // Handle client click to navigate to client details
+  const handleClientClick = () => {
+    if (client) {
+      navigate(`/clients/${client.id}`);
+    }
+  };
 
   return (
     <Card className="mb-6">
@@ -117,7 +127,10 @@ const ProjectInfo: React.FC<ProjectInfoProps> = ({ project, onProjectUpdate }) =
           <Building className="text-gray-400" size={20} />
           <div>
             <div className="font-medium text-sm text-gray-500">Client</div>
-            <div className="mt-1 text-blue-600 hover:text-blue-800 cursor-pointer">
+            <div 
+              className="mt-1 text-blue-600 hover:text-blue-800 cursor-pointer"
+              onClick={handleClientClick}
+            >
               {client ? client.name : 'Unknown Client'}
             </div>
           </div>
