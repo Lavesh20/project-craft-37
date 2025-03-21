@@ -200,7 +200,7 @@ const Clients = () => {
                       <SelectValue placeholder="Select assignee" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Assignees</SelectItem>
+                      <SelectItem value="all">All Assignees</SelectItem>
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name}
