@@ -86,7 +86,7 @@ const TemplateDetails: React.FC = () => {
     );
   }
   
-  if (isEditing) {
+  if (isEditing && template) {
     return <TemplateEditForm template={template} onCancel={() => setIsEditing(false)} />;
   }
   

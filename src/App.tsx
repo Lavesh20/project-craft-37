@@ -10,6 +10,7 @@ import TemplatesPage from "./pages/Templates";
 import TemplateDetailsPage from "./pages/TemplateDetails";
 import NewTemplatePage from "./pages/NewTemplate";
 import NotFound from "./pages/NotFound";
+import MainLayout from "./components/layout/MainLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,19 +29,19 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/projects" replace />} />
-          <Route path="/projects" element={<Index />} />
-          <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
-          <Route path="/planning" element={<Index />} />
-          <Route path="/team-work" element={<Index />} />
-          <Route path="/my-work" element={<Index />} />
-          <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/templates/new" element={<NewTemplatePage />} />
-          <Route path="/templates/:templateId" element={<TemplateDetailsPage />} />
-          <Route path="/clients" element={<Index />} />
-          <Route path="/contacts" element={<Index />} />
-          <Route path="/notifications" element={<Index />} />
-          <Route path="/account" element={<Index />} />
-          <Route path="/help" element={<Index />} />
+          <Route path="/projects" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/projects/:projectId" element={<MainLayout><ProjectDetailsPage /></MainLayout>} />
+          <Route path="/planning" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/team-work" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/my-work" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/templates" element={<MainLayout><TemplatesPage /></MainLayout>} />
+          <Route path="/templates/new" element={<MainLayout><NewTemplatePage /></MainLayout>} />
+          <Route path="/templates/:templateId" element={<MainLayout><TemplateDetailsPage /></MainLayout>} />
+          <Route path="/clients" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/contacts" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/notifications" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/account" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/help" element={<MainLayout><Index /></MainLayout>} />
           <Route path="/logout" element={<Navigate to="/" replace />} />
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
