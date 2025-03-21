@@ -1,13 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar } from 'lucide-react';
-import { fetchClients, fetchTeamMembers, createProject, updateProject } from '@/services/api';
-import { Client, TeamMember, CreateProjectFormData, Project } from '@/types';
+import { X, Calendar, Plus } from 'lucide-react';
+import { fetchClients, fetchTeamMembers, fetchTemplates, createProject, updateProject } from '@/services/api';
+import { Client, TeamMember, CreateProjectFormData, Project, Template } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -19,11 +27,15 @@ interface ProjectModalProps {
 const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
     projectToEdit ? parseISO(projectToEdit.dueDate) : new Date()
   );
+  const [newClientName, setNewClientName] = useState('');
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
   
   const isEditMode = !!projectToEdit;
   
@@ -41,12 +53,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
     const loadData = async () => {
       try {
         setLoading(true);
-        const [clientsData, teamMembersData] = await Promise.all([
+        const [clientsData, teamMembersData, templatesData] = await Promise.all([
           fetchClients(),
-          fetchTeamMembers()
+          fetchTeamMembers(),
+          fetchTemplates()
         ]);
         setClients(clientsData);
         setTeamMembers(teamMembersData);
+        setTemplates(templatesData);
         
         // If in edit mode, populate form with project data
         if (projectToEdit) {
@@ -91,6 +105,58 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
       setFormData(prev => ({ ...prev, dueDate: format(newDate, 'yyyy-MM-dd') }));
     }
   };
+  
+  const handleTemplateSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const templateId = e.target.value;
+    setSelectedTemplateId(templateId === "" ? undefined : templateId);
+    
+    if (templateId) {
+      // Find the selected template
+      const selectedTemplate = templates.find(t => t.id === templateId);
+      
+      if (selectedTemplate) {
+        // Pre-fill team members from the template
+        setFormData(prev => ({
+          ...prev,
+          teamMemberIds: selectedTemplate.teamMemberIds || []
+        }));
+      }
+    }
+  };
+  
+  const handleCreateClient = async () => {
+    if (!newClientName.trim()) {
+      toast.error('Client name is required');
+      return;
+    }
+    
+    try {
+      const newClient = {
+        name: newClientName,
+        description: '',
+        priority: 'None' as const,
+        services: [],
+        isActive: true
+      };
+      
+      const createdClient = await fetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newClient),
+      }).then(res => res.json());
+      
+      setClients(prev => [...prev, createdClient]);
+      setFormData(prev => ({ ...prev, clientId: createdClient.id }));
+      setNewClientName('');
+      setIsClientDialogOpen(false);
+      toast.success('Client created successfully');
+    } catch (error) {
+      console.error('Failed to create client:', error);
+      toast.error('Failed to create client');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +178,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
       const projectData = {
         ...formData,
         frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
-        status: projectToEdit?.status || 'Not Started' as const
+        status: projectToEdit?.status || 'Not Started' as const,
+        templateId: selectedTemplateId
       };
       
       if (isEditMode && projectToEdit) {
@@ -164,6 +231,33 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
           </div>
           
           <div className="p-6 space-y-6">
+            {!isEditMode && (
+              <div className="space-y-2">
+                <label htmlFor="templateId" className="block text-sm font-medium text-gray-700">
+                  Start from a Template
+                </label>
+                <select
+                  id="templateId"
+                  name="templateId"
+                  value={selectedTemplateId || ""}
+                  onChange={handleTemplateSelection}
+                  className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Don't use a template</option>
+                  {templates.map(template => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedTemplateId && (
+                  <p className="text-xs text-gray-500">
+                    Using a template will pre-populate certain fields and create tasks based on the template.
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Name<span className="text-red-500">*</span>
@@ -213,12 +307,56 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
                       </option>
                     ))}
                   </select>
-                  <button 
-                    type="button" 
-                    className="text-blue-600 text-sm hover:text-blue-800 transition-colors"
-                  >
-                    Create a client
-                  </button>
+                  
+                  <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        className="shrink-0"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        New Client
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Client</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label htmlFor="newClientName" className="block text-sm font-medium">
+                              Client Name<span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              id="newClientName"
+                              value={newClientName}
+                              onChange={(e) => setNewClientName(e.target.value)}
+                              placeholder="Enter client name"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsClientDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="button" 
+                          onClick={handleCreateClient}
+                          disabled={!newClientName.trim()}
+                        >
+                          Create Client
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               

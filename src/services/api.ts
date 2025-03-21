@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Project, 
@@ -43,6 +42,53 @@ export const createProject = async (data: CreateProjectFormData): Promise<Projec
     lastEdited: new Date().toISOString(),
     teamMemberIds: data.teamMemberIds || [],
   };
+  
+  // If creating from a template, add template tasks
+  if (data.templateId) {
+    const template = mockData.templates.find(t => t.id === data.templateId);
+    
+    if (template) {
+      // If this client isn't already associated with the template, add it
+      if (!template.clientIds.includes(data.clientId)) {
+        template.clientIds.push(data.clientId);
+      }
+      
+      // Create tasks based on template tasks
+      const templateTasks = template.tasks || [];
+      const newTasks: Task[] = [];
+      
+      for (const templateTask of templateTasks) {
+        // Calculate due date based on relativeDueDate
+        const projectDueDate = new Date(data.dueDate);
+        const daysToAdd = templateTask.relativeDueDate.position === 'before' 
+          ? -templateTask.relativeDueDate.value 
+          : templateTask.relativeDueDate.value;
+          
+        const taskDueDate = new Date(projectDueDate);
+        taskDueDate.setDate(taskDueDate.getDate() + daysToAdd);
+        
+        // Create new task
+        const newTask: Task = {
+          id: uuidv4(),
+          projectId: newProject.id,
+          name: templateTask.name,
+          description: templateTask.description,
+          assigneeId: templateTask.assigneeId,
+          status: 'Not Started',
+          position: templateTask.position,
+          dueDate: taskDueDate.toISOString().split('T')[0],
+          lastEdited: new Date().toISOString(),
+        };
+        
+        newTasks.push(newTask);
+        mockData.tasks.push(newTask);
+      }
+      
+      // Attach tasks to the project
+      newProject.tasks = newTasks;
+    }
+  }
+  
   mockData.projects.push(newProject);
   return newProject;
 };
@@ -135,7 +181,9 @@ export const createTemplate = async (data: CreateTemplateFormData): Promise<Temp
   await delay(800);
   const newTemplate: Template = {
     id: uuidv4(),
-    ...data,
+    name: data.name,
+    description: data.description,
+    teamMemberIds: data.teamMemberIds || [],
     tasks: [],
     lastEdited: new Date().toISOString(),
     clientIds: [],
@@ -157,7 +205,7 @@ export const updateTemplate = async (id: string, data: Partial<Template>): Promi
   return mockData.templates[templateIndex];
 };
 
-// Add template task functions
+// Template task functions
 export const createTemplateTask = async (templateId: string, taskData: Omit<TemplateTask, 'id' | 'templateId' | 'position'>): Promise<TemplateTask> => {
   await delay(800);
   const template = mockData.templates.find(t => t.id === templateId);
@@ -274,6 +322,31 @@ export const deleteClient = async (id: string): Promise<void> => {
 export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
   await delay(500);
   return mockData.teamMembers;
+};
+
+// Add function to link templates to clients
+export const addClientToTemplate = async (templateId: string, clientId: string): Promise<Template> => {
+  await delay(500);
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) throw new Error('Template not found');
+  
+  if (!template.clientIds.includes(clientId)) {
+    template.clientIds.push(clientId);
+  }
+  
+  return template;
+};
+
+// Get all projects associated with a client
+export const getClientProjects = async (clientId: string): Promise<Project[]> => {
+  await delay(500);
+  return mockData.projects.filter(project => project.clientId === clientId);
+};
+
+// Get all templates associated with a client
+export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
+  await delay(500);
+  return mockData.templates.filter(template => template.clientIds.includes(clientId));
 };
 
 // Add mock comments functionality

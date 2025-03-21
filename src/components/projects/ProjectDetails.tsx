@@ -2,19 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { fetchProject, updateProject } from '@/services/api';
-import { Project } from '@/types';
+import { fetchProject, fetchTemplate, updateProject } from '@/services/api';
+import { Project, Template } from '@/types';
 import ProjectHeader from './ProjectHeader';
 import ProjectInfo from './ProjectInfo';
 import TaskList from './TaskList';
 import CommentsSection from './CommentsSection';
 import ProjectModal from './ProjectModal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ExternalLink } from 'lucide-react';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
+  const [template, setTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -35,6 +37,16 @@ const ProjectDetails: React.FC = () => {
       }
       
       setProject(data);
+      
+      // If the project has a templateId, fetch the template
+      if (data.templateId) {
+        try {
+          const templateData = await fetchTemplate(data.templateId);
+          setTemplate(templateData || null);
+        } catch (error) {
+          console.error('Failed to fetch template:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch project:', error);
       navigate('/projects', { replace: true });
@@ -95,6 +107,21 @@ const ProjectDetails: React.FC = () => {
           onEdit={handleEditClick}
           onProjectUpdate={handleProjectUpdate}
         />
+        
+        {template && (
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-blue-600 font-medium">Based on template:</span>
+              <span>{template.name}</span>
+            </div>
+            <button 
+              onClick={() => navigate(`/templates/${template.id}`)}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+            >
+              View Template <ExternalLink size={14} />
+            </button>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">

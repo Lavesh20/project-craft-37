@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   name: string;
@@ -14,6 +13,7 @@ export interface Project {
   frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
   labels?: string[];
   tasks?: Task[];
+  templateId?: string;
 }
 
 export interface Task {
@@ -94,6 +94,7 @@ export interface CreateProjectFormData {
   repeating: boolean;
   frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
   dueDate: string;
+  templateId?: string;
 }
 
 export interface CreateTaskFormData {
