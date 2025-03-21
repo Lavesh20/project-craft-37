@@ -1,7 +1,7 @@
 
 import axios from 'axios';
-import { Project, Client, TeamMember, Task, Comment, CreateTaskFormData } from '../types';
-import { mockProjects, mockClients, mockTeamMembers, mockTasks, mockComments } from './mockData';
+import { Project, Client, TeamMember, Task, Comment, CreateTaskFormData, Template, TemplateTask, CreateTemplateFormData } from '../types';
+import { mockProjects, mockClients, mockTeamMembers, mockTasks, mockComments, mockTemplates } from './mockData';
 
 // Create axios instance that will be used when connecting to real backend
 const api = axios.create({
@@ -296,6 +296,143 @@ export const createClient = async (client: Omit<Client, 'id'>): Promise<Client> 
 export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
   // return api.get('/team-members').then(res => res.data);
   return Promise.resolve(mockTeamMembers);
+};
+
+// Templates API
+export const fetchTemplates = async (): Promise<Template[]> => {
+  // return api.get('/templates').then(res => res.data);
+  return Promise.resolve(mockTemplates);
+};
+
+export const getTemplate = async (id: string): Promise<Template | null> => {
+  // return api.get(`/templates/${id}`).then(res => res.data);
+  const template = mockTemplates.find(t => t.id === id);
+  if (!template) return Promise.resolve(null);
+  return Promise.resolve(template);
+};
+
+export const createTemplate = async (template: CreateTemplateFormData): Promise<Template> => {
+  // return api.post('/templates', template).then(res => res.data);
+  const newTemplate: Template = {
+    id: `template-${Math.floor(Math.random() * 1000)}`,
+    name: template.name,
+    description: template.description,
+    teamMemberIds: template.teamMemberIds,
+    clientIds: [],
+    tasks: [],
+    lastEdited: new Date().toISOString(),
+    lastEditedBy: 'user-1' // Assuming current user
+  };
+  mockTemplates.push(newTemplate);
+  return Promise.resolve(newTemplate);
+};
+
+export const updateTemplate = async (id: string, template: Partial<Template>): Promise<Template> => {
+  // return api.put(`/templates/${id}`, template).then(res => res.data);
+  const index = mockTemplates.findIndex(t => t.id === id);
+  if (index === -1) throw new Error('Template not found');
+  
+  mockTemplates[index] = {
+    ...mockTemplates[index],
+    ...template,
+    lastEdited: new Date().toISOString(),
+    lastEditedBy: 'user-1' // Assuming current user
+  };
+  
+  return Promise.resolve(mockTemplates[index]);
+};
+
+export const deleteTemplate = async (id: string): Promise<void> => {
+  // return api.delete(`/templates/${id}`).then(() => {});
+  const index = mockTemplates.findIndex(t => t.id === id);
+  if (index === -1) throw new Error('Template not found');
+  
+  mockTemplates.splice(index, 1);
+  
+  return Promise.resolve();
+};
+
+export const createTemplateTask = async (templateId: string, task: Omit<TemplateTask, 'id' | 'templateId' | 'position'>): Promise<TemplateTask> => {
+  // return api.post(`/templates/${templateId}/tasks`, task).then(res => res.data);
+  
+  const templateIndex = mockTemplates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) throw new Error('Template not found');
+  
+  // Get max position
+  const tasks = mockTemplates[templateIndex].tasks;
+  const maxPosition = tasks.length > 0 ? Math.max(...tasks.map(t => t.position)) : -1;
+  
+  const newTask: TemplateTask = {
+    id: `template-task-${Math.floor(Math.random() * 1000)}`,
+    templateId,
+    position: maxPosition + 1,
+    ...task
+  };
+  
+  mockTemplates[templateIndex].tasks.push(newTask);
+  mockTemplates[templateIndex].lastEdited = new Date().toISOString();
+  mockTemplates[templateIndex].lastEditedBy = 'user-1'; // Assuming current user
+  
+  return Promise.resolve(newTask);
+};
+
+export const updateTemplateTask = async (templateId: string, taskId: string, task: Partial<TemplateTask>): Promise<TemplateTask> => {
+  // return api.put(`/templates/${templateId}/tasks/${taskId}`, task).then(res => res.data);
+  
+  const templateIndex = mockTemplates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) throw new Error('Template not found');
+  
+  const taskIndex = mockTemplates[templateIndex].tasks.findIndex(t => t.id === taskId);
+  if (taskIndex === -1) throw new Error('Task not found');
+  
+  mockTemplates[templateIndex].tasks[taskIndex] = {
+    ...mockTemplates[templateIndex].tasks[taskIndex],
+    ...task
+  };
+  
+  mockTemplates[templateIndex].lastEdited = new Date().toISOString();
+  mockTemplates[templateIndex].lastEditedBy = 'user-1'; // Assuming current user
+  
+  return Promise.resolve(mockTemplates[templateIndex].tasks[taskIndex]);
+};
+
+export const deleteTemplateTask = async (templateId: string, taskId: string): Promise<void> => {
+  // return api.delete(`/templates/${templateId}/tasks/${taskId}`).then(() => {});
+  
+  const templateIndex = mockTemplates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) throw new Error('Template not found');
+  
+  const taskIndex = mockTemplates[templateIndex].tasks.findIndex(t => t.id === taskId);
+  if (taskIndex === -1) throw new Error('Task not found');
+  
+  mockTemplates[templateIndex].tasks.splice(taskIndex, 1);
+  mockTemplates[templateIndex].lastEdited = new Date().toISOString();
+  mockTemplates[templateIndex].lastEditedBy = 'user-1'; // Assuming current user
+  
+  return Promise.resolve();
+};
+
+export const reorderTemplateTasks = async (templateId: string, taskIds: string[]): Promise<TemplateTask[]> => {
+  // return api.post(`/templates/${templateId}/tasks/reorder`, { taskIds }).then(res => res.data);
+  
+  const templateIndex = mockTemplates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) throw new Error('Template not found');
+  
+  // Update positions
+  taskIds.forEach((taskId, index) => {
+    const taskIndex = mockTemplates[templateIndex].tasks.findIndex(t => t.id === taskId);
+    if (taskIndex !== -1) {
+      mockTemplates[templateIndex].tasks[taskIndex].position = index;
+    }
+  });
+  
+  // Sort to reflect new order
+  mockTemplates[templateIndex].tasks.sort((a, b) => a.position - b.position);
+  
+  mockTemplates[templateIndex].lastEdited = new Date().toISOString();
+  mockTemplates[templateIndex].lastEditedBy = 'user-1'; // Assuming current user
+  
+  return Promise.resolve(mockTemplates[templateIndex].tasks);
 };
 
 export default api;

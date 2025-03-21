@@ -28,6 +28,35 @@ export interface Task {
   lastEdited: string;
 }
 
+export interface TemplateTask {
+  id: string;
+  templateId: string;
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  relativeDueDate: {
+    value: number;
+    unit: 'days';
+    position: 'before' | 'after';
+  };
+  timeEstimate: {
+    value: number;
+    unit: 'h' | 'm';
+  };
+  position: number;
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  description?: string;
+  teamMemberIds: string[];
+  clientIds: string[];
+  tasks: TemplateTask[];
+  lastEdited: string;
+  lastEditedBy?: string;
+}
+
 export interface Comment {
   id: string;
   projectId: string;
@@ -66,6 +95,27 @@ export interface CreateTaskFormData {
   description?: string;
   assigneeId?: string;
   dueDate: string;
+}
+
+export interface CreateTemplateFormData {
+  name: string;
+  description?: string;
+  teamMemberIds: string[];
+}
+
+export interface CreateTemplateTaskFormData {
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  relativeDueDate: {
+    value: number;
+    unit: 'days';
+    position: 'before' | 'after';
+  };
+  timeEstimate: {
+    value: number;
+    unit: 'h' | 'm';
+  };
 }
 
 export interface FilterOptions {

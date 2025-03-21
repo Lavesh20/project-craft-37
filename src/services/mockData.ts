@@ -1,5 +1,5 @@
 
-import { Project, Client, TeamMember, Task, Comment } from '../types';
+import { Project, Client, TeamMember, Task, Comment, Template, TemplateTask } from '../types';
 
 // Mock Clients
 export const mockClients: Client[] = [
@@ -143,5 +143,171 @@ export const mockComments: Comment[] = [
     authorId: 'user-3',
     content: 'All expense documentation has been collected and organized.',
     createdAt: '2024-06-15T14:25:00Z'
+  }
+];
+
+// Mock Templates
+export const mockTemplates: Template[] = [
+  {
+    id: 'template-1',
+    name: 'SAMPLE Monthly Accounting',
+    description: 'Template for regular monthly accounting services',
+    teamMemberIds: [],
+    clientIds: ['client-1'],
+    tasks: [
+      {
+        id: 'template-task-1',
+        templateId: 'template-1',
+        name: 'Receive Client Information',
+        description: 'Receive all the necessary documents from client',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 10, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 0
+      },
+      {
+        id: 'template-task-2',
+        templateId: 'template-1',
+        name: 'Enter Client Information',
+        description: 'Input all client data into the system',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 1
+      },
+      {
+        id: 'template-task-3',
+        templateId: 'template-1',
+        name: 'Reconcile Accounts',
+        description: 'Ensure all accounts are properly reconciled',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 2
+      },
+      {
+        id: 'template-task-4',
+        templateId: 'template-1',
+        name: 'Review Prep Work',
+        description: 'Review all prepared documents',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 3
+      },
+      {
+        id: 'template-task-5',
+        templateId: 'template-1',
+        name: 'Run Reports',
+        description: 'Generate all required financial reports',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 2, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 4
+      },
+      {
+        id: 'template-task-6',
+        templateId: 'template-1',
+        name: 'Send Final Reports To Clients',
+        description: 'Deliver the completed reports to the client',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 1, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 5
+      }
+    ],
+    lastEdited: '2024-06-10T09:00:00Z',
+    lastEditedBy: 'user-1'
+  },
+  {
+    id: 'template-2',
+    name: 'SAMPLE Tax Return',
+    description: 'Template for preparing and filing tax returns',
+    teamMemberIds: [],
+    clientIds: [],
+    tasks: [
+      {
+        id: 'template-task-7',
+        templateId: 'template-2',
+        name: 'Collect Tax Documents',
+        description: 'Gather all necessary tax documents from client',
+        assigneeId: 'user-1',
+        relativeDueDate: { value: 30, unit: 'days', position: 'before' },
+        timeEstimate: { value: 1, unit: 'h' },
+        position: 0
+      },
+      {
+        id: 'template-task-8',
+        templateId: 'template-2',
+        name: 'Review Tax Documents',
+        description: 'Ensure all tax documents are complete and accurate',
+        assigneeId: 'user-2',
+        relativeDueDate: { value: 25, unit: 'days', position: 'before' },
+        timeEstimate: { value: 2, unit: 'h' },
+        position: 1
+      },
+      {
+        id: 'template-task-9',
+        templateId: 'template-2',
+        name: 'Prepare Tax Return Draft',
+        description: 'Create initial draft of tax return',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 20, unit: 'days', position: 'before' },
+        timeEstimate: { value: 3, unit: 'h' },
+        position: 2
+      },
+      {
+        id: 'template-task-10',
+        templateId: 'template-2',
+        name: 'Review Tax Return Draft',
+        description: 'Check tax return draft for accuracy and completeness',
+        assigneeId: 'user-1',
+        relativeDueDate: { value: 15, unit: 'days', position: 'before' },
+        timeEstimate: { value: 1, unit: 'h' },
+        position: 3
+      },
+      {
+        id: 'template-task-11',
+        templateId: 'template-2',
+        name: 'Finalize Tax Return',
+        description: 'Make final adjustments to tax return',
+        assigneeId: 'user-2',
+        relativeDueDate: { value: 10, unit: 'days', position: 'before' },
+        timeEstimate: { value: 1, unit: 'h' },
+        position: 4
+      },
+      {
+        id: 'template-task-12',
+        templateId: 'template-2',
+        name: 'Client Review Meeting',
+        description: 'Meet with client to review tax return',
+        assigneeId: 'user-3',
+        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
+        timeEstimate: { value: 1, unit: 'h' },
+        position: 5
+      },
+      {
+        id: 'template-task-13',
+        templateId: 'template-2',
+        name: 'Submit Tax Return',
+        description: 'File tax return with appropriate authorities',
+        assigneeId: 'user-1',
+        relativeDueDate: { value: 1, unit: 'days', position: 'before' },
+        timeEstimate: { value: 30, unit: 'm' },
+        position: 6
+      },
+      {
+        id: 'template-task-14',
+        templateId: 'template-2',
+        name: 'Send Final Documents to Client',
+        description: 'Provide copies of filed tax return to client',
+        assigneeId: 'user-2',
+        relativeDueDate: { value: 1, unit: 'days', position: 'after' },
+        timeEstimate: { value: 15, unit: 'm' },
+        position: 7
+      }
+    ],
+    lastEdited: '2024-06-09T14:30:00Z',
+    lastEditedBy: 'user-2'
   }
 ];

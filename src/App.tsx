@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ProjectDetailsPage from "./pages/ProjectDetails";
+import TemplatesPage from "./pages/Templates";
+import TemplateDetailsPage from "./pages/TemplateDetails";
+import NewTemplatePage from "./pages/NewTemplate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -30,7 +33,9 @@ const App = () => (
           <Route path="/planning" element={<Index />} />
           <Route path="/team-work" element={<Index />} />
           <Route path="/my-work" element={<Index />} />
-          <Route path="/templates" element={<Index />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/templates/new" element={<NewTemplatePage />} />
+          <Route path="/templates/:templateId" element={<TemplateDetailsPage />} />
           <Route path="/clients" element={<Index />} />
           <Route path="/contacts" element={<Index />} />
           <Route path="/notifications" element={<Index />} />
