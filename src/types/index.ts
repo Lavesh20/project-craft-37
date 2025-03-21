@@ -9,9 +9,31 @@ export interface Project {
   status: 'Complete' | 'In Progress' | 'Not Started';
   dueDate: string;
   lastEdited: string;
+  lastEditedBy?: string;
   repeating: boolean;
   frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
   labels?: string[];
+  tasks?: Task[];
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  status: 'Complete' | 'In Progress' | 'Not Started';
+  dueDate: string;
+  position: number;
+  lastEdited: string;
+}
+
+export interface Comment {
+  id: string;
+  projectId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface Client {
@@ -36,6 +58,13 @@ export interface CreateProjectFormData {
   teamMemberIds: string[];
   repeating: boolean;
   frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
+  dueDate: string;
+}
+
+export interface CreateTaskFormData {
+  name: string;
+  description?: string;
+  assigneeId?: string;
   dueDate: string;
 }
 

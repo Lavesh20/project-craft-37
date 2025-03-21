@@ -1,7 +1,7 @@
 
 import axios from 'axios';
-import { Project, Client, TeamMember } from '../types';
-import { mockProjects, mockClients, mockTeamMembers } from './mockData';
+import { Project, Client, TeamMember, Task, Comment, CreateTaskFormData } from '../types';
+import { mockProjects, mockClients, mockTeamMembers, mockTasks, mockComments } from './mockData';
 
 // Create axios instance that will be used when connecting to real backend
 const api = axios.create({
@@ -37,7 +37,20 @@ export const fetchProjects = async (filters?: any): Promise<Project[]> => {
 
 export const getProject = async (id: string): Promise<Project | null> => {
   // return api.get(`/projects/${id}`).then(res => res.data);
-  return Promise.resolve(mockProjects.find(p => p.id === id) || null);
+  
+  // Find the project in mock data
+  const project = mockProjects.find(p => p.id === id);
+  
+  if (!project) return Promise.resolve(null);
+  
+  // Get tasks for this project
+  const tasks = mockTasks.filter(t => t.projectId === id);
+  
+  // Return project with tasks
+  return Promise.resolve({
+    ...project,
+    tasks
+  });
 };
 
 export const createProject = async (project: Omit<Project, 'id' | 'lastEdited'>): Promise<Project> => {
@@ -45,7 +58,8 @@ export const createProject = async (project: Omit<Project, 'id' | 'lastEdited'>)
   const newProject: Project = {
     id: `proj-${Math.floor(Math.random() * 1000)}`,
     ...project,
-    lastEdited: new Date().toISOString()
+    lastEdited: new Date().toISOString(),
+    tasks: []
   };
   mockProjects.push(newProject);
   return Promise.resolve(newProject);
@@ -56,7 +70,19 @@ export const updateProject = async (id: string, project: Partial<Project>): Prom
   const index = mockProjects.findIndex(p => p.id === id);
   if (index === -1) throw new Error('Project not found');
   
-  mockProjects[index] = { ...mockProjects[index], ...project, lastEdited: new Date().toISOString() };
+  mockProjects[index] = { 
+    ...mockProjects[index], 
+    ...project, 
+    lastEdited: new Date().toISOString(),
+    lastEditedBy: 'user-1' // Assuming current user
+  };
+  
+  // Check if all tasks are complete
+  const projectTasks = mockTasks.filter(t => t.projectId === id);
+  if (projectTasks.length > 0 && projectTasks.every(t => t.status === 'Complete')) {
+    mockProjects[index].status = 'Complete';
+  }
+  
   return Promise.resolve(mockProjects[index]);
 };
 
@@ -66,6 +92,187 @@ export const deleteProject = async (id: string): Promise<void> => {
   if (index === -1) throw new Error('Project not found');
   
   mockProjects.splice(index, 1);
+  
+  // Also delete related tasks and comments
+  const taskIndices = mockTasks.reduce((acc, task, idx) => {
+    if (task.projectId === id) acc.push(idx);
+    return acc;
+  }, [] as number[]);
+  
+  // Remove from highest index to lowest to avoid shifting issues
+  for (let i = taskIndices.length - 1; i >= 0; i--) {
+    mockTasks.splice(taskIndices[i], 1);
+  }
+  
+  // Delete comments
+  const commentIndices = mockComments.reduce((acc, comment, idx) => {
+    if (comment.projectId === id) acc.push(idx);
+    return acc;
+  }, [] as number[]);
+  
+  for (let i = commentIndices.length - 1; i >= 0; i--) {
+    mockComments.splice(commentIndices[i], 1);
+  }
+  
+  return Promise.resolve();
+};
+
+// Tasks API
+export const fetchTasks = async (projectId: string): Promise<Task[]> => {
+  // return api.get(`/projects/${projectId}/tasks`).then(res => res.data);
+  return Promise.resolve(mockTasks.filter(t => t.projectId === projectId));
+};
+
+export const getTask = async (projectId: string, taskId: string): Promise<Task | null> => {
+  // return api.get(`/projects/${projectId}/tasks/${taskId}`).then(res => res.data);
+  return Promise.resolve(mockTasks.find(t => t.projectId === projectId && t.id === taskId) || null);
+};
+
+export const createTask = async (projectId: string, task: CreateTaskFormData): Promise<Task> => {
+  // return api.post(`/projects/${projectId}/tasks`, task).then(res => res.data);
+  
+  // Get max position from existing tasks
+  const projectTasks = mockTasks.filter(t => t.projectId === projectId);
+  const maxPosition = projectTasks.length > 0 
+    ? Math.max(...projectTasks.map(t => t.position)) 
+    : -1;
+  
+  const newTask: Task = {
+    id: `task-${Math.floor(Math.random() * 1000)}`,
+    projectId,
+    name: task.name,
+    description: task.description,
+    assigneeId: task.assigneeId,
+    status: 'Not Started',
+    dueDate: task.dueDate,
+    position: maxPosition + 1,
+    lastEdited: new Date().toISOString()
+  };
+  
+  mockTasks.push(newTask);
+  
+  // Update project's lastEdited
+  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    mockProjects[projectIndex].lastEdited = new Date().toISOString();
+    mockProjects[projectIndex].lastEditedBy = 'user-1'; // Assuming current user
+  }
+  
+  return Promise.resolve(newTask);
+};
+
+export const updateTask = async (projectId: string, taskId: string, task: Partial<Task>): Promise<Task> => {
+  // return api.put(`/projects/${projectId}/tasks/${taskId}`, task).then(res => res.data);
+  const index = mockTasks.findIndex(t => t.id === taskId && t.projectId === projectId);
+  if (index === -1) throw new Error('Task not found');
+  
+  mockTasks[index] = { 
+    ...mockTasks[index], 
+    ...task, 
+    lastEdited: new Date().toISOString() 
+  };
+  
+  // Update project's lastEdited
+  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    mockProjects[projectIndex].lastEdited = new Date().toISOString();
+    mockProjects[projectIndex].lastEditedBy = 'user-1'; // Assuming current user
+    
+    // Check if all tasks are complete and update project status
+    const projectTasks = mockTasks.filter(t => t.projectId === projectId);
+    if (projectTasks.length > 0 && projectTasks.every(t => t.status === 'Complete')) {
+      mockProjects[projectIndex].status = 'Complete';
+    } else if (projectTasks.some(t => t.status === 'In Progress')) {
+      mockProjects[projectIndex].status = 'In Progress';
+    } else {
+      mockProjects[projectIndex].status = 'Not Started';
+    }
+  }
+  
+  return Promise.resolve(mockTasks[index]);
+};
+
+export const deleteTask = async (projectId: string, taskId: string): Promise<void> => {
+  // return api.delete(`/projects/${projectId}/tasks/${taskId}`).then(() => {});
+  const index = mockTasks.findIndex(t => t.id === taskId && t.projectId === projectId);
+  if (index === -1) throw new Error('Task not found');
+  
+  mockTasks.splice(index, 1);
+  
+  // Update project's lastEdited
+  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    mockProjects[projectIndex].lastEdited = new Date().toISOString();
+    mockProjects[projectIndex].lastEditedBy = 'user-1'; // Assuming current user
+  }
+  
+  return Promise.resolve();
+};
+
+export const reorderTasks = async (projectId: string, taskIds: string[]): Promise<Task[]> => {
+  // return api.post(`/projects/${projectId}/tasks/reorder`, { taskIds }).then(res => res.data);
+  
+  // Update positions based on new order
+  taskIds.forEach((taskId, index) => {
+    const taskIndex = mockTasks.findIndex(t => t.id === taskId && t.projectId === projectId);
+    if (taskIndex !== -1) {
+      mockTasks[taskIndex].position = index;
+    }
+  });
+  
+  // Sort to reflect new order
+  mockTasks.sort((a, b) => {
+    if (a.projectId === b.projectId && a.projectId === projectId) {
+      return a.position - b.position;
+    }
+    return 0;
+  });
+  
+  // Update project's lastEdited
+  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    mockProjects[projectIndex].lastEdited = new Date().toISOString();
+    mockProjects[projectIndex].lastEditedBy = 'user-1'; // Assuming current user
+  }
+  
+  return Promise.resolve(mockTasks.filter(t => t.projectId === projectId));
+};
+
+// Comments API
+export const fetchComments = async (projectId: string): Promise<Comment[]> => {
+  // return api.get(`/projects/${projectId}/comments`).then(res => res.data);
+  return Promise.resolve(mockComments.filter(c => c.projectId === projectId));
+};
+
+export const createComment = async (projectId: string, content: string): Promise<Comment> => {
+  // return api.post(`/projects/${projectId}/comments`, { content }).then(res => res.data);
+  const newComment: Comment = {
+    id: `comment-${Math.floor(Math.random() * 1000)}`,
+    projectId,
+    authorId: 'user-1', // Assuming current user
+    content,
+    createdAt: new Date().toISOString()
+  };
+  
+  mockComments.push(newComment);
+  
+  // Update project's lastEdited
+  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    mockProjects[projectIndex].lastEdited = new Date().toISOString();
+    mockProjects[projectIndex].lastEditedBy = 'user-1'; // Assuming current user
+  }
+  
+  return Promise.resolve(newComment);
+};
+
+export const deleteComment = async (projectId: string, commentId: string): Promise<void> => {
+  // return api.delete(`/projects/${projectId}/comments/${commentId}`).then(() => {});
+  const index = mockComments.findIndex(c => c.id === commentId && c.projectId === projectId);
+  if (index === -1) throw new Error('Comment not found');
+  
+  mockComments.splice(index, 1);
+  
   return Promise.resolve();
 };
 

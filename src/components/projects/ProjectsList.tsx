@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchProjects } from '@/services/api';
 import { Project, FilterOptions, TableColumn } from '@/types';
 import { Filter, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import ProjectModal from './ProjectModal';
 
 const ProjectsList: React.FC = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,6 +62,10 @@ const ProjectsList: React.FC = () => {
       setSortColumn(columnId);
       setSortDirection('asc');
     }
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
   const getSortedProjects = () => {
@@ -184,7 +190,11 @@ const ProjectsList: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sortedProjects.map(project => (
-                    <tr key={project.id} className="hover:bg-gray-50">
+                    <tr 
+                      key={project.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleProjectClick(project.id)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           {project.status === 'Complete' && (
