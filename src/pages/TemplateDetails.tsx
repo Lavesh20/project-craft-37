@@ -232,27 +232,29 @@ const TemplateDetails: React.FC = () => {
                         </div>
                       ))}
                       
-                      <div className="pt-2 flex flex-col items-center gap-2">
-                        <div className="text-xs text-muted-foreground">
-                          Showing 1-{associatedClients.length} of {associatedClients.length} items
+                      {associatedClients.length > 10 && (
+                        <div className="pt-2 flex flex-col items-center gap-2">
+                          <div className="text-xs text-muted-foreground">
+                            Showing 1-{associatedClients.length} of {associatedClients.length} items
+                          </div>
+                          <Pagination>
+                            <PaginationContent>
+                              <PaginationItem>
+                                <PaginationLink disabled>Previous</PaginationLink>
+                              </PaginationItem>
+                              <PaginationItem>
+                                <PaginationLink isActive>1</PaginationLink>
+                              </PaginationItem>
+                              <PaginationItem>
+                                <PaginationLink disabled>Next</PaginationLink>
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                          <div className="text-xs text-muted-foreground">
+                            10 rows per page
+                          </div>
                         </div>
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationLink aria-disabled="true">Previous</PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                              <PaginationLink isActive>1</PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                              <PaginationLink aria-disabled="true">Next</PaginationLink>
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                        <div className="text-xs text-muted-foreground">
-                          10 rows per page
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-muted-foreground text-sm">

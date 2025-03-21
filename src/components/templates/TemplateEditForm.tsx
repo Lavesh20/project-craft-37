@@ -357,12 +357,12 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel 
                               
                               <div>
                                 <Select
-                                  value={task.assigneeId}
+                                  value={task.assigneeId || "none"}
                                   onValueChange={(value) => {
                                     const updatedTasks = [...tasks];
                                     updatedTasks[index] = {
                                       ...task,
-                                      assigneeId: value
+                                      assigneeId: value === "none" ? undefined : value
                                     };
                                     setTasks(updatedTasks);
                                   }}
@@ -371,7 +371,7 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel 
                                     <SelectValue placeholder="Assignee" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">No assignee</SelectItem>
+                                    <SelectItem value="none">No assignee</SelectItem>
                                     {teamMembers?.map(member => (
                                       <SelectItem key={member.id} value={member.id}>
                                         {member.name}
@@ -485,17 +485,17 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel 
                         
                         <div>
                           <Select
-                            value={newTask.assigneeId || ''}
+                            value={newTask.assigneeId || "none"}
                             onValueChange={(value) => setNewTask({
                               ...newTask,
-                              assigneeId: value || undefined
+                              assigneeId: value === "none" ? undefined : value
                             })}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Assignee" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">No assignee</SelectItem>
+                              <SelectItem value="none">No assignee</SelectItem>
                               {teamMembers?.map(member => (
                                 <SelectItem key={member.id} value={member.id}>
                                   {member.name}
@@ -523,7 +523,7 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel 
                             task: {
                               name: newTask.name,
                               description: newTask.description,
-                              assigneeId: newTask.assigneeId,
+                              assigneeId: newTask.assigneeId === "none" ? undefined : newTask.assigneeId,
                               relativeDueDate: newTask.relativeDueDate!,
                               timeEstimate: newTask.timeEstimate!
                             }
