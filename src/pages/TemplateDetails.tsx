@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getTemplate, fetchClients, fetchTeamMembers } from '@/services/api';
+import { fetchTemplate, fetchClients, fetchTeamMembers } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Plus, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ const TemplateDetails: React.FC = () => {
   // Fetch template data
   const { data: template, isLoading: isLoadingTemplate, error } = useQuery({
     queryKey: ['template', templateId],
-    queryFn: () => getTemplate(templateId!),
+    queryFn: () => fetchTemplate(templateId!),
     enabled: !!templateId,
   });
   

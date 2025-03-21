@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Task, Project, CreateTaskFormData, TeamMember } from '@/types';
-import { createTask, updateTask, reorderTasks, fetchTeamMembers, getProject } from '@/services/api';
+import { createTask, updateTask, reorderTasks, fetchTeamMembers, fetchProject } from '@/services/api';
 import { Plus, Check, Calendar, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,7 +77,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, onProjectUpdate }
       await updateTask(projectId, taskId, { status });
       
       // Refresh project to update UI and status
-      const updatedProject = await getProject(projectId);
+      const updatedProject = await fetchProject(projectId);
       if (updatedProject) {
         onProjectUpdate(updatedProject);
       }
@@ -107,7 +107,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, onProjectUpdate }
       setIsAddingTask(false);
       
       // Refresh project to update UI
-      const updatedProject = await getProject(projectId);
+      const updatedProject = await fetchProject(projectId);
       if (updatedProject) {
         onProjectUpdate(updatedProject);
       }

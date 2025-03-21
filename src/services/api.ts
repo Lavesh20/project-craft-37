@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Project, 
@@ -9,7 +10,9 @@ import {
   CreateTaskFormData,
   CreateTemplateFormData,
   CreateTemplateTaskFormData,
-  CreateClientFormData
+  CreateClientFormData,
+  Comment,
+  TemplateTask
 } from '@/types';
 import { mockData } from './mockData';
 
@@ -24,6 +27,9 @@ export const fetchProject = async (projectId: string): Promise<Project | undefin
   await delay(500);
   return mockData.projects.find(project => project.id === projectId);
 };
+
+// Alias for fetchProject to maintain compatibility
+export const getProject = fetchProject;
 
 export const createProject = async (data: CreateProjectFormData): Promise<Project> => {
   await delay(800);
@@ -64,23 +70,26 @@ export const fetchTasks = async (): Promise<Task[]> => {
   return mockData.tasks;
 };
 
-export const createTask = async (data: CreateTaskFormData, projectId: string): Promise<Task> => {
+export const createTask = async (projectId: string, data: CreateTaskFormData): Promise<Task> => {
   await delay(800);
   const newTask: Task = {
     id: uuidv4(),
     projectId: projectId,
-    ...data,
+    name: data.name,
+    description: data.description,
+    assigneeId: data.assigneeId,
     status: 'Not Started',
-    position: mockData.tasks.length + 1,
+    position: mockData.tasks.filter(task => task.projectId === projectId).length + 1,
+    dueDate: data.dueDate,
     lastEdited: new Date().toISOString(),
   };
   mockData.tasks.push(newTask);
   return newTask;
 };
 
-export const updateTask = async (id: string, data: Partial<Task>): Promise<Task> => {
+export const updateTask = async (projectId: string, taskId: string, data: Partial<Task>): Promise<Task> => {
   await delay(800);
-  const taskIndex = mockData.tasks.findIndex(task => task.id === id);
+  const taskIndex = mockData.tasks.findIndex(task => task.id === taskId);
   if (taskIndex === -1) throw new Error('Task not found');
 
   mockData.tasks[taskIndex] = {
@@ -89,6 +98,21 @@ export const updateTask = async (id: string, data: Partial<Task>): Promise<Task>
     lastEdited: new Date().toISOString(),
   };
   return mockData.tasks[taskIndex];
+};
+
+// Added for task list reordering
+export const reorderTasks = async (projectId: string, taskIds: string[]): Promise<Task[]> => {
+  await delay(500);
+  const tasks = mockData.tasks.filter(task => task.projectId === projectId);
+  
+  taskIds.forEach((taskId, index) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      task.position = index + 1;
+    }
+  });
+  
+  return tasks.sort((a, b) => a.position - b.position);
 };
 
 export const fetchTemplates = async (): Promise<Template[]> => {
@@ -101,6 +125,9 @@ export const fetchTemplate = async (templateId: string): Promise<Template | unde
   return mockData.templates.find(template => template.id === templateId);
 };
 
+// Alias for fetchTemplate to maintain compatibility
+export const getTemplate = fetchTemplate;
+
 export const createTemplate = async (data: CreateTemplateFormData): Promise<Template> => {
   await delay(800);
   const newTemplate: Template = {
@@ -108,6 +135,7 @@ export const createTemplate = async (data: CreateTemplateFormData): Promise<Temp
     ...data,
     tasks: [],
     lastEdited: new Date().toISOString(),
+    clientIds: [],
   };
   mockData.templates.push(newTemplate);
   return newTemplate;
@@ -124,6 +152,74 @@ export const updateTemplate = async (id: string, data: Partial<Template>): Promi
     lastEdited: new Date().toISOString(),
   };
   return mockData.templates[templateIndex];
+};
+
+// Add template task functions
+export const createTemplateTask = async (templateId: string, taskData: Omit<TemplateTask, 'id' | 'templateId' | 'position'>): Promise<TemplateTask> => {
+  await delay(800);
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) throw new Error('Template not found');
+  
+  const newTask: TemplateTask = {
+    id: uuidv4(),
+    templateId,
+    position: template.tasks.length + 1,
+    name: taskData.name,
+    description: taskData.description,
+    assigneeId: taskData.assigneeId,
+    relativeDueDate: taskData.relativeDueDate,
+    timeEstimate: taskData.timeEstimate
+  };
+  
+  template.tasks.push(newTask);
+  return newTask;
+};
+
+export const updateTemplateTask = async (templateId: string, taskId: string, data: Partial<TemplateTask>): Promise<TemplateTask> => {
+  await delay(800);
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) throw new Error('Template not found');
+  
+  const taskIndex = template.tasks.findIndex(task => task.id === taskId);
+  if (taskIndex === -1) throw new Error('Task not found');
+  
+  template.tasks[taskIndex] = {
+    ...template.tasks[taskIndex],
+    ...data,
+  };
+  
+  return template.tasks[taskIndex];
+};
+
+export const deleteTemplateTask = async (templateId: string, taskId: string): Promise<void> => {
+  await delay(500);
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) throw new Error('Template not found');
+  
+  const taskIndex = template.tasks.findIndex(task => task.id === taskId);
+  if (taskIndex === -1) throw new Error('Task not found');
+  
+  template.tasks.splice(taskIndex, 1);
+  
+  // Update positions for remaining tasks
+  template.tasks.forEach((task, index) => {
+    task.position = index + 1;
+  });
+};
+
+export const reorderTemplateTasks = async (templateId: string, taskIds: string[]): Promise<TemplateTask[]> => {
+  await delay(500);
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) throw new Error('Template not found');
+  
+  taskIds.forEach((taskId, index) => {
+    const taskIndex = template.tasks.findIndex(t => t.id === taskId);
+    if (taskIndex !== -1) {
+      template.tasks[taskIndex].position = index + 1;
+    }
+  });
+  
+  return [...template.tasks].sort((a, b) => a.position - b.position);
 };
 
 export const fetchClients = async (): Promise<Client[]> => {
@@ -159,7 +255,6 @@ export const updateClient = async (id: string, data: Partial<Client>): Promise<C
   mockData.clients[index] = {
     ...mockData.clients[index],
     ...data,
-    lastEdited: new Date().toISOString(),
   };
   
   return mockData.clients[index];
@@ -176,4 +271,43 @@ export const deleteClient = async (id: string): Promise<void> => {
 export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
   await delay(500);
   return mockData.teamMembers;
+};
+
+// Add mock comments functionality
+export const fetchComments = async (projectId: string): Promise<Comment[]> => {
+  await delay(500);
+  // Mock data for comments
+  const mockComments: Comment[] = [
+    {
+      id: '1',
+      projectId,
+      authorId: 'user-1',
+      content: 'Initial client call completed. They need this by end of month.',
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: '2',
+      projectId,
+      authorId: 'user-2',
+      content: 'I\'ve started working on the first few tasks. Will update progress tomorrow.',
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ];
+  
+  return mockComments.filter(comment => comment.projectId === projectId);
+};
+
+export const createComment = async (projectId: string, content: string): Promise<Comment> => {
+  await delay(800);
+  
+  // Mock creating a new comment
+  const newComment: Comment = {
+    id: uuidv4(),
+    projectId,
+    authorId: 'user-1', // Hardcoded current user for now
+    content,
+    createdAt: new Date().toISOString()
+  };
+  
+  return newComment;
 };

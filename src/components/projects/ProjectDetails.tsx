@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { getProject, updateProject } from '@/services/api';
+import { fetchProject, updateProject } from '@/services/api';
 import { Project } from '@/types';
 import ProjectHeader from './ProjectHeader';
 import ProjectInfo from './ProjectInfo';
@@ -27,7 +27,7 @@ const ProjectDetails: React.FC = () => {
   const loadProject = async (id: string) => {
     try {
       setLoading(true);
-      const data = await getProject(id);
+      const data = await fetchProject(id);
       
       if (!data) {
         navigate('/projects', { replace: true });
