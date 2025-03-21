@@ -1,313 +1,232 @@
+import { Project, Task, Template, TemplateTask, Client, TeamMember } from '@/types';
 
-import { Project, Client, TeamMember, Task, Comment, Template, TemplateTask } from '../types';
-
-// Mock Clients
-export const mockClients: Client[] = [
-  { id: 'client-1', name: 'Example Inc.', email: 'contact@example.com', phone: '555-1234' },
-  { id: 'client-2', name: 'ABC Company', email: 'info@abccompany.com', phone: '555-5678' },
-  { id: 'client-3', name: 'XYZ Corporation', email: 'hello@xyzcorp.com', phone: '555-9876' }
-];
-
-// Mock Team Members
-export const mockTeamMembers: TeamMember[] = [
-  { id: 'user-1', name: 'John Doe', email: 'john@jetpack.com', role: 'Admin' },
-  { id: 'user-2', name: 'Jane Smith', email: 'jane@jetpack.com', role: 'Manager' },
-  { id: 'user-3', name: 'Vyas', email: 'vyas@jetpack.com', role: 'Staff' }
-];
-
-// Mock Projects
-export const mockProjects: Project[] = [
+const projects: Project[] = [
   {
-    id: 'proj-1',
-    name: 'SAMPLE Monthly Accounting',
-    description: 'Regular monthly accounting services',
-    clientId: 'client-1',
-    assigneeId: 'user-1',
-    teamMemberIds: ['user-1', 'user-3'],
-    status: 'Complete',
-    dueDate: '2024-06-12',
-    lastEdited: '2024-06-11T14:30:00Z',
-    lastEditedBy: 'user-1',
-    repeating: false,
-    labels: ['Accounting', 'Monthly', 'Project']
-  },
-  {
-    id: 'proj-2',
-    name: 'test project',
-    description: 'A test project for demonstration',
-    clientId: 'client-2',
-    assigneeId: 'user-2',
-    teamMemberIds: ['user-2'],
-    status: 'Complete',
-    dueDate: '2024-06-25',
-    lastEdited: '2024-06-11T10:15:00Z',
-    lastEditedBy: 'user-2',
-    repeating: false,
-    labels: ['Test', 'Project']
-  },
-  {
-    id: 'proj-3',
-    name: 'Tax Return - Q2',
-    description: 'Quarterly tax return preparation',
-    clientId: 'client-3',
-    assigneeId: 'user-3',
-    teamMemberIds: ['user-1', 'user-3'],
+    id: '1',
+    name: 'Website Redesign',
+    clientId: '101',
+    teamMemberIds: ['102', '103'],
     status: 'In Progress',
-    dueDate: '2024-06-30',
-    lastEdited: '2024-06-10T09:45:00Z',
-    lastEditedBy: 'user-3',
+    dueDate: '2024-03-15',
+    lastEdited: '2024-02-01',
+    repeating: false,
+  },
+  {
+    id: '2',
+    name: 'Mobile App Development',
+    clientId: '102',
+    teamMemberIds: ['101', '104'],
+    status: 'Complete',
+    dueDate: '2024-02-28',
+    lastEdited: '2024-02-05',
     repeating: true,
-    frequency: 'Quarterly',
-    labels: ['Tax', 'Quarterly', 'Project']
-  }
-];
-
-// Mock Tasks
-export const mockTasks: Task[] = [
-  {
-    id: 'task-1',
-    projectId: 'proj-1',
-    name: 'Prepare financial statements',
-    description: 'Create monthly P&L, balance sheet, and cash flow statements',
-    assigneeId: 'user-1',
-    status: 'Complete',
-    dueDate: '2024-06-10',
-    position: 0,
-    lastEdited: '2024-06-10T15:30:00Z'
+    frequency: 'Monthly',
   },
   {
-    id: 'task-2',
-    projectId: 'proj-1',
-    name: 'Reconcile accounts',
-    description: 'Make sure all accounts are reconciled for the month',
-    assigneeId: 'user-3',
-    status: 'Complete',
-    dueDate: '2024-06-11',
-    position: 1,
-    lastEdited: '2024-06-11T09:45:00Z'
-  },
-  {
-    id: 'task-3',
-    projectId: 'proj-3',
-    name: 'Gather expense documentation',
-    description: 'Collect all receipts and invoices for the quarter',
-    assigneeId: 'user-3',
-    status: 'Complete',
-    dueDate: '2024-06-15',
-    position: 0,
-    lastEdited: '2024-06-15T14:20:00Z'
-  },
-  {
-    id: 'task-4',
-    projectId: 'proj-3',
-    name: 'Calculate quarterly taxes',
-    description: 'Determine tax liability based on quarterly earnings',
-    assigneeId: 'user-1',
-    status: 'In Progress',
-    dueDate: '2024-06-25',
-    position: 1,
-    lastEdited: '2024-06-16T10:05:00Z'
-  },
-  {
-    id: 'task-5',
-    projectId: 'proj-3',
-    name: 'File tax return',
-    description: 'Submit the completed tax return to the appropriate agencies',
-    assigneeId: 'user-3',
+    id: '3',
+    name: 'SEO Optimization',
+    clientId: '103',
+    teamMemberIds: ['102', '103'],
     status: 'Not Started',
-    dueDate: '2024-06-30',
+    dueDate: '2024-04-01',
+    lastEdited: '2024-02-10',
+    repeating: true,
+    frequency: 'Weekly',
+  },
+];
+
+const tasks: Task[] = [
+  {
+    id: '1',
+    projectId: '1',
+    name: 'Design Mockups',
+    status: 'Complete',
+    dueDate: '2024-02-01',
+    position: 1,
+    lastEdited: '2024-01-25',
+  },
+  {
+    id: '2',
+    projectId: '1',
+    name: 'Front-end Development',
+    status: 'In Progress',
+    dueDate: '2024-02-15',
     position: 2,
-    lastEdited: '2024-06-10T09:45:00Z'
-  }
+    lastEdited: '2024-02-01',
+  },
+  {
+    id: '3',
+    projectId: '2',
+    name: 'User Interface Design',
+    status: 'Complete',
+    dueDate: '2024-01-15',
+    position: 1,
+    lastEdited: '2024-01-10',
+  },
+  {
+    id: '4',
+    projectId: '2',
+    name: 'Back-end Development',
+    status: 'Complete',
+    dueDate: '2024-02-10',
+    position: 2,
+    lastEdited: '2024-02-01',
+  },
 ];
 
-// Mock Comments
-export const mockComments: Comment[] = [
+const templates: Template[] = [
   {
-    id: 'comment-1',
-    projectId: 'proj-1',
-    authorId: 'user-1',
-    content: 'All financial statements have been completed and reconciled.',
-    createdAt: '2024-06-11T14:00:00Z'
-  },
-  {
-    id: 'comment-2',
-    projectId: 'proj-1',
-    authorId: 'user-3',
-    content: 'I\'ve finished reconciling all the accounts. Everything looks good.',
-    createdAt: '2024-06-11T09:50:00Z'
-  },
-  {
-    id: 'comment-3',
-    projectId: 'proj-3',
-    authorId: 'user-3',
-    content: 'All expense documentation has been collected and organized.',
-    createdAt: '2024-06-15T14:25:00Z'
-  }
-];
-
-// Mock Templates
-export const mockTemplates: Template[] = [
-  {
-    id: 'template-1',
-    name: 'SAMPLE Monthly Accounting',
-    description: 'Template for regular monthly accounting services',
-    teamMemberIds: [],
-    clientIds: ['client-1'],
+    id: '1',
+    name: 'New Website Template',
+    teamMemberIds: ['101', '102'],
+    clientIds: ['201'],
     tasks: [
       {
-        id: 'template-task-1',
-        templateId: 'template-1',
-        name: 'Receive Client Information',
-        description: 'Receive all the necessary documents from client',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 10, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 0
-      },
-      {
-        id: 'template-task-2',
-        templateId: 'template-1',
-        name: 'Enter Client Information',
-        description: 'Input all client data into the system',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 1
-      },
-      {
-        id: 'template-task-3',
-        templateId: 'template-1',
-        name: 'Reconcile Accounts',
-        description: 'Ensure all accounts are properly reconciled',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 2
-      },
-      {
-        id: 'template-task-4',
-        templateId: 'template-1',
-        name: 'Review Prep Work',
-        description: 'Review all prepared documents',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 3
-      },
-      {
-        id: 'template-task-5',
-        templateId: 'template-1',
-        name: 'Run Reports',
-        description: 'Generate all required financial reports',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 2, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 4
-      },
-      {
-        id: 'template-task-6',
-        templateId: 'template-1',
-        name: 'Send Final Reports To Clients',
-        description: 'Deliver the completed reports to the client',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 1, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 5
-      }
-    ],
-    lastEdited: '2024-06-10T09:00:00Z',
-    lastEditedBy: 'user-1'
-  },
-  {
-    id: 'template-2',
-    name: 'SAMPLE Tax Return',
-    description: 'Template for preparing and filing tax returns',
-    teamMemberIds: [],
-    clientIds: [],
-    tasks: [
-      {
-        id: 'template-task-7',
-        templateId: 'template-2',
-        name: 'Collect Tax Documents',
-        description: 'Gather all necessary tax documents from client',
-        assigneeId: 'user-1',
-        relativeDueDate: { value: 30, unit: 'days', position: 'before' },
-        timeEstimate: { value: 1, unit: 'h' },
-        position: 0
-      },
-      {
-        id: 'template-task-8',
-        templateId: 'template-2',
-        name: 'Review Tax Documents',
-        description: 'Ensure all tax documents are complete and accurate',
-        assigneeId: 'user-2',
-        relativeDueDate: { value: 25, unit: 'days', position: 'before' },
+        id: '1',
+        templateId: '1',
+        name: 'Initial Design',
+        relativeDueDate: { value: 7, unit: 'days', position: 'after' },
         timeEstimate: { value: 2, unit: 'h' },
-        position: 1
+        position: 1,
       },
       {
-        id: 'template-task-9',
-        templateId: 'template-2',
-        name: 'Prepare Tax Return Draft',
-        description: 'Create initial draft of tax return',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 20, unit: 'days', position: 'before' },
-        timeEstimate: { value: 3, unit: 'h' },
-        position: 2
+        id: '2',
+        templateId: '1',
+        name: 'Content Creation',
+        relativeDueDate: { value: 14, unit: 'days', position: 'after' },
+        timeEstimate: { value: 4, unit: 'h' },
+        position: 2,
       },
-      {
-        id: 'template-task-10',
-        templateId: 'template-2',
-        name: 'Review Tax Return Draft',
-        description: 'Check tax return draft for accuracy and completeness',
-        assigneeId: 'user-1',
-        relativeDueDate: { value: 15, unit: 'days', position: 'before' },
-        timeEstimate: { value: 1, unit: 'h' },
-        position: 3
-      },
-      {
-        id: 'template-task-11',
-        templateId: 'template-2',
-        name: 'Finalize Tax Return',
-        description: 'Make final adjustments to tax return',
-        assigneeId: 'user-2',
-        relativeDueDate: { value: 10, unit: 'days', position: 'before' },
-        timeEstimate: { value: 1, unit: 'h' },
-        position: 4
-      },
-      {
-        id: 'template-task-12',
-        templateId: 'template-2',
-        name: 'Client Review Meeting',
-        description: 'Meet with client to review tax return',
-        assigneeId: 'user-3',
-        relativeDueDate: { value: 5, unit: 'days', position: 'before' },
-        timeEstimate: { value: 1, unit: 'h' },
-        position: 5
-      },
-      {
-        id: 'template-task-13',
-        templateId: 'template-2',
-        name: 'Submit Tax Return',
-        description: 'File tax return with appropriate authorities',
-        assigneeId: 'user-1',
-        relativeDueDate: { value: 1, unit: 'days', position: 'before' },
-        timeEstimate: { value: 30, unit: 'm' },
-        position: 6
-      },
-      {
-        id: 'template-task-14',
-        templateId: 'template-2',
-        name: 'Send Final Documents to Client',
-        description: 'Provide copies of filed tax return to client',
-        assigneeId: 'user-2',
-        relativeDueDate: { value: 1, unit: 'days', position: 'after' },
-        timeEstimate: { value: 15, unit: 'm' },
-        position: 7
-      }
     ],
-    lastEdited: '2024-06-09T14:30:00Z',
-    lastEditedBy: 'user-2'
+    lastEdited: '2024-02-01',
+  },
+  {
+    id: '2',
+    name: 'Mobile App Template',
+    teamMemberIds: ['103', '104'],
+    clientIds: ['202'],
+    tasks: [
+      {
+        id: '3',
+        templateId: '2',
+        name: 'Wireframing',
+        relativeDueDate: { value: 3, unit: 'days', position: 'before' },
+        timeEstimate: { value: 3, unit: 'h' },
+        position: 1,
+      },
+      {
+        id: '4',
+        templateId: '2',
+        name: 'Testing',
+        relativeDueDate: { value: 7, unit: 'days', position: 'before' },
+        timeEstimate: { value: 5, unit: 'h' },
+        position: 2,
+      },
+    ],
+    lastEdited: '2024-02-05',
+  },
+];
+
+const teamMembers: TeamMember[] = [
+  {
+    id: '101',
+    name: 'Alex Johnson',
+    email: 'alex@example.com',
+    role: 'Admin'
+  },
+  {
+    id: '102',
+    name: 'Sarah Parker',
+    email: 'sarah@example.com',
+    role: 'Manager'
+  },
+  {
+    id: '103',
+    name: 'Michael Chen',
+    email: 'michael@example.com',
+    role: 'Staff'
+  },
+  {
+    id: '104',
+    name: 'Emily Rodriguez',
+    email: 'emily@example.com',
+    role: 'Staff'
   }
 ];
+
+const clients: Client[] = [
+  {
+    id: '201',
+    name: 'Acme Corporation',
+    description: 'Global technology company',
+    primaryContactName: 'John Doe',
+    location: 'San Francisco, CA',
+    website: 'https://acme.example.com',
+    assigneeId: '101',
+    priority: 'High',
+    services: ['tax-preparation', 'consulting'],
+    isActive: true
+  },
+  {
+    id: '202',
+    name: 'Beta Industries',
+    description: 'Manufacturing company',
+    primaryContactName: 'Jane Smith',
+    location: 'Chicago, IL',
+    website: 'https://beta.example.com',
+    assigneeId: '102',
+    priority: 'Medium',
+    services: ['bookkeeping', 'payroll'],
+    isActive: true
+  },
+  {
+    id: '203',
+    name: 'Gamma Services',
+    description: 'Professional services firm',
+    primaryContactName: 'Bob Wilson',
+    location: 'New York, NY',
+    website: 'https://gamma.example.com',
+    assigneeId: '103',
+    priority: 'Low',
+    services: ['financial-planning', 'audit'],
+    isActive: true
+  },
+  {
+    id: '204',
+    name: 'Delta Tech',
+    description: 'Software development company',
+    primaryContactName: 'Alice Brown',
+    location: 'Austin, TX',
+    website: 'https://delta.example.com',
+    assigneeId: '104',
+    priority: 'High',
+    services: ['tax-preparation', 'estate-planning'],
+    isActive: true
+  },
+  {
+    id: '205',
+    name: 'Epsilon Retail',
+    description: 'Retail chain',
+    primaryContactName: 'Charlie Green',
+    location: 'Seattle, WA',
+    website: 'https://epsilon.example.com',
+    assigneeId: '101',
+    priority: 'Medium',
+    services: ['bookkeeping', 'consulting'],
+    isActive: true
+  }
+];
+
+export const mockData = {
+  projects,
+  tasks,
+  templates,
+  clients,
+  teamMembers
+};
+
+// Function to fetch team members for use in various components
+export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return teamMembers;
+};

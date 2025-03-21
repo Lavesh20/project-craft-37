@@ -11,6 +11,7 @@ import TemplateDetailsPage from "./pages/TemplateDetails";
 import NewTemplatePage from "./pages/NewTemplate";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/layout/MainLayout";
+import Clients from "./pages/Clients";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +38,7 @@ const App = () => (
           <Route path="/templates" element={<MainLayout><TemplatesPage /></MainLayout>} />
           <Route path="/templates/new" element={<MainLayout><NewTemplatePage /></MainLayout>} />
           <Route path="/templates/:templateId" element={<MainLayout><TemplateDetailsPage /></MainLayout>} />
-          <Route path="/clients" element={<MainLayout><Index /></MainLayout>} />
+          <Route path="/clients" element={<MainLayout><Clients /></MainLayout>} />
           <Route path="/contacts" element={<MainLayout><Index /></MainLayout>} />
           <Route path="/notifications" element={<MainLayout><Index /></MainLayout>} />
           <Route path="/account" element={<MainLayout><Index /></MainLayout>} />

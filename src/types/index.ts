@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   name: string;
@@ -68,8 +67,14 @@ export interface Comment {
 export interface Client {
   id: string;
   name: string;
-  email?: string;
-  phone?: string;
+  description?: string;
+  primaryContactName?: string;
+  location?: string;
+  website?: string;
+  assigneeId?: string;
+  priority: 'None' | 'Low' | 'Medium' | 'High';
+  services: string[];
+  isActive: boolean;
 }
 
 export interface TeamMember {
@@ -116,6 +121,18 @@ export interface CreateTemplateTaskFormData {
     value: number;
     unit: 'h' | 'm';
   };
+}
+
+export interface CreateClientFormData {
+  name: string;
+  description?: string;
+  primaryContactName?: string;
+  location?: string;
+  website?: string;
+  assigneeId?: string;
+  priority: 'None' | 'Low' | 'Medium' | 'High';
+  services: string[];
+  isActive: boolean;
 }
 
 export interface FilterOptions {
