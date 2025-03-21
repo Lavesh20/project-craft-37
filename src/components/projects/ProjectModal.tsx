@@ -1,26 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Calendar } from 'lucide-react';
-import { fetchClients, fetchTeamMembers, createProject } from '@/services/api';
-import { Client, TeamMember, CreateProjectFormData } from '@/types';
+import { fetchClients, fetchTeamMembers, createProject, updateProject } from '@/services/api';
+import { Client, TeamMember, CreateProjectFormData, Project } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
 interface ProjectModalProps {
   onClose: () => void;
+  projectToEdit?: Project; // Make this optional to support both create and edit modes
 }
 
-const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
+const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(
+    projectToEdit ? parseISO(projectToEdit.dueDate) : new Date()
+  );
+  
+  const isEditMode = !!projectToEdit;
   
   const [formData, setFormData] = useState<CreateProjectFormData>({
     name: '',
@@ -42,6 +47,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
         ]);
         setClients(clientsData);
         setTeamMembers(teamMembersData);
+        
+        // If in edit mode, populate form with project data
+        if (projectToEdit) {
+          setFormData({
+            name: projectToEdit.name,
+            description: projectToEdit.description || '',
+            clientId: projectToEdit.clientId,
+            assigneeId: projectToEdit.assigneeId || '',
+            teamMemberIds: projectToEdit.teamMemberIds || [],
+            repeating: projectToEdit.repeating,
+            frequency: projectToEdit.frequency,
+            dueDate: projectToEdit.dueDate
+          });
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
       } finally {
@@ -50,7 +69,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
     };
     
     loadData();
-  }, []);
+  }, [projectToEdit]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -89,20 +108,27 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
     try {
       setSubmitting(true);
       
-      // Create project object from form data and ensure frequency is typed correctly
-      const newProject = {
+      // Create project object from form data
+      const projectData = {
         ...formData,
-        // Convert the string frequency to a properly typed frequency or undefined
         frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
-        status: 'Not Started' as const
+        status: projectToEdit?.status || 'Not Started' as const
       };
       
-      await createProject(newProject);
-      toast.success('Project created successfully');
+      if (isEditMode && projectToEdit) {
+        // Update existing project
+        await updateProject(projectToEdit.id, projectData);
+        toast.success('Project updated successfully');
+      } else {
+        // Create new project
+        await createProject(projectData);
+        toast.success('Project created successfully');
+      }
+      
       onClose();
     } catch (error) {
-      console.error('Error creating project:', error);
-      toast.error('Failed to create project');
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} project:`, error);
+      toast.error(`Failed to ${isEditMode ? 'update' : 'create'} project`);
     } finally {
       setSubmitting(false);
     }
@@ -124,7 +150,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
         <form onSubmit={handleSubmit}>
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-800">New Project</h2>
+              <h2 className="text-xl font-semibold text-gray-800">
+                {isEditMode ? 'Edit Project' : 'New Project'}
+              </h2>
               <button 
                 type="button" 
                 onClick={onClose}
@@ -325,7 +353,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose }) => {
               className="bg-jetpack-blue hover:bg-blue-700 transition-colors"
               disabled={submitting}
             >
-              {submitting ? 'Creating...' : 'Create Project'}
+              {submitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Project' : 'Create Project')}
             </Button>
           </div>
         </form>

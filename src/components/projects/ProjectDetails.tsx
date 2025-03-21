@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { getProject, updateProject } from '@/services/api';
 import { Project } from '@/types';
 import ProjectHeader from './ProjectHeader';
