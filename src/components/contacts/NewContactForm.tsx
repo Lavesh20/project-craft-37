@@ -32,6 +32,8 @@ const formSchema = z.object({
   isPrimaryContact: z.boolean().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 interface NewContactFormProps {
   onCancel: () => void;
   afterSubmit?: (contact: CreateContactFormData) => void;
@@ -43,7 +45,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({ onCancel, afterSubmit }
   const queryClient = useQueryClient();
 
   // Initialize form
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -67,7 +69,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({ onCancel, afterSubmit }
         description: 'Contact created successfully',
       });
       if (afterSubmit) {
-        afterSubmit(form.getValues());
+        afterSubmit(form.getValues() as CreateContactFormData);
       } else {
         navigate('/contacts');
       }
@@ -82,15 +84,15 @@ const NewContactForm: React.FC<NewContactFormProps> = ({ onCancel, afterSubmit }
   });
 
   // Form submission handler
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    createContactMutation.mutate(data);
+  const onSubmit = async (data: FormValues) => {
+    createContactMutation.mutate(data as CreateContactFormData);
   };
 
   const handleCreateAndAddAnother = () => {
     const isValid = form.trigger();
     if (isValid) {
       const data = form.getValues();
-      createContactMutation.mutate(data, {
+      createContactMutation.mutate(data as CreateContactFormData, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['contacts'] });
           toast({

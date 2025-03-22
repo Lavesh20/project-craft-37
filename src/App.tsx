@@ -54,6 +54,10 @@ const router = createBrowserRouter([
     element: <Contacts />,
   },
   {
+    path: '/my-work',
+    element: <Index />, // Temporarily using Index component for My Work route
+  },
+  {
     path: '*',
     element: <NotFound />,
   },
