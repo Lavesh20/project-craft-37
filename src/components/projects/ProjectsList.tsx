@@ -2,21 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchProjects } from '@/services/api';
-import { Project, FilterOptions, TableColumn } from '@/types';
+import { fetchProjects, fetchClients } from '@/services/api';
+import { Project, FilterOptions, TableColumn, Client } from '@/types';
 import { Filter, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProjectModal from './ProjectModal';
+import { useQuery } from '@tanstack/react-query';
 
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterOptions>({ timeframe: 'this-month' });
   const [sortColumn, setSortColumn] = useState<string | null>('dueDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // Use React Query to fetch projects and clients
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ['projects', filter],
+    queryFn: () => fetchProjects(filter),
+  });
+
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: fetchClients,
+  });
   
   const [columns, setColumns] = useState<TableColumn[]>([
     { id: 'name', label: 'NAME', visible: true, sortable: true },
@@ -28,29 +38,12 @@ const ProjectsList: React.FC = () => {
     { id: 'lastEdited', label: 'LAST EDITED', visible: true, sortable: true }
   ]);
 
-  useEffect(() => {
-    loadProjects();
-  }, [filter]);
-
-  const loadProjects = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchProjects(filter);
-      setProjects(data);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateProject = () => {
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    loadProjects(); // Reload projects when modal closes
   };
 
   const handleSort = (columnId: string) => {
@@ -68,6 +61,12 @@ const ProjectsList: React.FC = () => {
     navigate(`/projects/${projectId}`);
   };
 
+  // Helper function to get client name by ID
+  const getClientNameById = (clientId: string): string => {
+    const client = clients.find(client => client.id === clientId);
+    return client ? client.name : 'Unknown Client';
+  };
+
   const getSortedProjects = () => {
     if (!sortColumn) return projects;
 
@@ -80,9 +79,8 @@ const ProjectsList: React.FC = () => {
           valueB = b.name.toLowerCase();
           break;
         case 'client':
-          // In a real app, you'd have the client names here
-          valueA = a.clientId;
-          valueB = b.clientId;
+          valueA = getClientNameById(a.clientId).toLowerCase();
+          valueB = getClientNameById(b.clientId).toLowerCase();
           break;
         case 'dueDate':
           valueA = new Date(a.dueDate).getTime();
@@ -123,6 +121,7 @@ const ProjectsList: React.FC = () => {
 
   const visibleColumns = columns.filter(col => col.visible);
   const sortedProjects = getSortedProjects();
+  const loading = projectsLoading || clientsLoading;
   
   return (
     <div className="bg-white rounded-lg shadow">
@@ -148,12 +147,6 @@ const ProjectsList: React.FC = () => {
               Edit Columns
             </Button>
           </div>
-        </div>
-        
-        <div className="mb-4">
-          <Badge variant="outline" className="bg-gray-100 hover:bg-gray-200 px-3 py-1 text-sm">
-            This month
-          </Badge>
         </div>
         
         {loading ? (
@@ -207,9 +200,7 @@ const ProjectsList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-blue-600 hover:text-blue-800">
-                          {/* This would be a client name lookup in a real app */}
-                          {project.clientId === 'client-1' ? 'Example Inc.' : 
-                           project.clientId === 'client-2' ? 'ABC Company' : 'XYZ Corporation'}
+                          {getClientNameById(project.clientId)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
