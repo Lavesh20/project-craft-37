@@ -2,10 +2,47 @@
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ExternalLink, CalendarIcon, UsersIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { fetchTemplates, fetchClients } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import { format, parseISO } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Templates: React.FC = () => {
+  // Fetch templates using React Query
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['templates'],
+    queryFn: fetchTemplates,
+  });
+
+  // Fetch clients for reference
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: fetchClients,
+  });
+
+  const isLoading = templatesLoading || clientsLoading;
+
+  // Helper function to get client names for a template
+  const getClientNames = (clientIds: string[]) => {
+    if (!clients.length) return 'Loading clients...';
+    
+    const templateClients = clients.filter(client => clientIds.includes(client.id));
+    if (!templateClients.length) return 'No clients';
+    
+    return templateClients.map(client => client.name).join(', ');
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'MMM dd, yyyy');
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto">
@@ -19,11 +56,73 @@ const Templates: React.FC = () => {
           </Link>
         </header>
         
-        <div className="bg-white rounded-md shadow p-6">
-          <p className="text-gray-500 text-center py-8">
-            No templates available. Create your first template to get started.
-          </p>
-        </div>
+        {isLoading ? (
+          <div className="bg-white rounded-md shadow p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+        ) : templates.length === 0 ? (
+          <div className="bg-white rounded-md shadow p-6">
+            <p className="text-gray-500 text-center py-8">
+              No templates available. Create your first template to get started.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-md shadow">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clients</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Edited</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {templates.map((template) => (
+                    <tr key={template.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="text-sm font-medium text-gray-900">{template.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          {template.tasks.length} tasks
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {getClientNames(template.clientIds)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {formatDate(template.lastEdited)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-2">
+                          <Link 
+                            to={`/templates/${template.id}`} 
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <ExternalLink size={16} />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
