@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
@@ -61,10 +60,20 @@ const ProjectsList: React.FC = () => {
     navigate(`/projects/${projectId}`);
   };
 
-  // Helper function to get client name by ID
+  // Updated helper function to get client name by ID with proper logging
   const getClientNameById = (clientId: string): string => {
+    if (!clients || clients.length === 0) {
+      console.log('No clients data available');
+      return 'Loading...';
+    }
+    
     const client = clients.find(client => client.id === clientId);
-    return client ? client.name : 'Unknown Client';
+    if (!client) {
+      console.log(`Client with ID ${clientId} not found`, clients);
+      return 'Unknown Client';
+    }
+    
+    return client.name;
   };
 
   const getSortedProjects = () => {

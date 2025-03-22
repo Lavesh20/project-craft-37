@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -49,6 +48,7 @@ import {
 import NewClientForm from '@/components/clients/NewClientForm';
 import { Client, TeamMember } from '@/types';
 import { fetchClients, fetchTeamMembers } from '@/services/api';
+import MainLayout from '@/components/layout/MainLayout';
 
 const Clients = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -140,270 +140,272 @@ const Clients = () => {
   const totalPages = Math.ceil(filteredClients.length / rowsPerPage);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Clients</h1>
-        <div className="flex items-center gap-2">
-          <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter size={16} />
-                Filter
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filter Clients</SheetTitle>
-              </SheetHeader>
-              <div className="py-4 space-y-6">
-                <div className="space-y-2">
-                  <Label>Client Name</Label>
-                  <Input 
-                    placeholder="Search by name" 
-                    value={filters.clientName}
-                    onChange={(e) => handleFilterChange('clientName', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Priority</Label>
-                  <RadioGroup 
-                    value={filters.priority}
-                    onValueChange={(value) => handleFilterChange('priority', value)}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="None" id="priority-none" />
-                      <Label htmlFor="priority-none">None</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Low" id="priority-low" />
-                      <Label htmlFor="priority-low">Low</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Medium" id="priority-medium" />
-                      <Label htmlFor="priority-medium">Medium</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="High" id="priority-high" />
-                      <Label htmlFor="priority-high">High</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Assignee</Label>
-                  <Select 
-                    value={filters.assigneeId}
-                    onValueChange={(value) => handleFilterChange('assigneeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select assignee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Assignees</SelectItem>
-                      {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="active-only" 
-                      checked={filters.isActive}
-                      onCheckedChange={(checked) => handleFilterChange('isActive', checked)}
+    <MainLayout>
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Clients</h1>
+          <div className="flex items-center gap-2">
+            <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter size={16} />
+                  Filter
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Filter Clients</SheetTitle>
+                </SheetHeader>
+                <div className="py-4 space-y-6">
+                  <div className="space-y-2">
+                    <Label>Client Name</Label>
+                    <Input 
+                      placeholder="Search by name" 
+                      value={filters.clientName}
+                      onChange={(e) => handleFilterChange('clientName', e.target.value)}
                     />
-                    <Label htmlFor="active-only">Active clients only</Label>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Priority</Label>
+                    <RadioGroup 
+                      value={filters.priority}
+                      onValueChange={(value) => handleFilterChange('priority', value)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="None" id="priority-none" />
+                        <Label htmlFor="priority-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Low" id="priority-low" />
+                        <Label htmlFor="priority-low">Low</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Medium" id="priority-medium" />
+                        <Label htmlFor="priority-medium">Medium</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="High" id="priority-high" />
+                        <Label htmlFor="priority-high">High</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Assignee</Label>
+                    <Select 
+                      value={filters.assigneeId}
+                      onValueChange={(value) => handleFilterChange('assigneeId', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Assignees</SelectItem>
+                        {teamMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="active-only" 
+                        checked={filters.isActive}
+                        onCheckedChange={(checked) => handleFilterChange('isActive', checked)}
+                      />
+                      <Label htmlFor="active-only">Active clients only</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Primary Contact</Label>
+                    <Input 
+                      placeholder="Search by contact name" 
+                      value={filters.primaryContact}
+                      onChange={(e) => handleFilterChange('primaryContact', e.target.value)}
+                    />
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Primary Contact</Label>
-                  <Input 
-                    placeholder="Search by contact name" 
-                    value={filters.primaryContact}
-                    onChange={(e) => handleFilterChange('primaryContact', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <SheetFooter className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset Filters
+                <SheetFooter className="flex justify-between pt-4 border-t">
+                  <Button variant="outline" onClick={resetFilters}>
+                    Reset Filters
+                  </Button>
+                  <Button onClick={() => setIsFilterOpen(false)}>
+                    Apply Filters
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+            
+            <Button variant="outline" className="gap-2">
+              <Import size={16} />
+              Import Clients
+            </Button>
+            
+            <Button variant="link" className="gap-2">
+              <Download size={16} />
+              Download Template
+            </Button>
+            
+            <Sheet open={isNewClientOpen} onOpenChange={setIsNewClientOpen}>
+              <SheetTrigger asChild>
+                <Button className="gap-2">
+                  <Plus size={16} />
+                  Create New Client
                 </Button>
-                <Button onClick={() => setIsFilterOpen(false)}>
-                  Apply Filters
-                </Button>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-          
-          <Button variant="outline" className="gap-2">
-            <Import size={16} />
-            Import Clients
-          </Button>
-          
-          <Button variant="link" className="gap-2">
-            <Download size={16} />
-            Download Template
-          </Button>
-          
-          <Sheet open={isNewClientOpen} onOpenChange={setIsNewClientOpen}>
-            <SheetTrigger asChild>
-              <Button className="gap-2">
-                <Plus size={16} />
-                Create New Client
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="sm:max-w-2xl overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Create New Client</SheetTitle>
-              </SheetHeader>
-              <NewClientForm 
-                teamMembers={teamMembers} 
-                onSuccess={() => setIsNewClientOpen(false)}
-                onCancel={() => setIsNewClientOpen(false)}
-              />
-            </SheetContent>
-          </Sheet>
+              </SheetTrigger>
+              <SheetContent className="sm:max-w-2xl overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Create New Client</SheetTitle>
+                </SheetHeader>
+                <NewClientForm 
+                  teamMembers={teamMembers} 
+                  onSuccess={() => setIsNewClientOpen(false)}
+                  onCancel={() => setIsNewClientOpen(false)}
+                />
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-      </div>
-      
-      <div className="bg-white rounded-md shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead 
-                className="cursor-pointer"
-                onClick={() => handleSort('name')}
-              >
-                <div className="flex items-center gap-2">
-                  Name
-                  {sortBy === 'name' && (
-                    sortOrder === 'asc' ? <ArrowUpAZ size={16} /> : <ArrowDownAZ size={16} />
-                  )}
-                </div>
-              </TableHead>
-              <TableHead>Primary Contact</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Services</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clientsLoading ? (
+        
+        <div className="bg-white rounded-md shadow">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
-                  Loading clients...
-                </TableCell>
-              </TableRow>
-            ) : paginatedClients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
-                  No clients found. Create your first client to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedClients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.name}</TableCell>
-                  <TableCell>{client.primaryContactName || '-'}</TableCell>
-                  <TableCell>{getAssigneeName(client.assigneeId)}</TableCell>
-                  <TableCell>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      client.priority === 'High' ? 'bg-red-100 text-red-800' :
-                      client.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
-                      client.priority === 'Low' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {client.priority}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {client.services.length > 0 
-                      ? client.services.slice(0, 2).join(', ') + (client.services.length > 2 ? '...' : '')
-                      : '-'
-                    }
-                  </TableCell>
-                  <TableCell>
-                    {client.isActive ? (
-                      <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                        Inactive
-                      </span>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-2">
+                    Name
+                    {sortBy === 'name' && (
+                      sortOrder === 'asc' ? <ArrowUpAZ size={16} /> : <ArrowDownAZ size={16} />
                     )}
+                  </div>
+                </TableHead>
+                <TableHead>Primary Contact</TableHead>
+                <TableHead>Assignee</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Services</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientsLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10">
+                    Loading clients...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        
-        <div className="flex items-center justify-between p-4 border-t">
-          <div className="text-sm text-gray-500">
-            Showing {filteredClients.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0}-
-            {Math.min(currentPage * rowsPerPage, filteredClients.length)} of {filteredClients.length} items
-          </div>
+              ) : paginatedClients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10">
+                    No clients found. Create your first client to get started.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedClients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell className="font-medium">{client.name}</TableCell>
+                    <TableCell>{client.primaryContactName || '-'}</TableCell>
+                    <TableCell>{getAssigneeName(client.assigneeId)}</TableCell>
+                    <TableCell>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                        client.priority === 'High' ? 'bg-red-100 text-red-800' :
+                        client.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
+                        client.priority === 'Low' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {client.priority}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {client.services.length > 0 
+                        ? client.services.slice(0, 2).join(', ') + (client.services.length > 2 ? '...' : '')
+                        : '-'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {client.isActive ? (
+                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
           
-          <div className="flex items-center gap-2">
-            <Select 
-              value={rowsPerPage.toString()} 
-              onValueChange={(value) => {
-                setRowsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Rows per page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 rows per page</SelectItem>
-                <SelectItem value="10">10 rows per page</SelectItem>
-                <SelectItem value="20">20 rows per page</SelectItem>
-                <SelectItem value="50">50 rows per page</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between p-4 border-t">
+            <div className="text-sm text-gray-500">
+              Showing {filteredClients.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0}-
+              {Math.min(currentPage * rowsPerPage, filteredClients.length)} of {filteredClients.length} items
+            </div>
             
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-                
-                {[...Array(totalPages)].map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(i + 1)}
-                      isActive={currentPage === i + 1}
-                    >
-                      {i + 1}
-                    </PaginationLink>
+            <div className="flex items-center gap-2">
+              <Select 
+                value={rowsPerPage.toString()} 
+                onValueChange={(value) => {
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Rows per page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 rows per page</SelectItem>
+                  <SelectItem value="10">10 rows per page</SelectItem>
+                  <SelectItem value="20">20 rows per page</SelectItem>
+                  <SelectItem value="50">50 rows per page</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    />
                   </PaginationItem>
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                  
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(i + 1)}
+                        isActive={currentPage === i + 1}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
