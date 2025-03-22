@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   name: string;
@@ -151,4 +150,30 @@ export interface TableColumn {
   label: string;
   visible: boolean;
   sortable?: boolean;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  clientId?: string;
+  isPrimaryContact?: boolean;
+  lastEdited: string;
+}
+
+export interface CreateContactFormData {
+  name: string;
+  email: string;
+  phone?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  clientId?: string;
+  isPrimaryContact?: boolean;
 }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   createBrowserRouter,
@@ -10,6 +11,7 @@ import Templates from '@/pages/Templates';
 import NewTemplate from '@/pages/NewTemplate';
 import TemplateDetails from '@/pages/TemplateDetails';
 import Clients from '@/pages/Clients';
+import Contacts from '@/pages/Contacts';
 import NotFound from '@/pages/NotFound';
 import ClientDetails from './pages/ClientDetails';
 
@@ -46,6 +48,10 @@ const router = createBrowserRouter([
   {
     path: '/clients/:clientId',
     element: <ClientDetails />,
+  },
+  {
+    path: '/contacts',
+    element: <Contacts />,
   },
   {
     path: '*',

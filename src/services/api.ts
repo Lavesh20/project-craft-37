@@ -12,7 +12,9 @@ import {
   CreateClientFormData,
   Comment,
   TemplateTask,
-  FilterOptions
+  FilterOptions,
+  Contact,
+  CreateContactFormData
 } from '@/types';
 import { mockData } from './mockData';
 
@@ -386,4 +388,49 @@ export const createComment = async (projectId: string, content: string): Promise
   };
   
   return newComment;
+};
+
+// Contacts API functions
+export const fetchContacts = async (): Promise<Contact[]> => {
+  await delay(500);
+  return mockData.contacts || [];
+};
+
+export const fetchContact = async (contactId: string): Promise<Contact | undefined> => {
+  await delay(500);
+  return mockData.contacts.find(contact => contact.id === contactId);
+};
+
+export const createContact = async (data: CreateContactFormData): Promise<Contact> => {
+  await delay(800);
+  const newContact: Contact = {
+    id: uuidv4(),
+    ...data,
+    lastEdited: new Date().toISOString(),
+  };
+  
+  mockData.contacts.push(newContact);
+  return newContact;
+};
+
+export const updateContact = async (id: string, data: Partial<Contact>): Promise<Contact> => {
+  await delay(800);
+  const index = mockData.contacts.findIndex(c => c.id === id);
+  if (index === -1) throw new Error('Contact not found');
+  
+  mockData.contacts[index] = {
+    ...mockData.contacts[index],
+    ...data,
+    lastEdited: new Date().toISOString(),
+  };
+  
+  return mockData.contacts[index];
+};
+
+export const deleteContact = async (id: string): Promise<void> => {
+  await delay(500);
+  const index = mockData.contacts.findIndex(c => c.id === id);
+  if (index === -1) throw new Error('Contact not found');
+  
+  mockData.contacts.splice(index, 1);
 };
