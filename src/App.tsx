@@ -13,7 +13,7 @@ import TemplateDetails from '@/pages/TemplateDetails';
 import Clients from '@/pages/Clients';
 import Contacts from '@/pages/Contacts';
 import NotFound from '@/pages/NotFound';
-import ClientDetails from './pages/ClientDetails';
+import ClientDetails from '@/pages/ClientDetails';
 
 // Routes definition
 const router = createBrowserRouter([

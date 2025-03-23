@@ -1,409 +1,232 @@
+
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Filter, 
-  Import, 
-  Download, 
-  Plus, 
-  ArrowUpAZ, 
-  ArrowDownAZ, 
-  X 
-} from 'lucide-react';
+import { fetchClients } from '@/services/api';
+import MainLayout from '@/components/layout/MainLayout';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Building, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableHead, 
-  TableRow, 
-  TableCell 
-} from '@/components/ui/table';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from '@/components/ui/sheet';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import NewClientForm from '@/components/clients/NewClientForm';
-import { Client, TeamMember } from '@/types';
-import { fetchClients, fetchTeamMembers } from '@/services/api';
-import MainLayout from '@/components/layout/MainLayout';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Clients = () => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isNewClientOpen, setIsNewClientOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<string>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
-  const [filters, setFilters] = useState({
-    clientName: '',
-    priority: '',
-    assigneeId: '',
-    isActive: true,
-    primaryContact: '',
-    services: [] as string[],
-  });
-
-  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showClientForm, setShowClientForm] = useState(false);
+  
+  const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
   });
-
-  const { data: teamMembers = [], isLoading: teamMembersLoading } = useQuery({
-    queryKey: ['team-members'],
-    queryFn: fetchTeamMembers,
-  });
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  };
-
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      clientName: '',
-      priority: '',
-      assigneeId: '',
-      isActive: true,
-      primaryContact: '',
-      services: [],
-    });
-  };
-
-  const applyFilters = (clients: Client[]) => {
-    return clients.filter(client => {
-      const nameMatch = !filters.clientName || client.name.toLowerCase().includes(filters.clientName.toLowerCase());
-      const priorityMatch = !filters.priority || client.priority === filters.priority;
-      const assigneeMatch = !filters.assigneeId || client.assigneeId === filters.assigneeId;
-      const activeMatch = filters.isActive === undefined || client.isActive === filters.isActive;
-      const primaryContactMatch = !filters.primaryContact || 
-        (client.primaryContactName && client.primaryContactName.toLowerCase().includes(filters.primaryContact.toLowerCase()));
-      const servicesMatch = filters.services.length === 0 || 
-        filters.services.some(service => client.services.includes(service));
-
-      return nameMatch && priorityMatch && assigneeMatch && activeMatch && primaryContactMatch && servicesMatch;
-    });
-  };
-
-  const sortedClients = [...(clients as Client[])].sort((a, b) => {
-    if (sortBy === 'name') {
-      return sortOrder === 'asc' 
-        ? a.name.localeCompare(b.name) 
-        : b.name.localeCompare(a.name);
-    }
-    return 0;
-  });
-
-  const filteredClients = applyFilters(sortedClients);
   
-  const paginatedClients = filteredClients.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+  const filteredClients = clients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.description && client.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  const getAssigneeName = (assigneeId?: string) => {
-    if (!assigneeId) return 'Unassigned';
-    const assignee = teamMembers.find(m => m.id === assigneeId);
-    return assignee ? assignee.name : 'Unknown';
+  
+  const activeClients = filteredClients.filter(client => client.isActive);
+  const inactiveClients = filteredClients.filter(client => !client.isActive);
+  
+  const handleClientClick = (clientId: string) => {
+    navigate(`/clients/${clientId}`);
   };
-
-  const totalPages = Math.ceil(filteredClients.length / rowsPerPage);
-
+  
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <Skeleton className="h-12 w-48 mb-6" />
+          <div className="grid gap-6">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6">
+      <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Clients</h1>
-          <div className="flex items-center gap-2">
-            <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter size={16} />
-                  Filter
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filter Clients</SheetTitle>
-                </SheetHeader>
-                <div className="py-4 space-y-6">
-                  <div className="space-y-2">
-                    <Label>Client Name</Label>
-                    <Input 
-                      placeholder="Search by name" 
-                      value={filters.clientName}
-                      onChange={(e) => handleFilterChange('clientName', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Priority</Label>
-                    <RadioGroup 
-                      value={filters.priority}
-                      onValueChange={(value) => handleFilterChange('priority', value)}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="None" id="priority-none" />
-                        <Label htmlFor="priority-none">None</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Low" id="priority-low" />
-                        <Label htmlFor="priority-low">Low</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Medium" id="priority-medium" />
-                        <Label htmlFor="priority-medium">Medium</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="High" id="priority-high" />
-                        <Label htmlFor="priority-high">High</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Assignee</Label>
-                    <Select 
-                      value={filters.assigneeId}
-                      onValueChange={(value) => handleFilterChange('assigneeId', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select assignee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Assignees</SelectItem>
-                        {teamMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="active-only" 
-                        checked={filters.isActive}
-                        onCheckedChange={(checked) => handleFilterChange('isActive', checked)}
-                      />
-                      <Label htmlFor="active-only">Active clients only</Label>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Primary Contact</Label>
-                    <Input 
-                      placeholder="Search by contact name" 
-                      value={filters.primaryContact}
-                      onChange={(e) => handleFilterChange('primaryContact', e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <SheetFooter className="flex justify-between pt-4 border-t">
-                  <Button variant="outline" onClick={resetFilters}>
-                    Reset Filters
-                  </Button>
-                  <Button onClick={() => setIsFilterOpen(false)}>
-                    Apply Filters
-                  </Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-            
-            <Button variant="outline" className="gap-2">
-              <Import size={16} />
-              Import Clients
-            </Button>
-            
-            <Button variant="link" className="gap-2">
-              <Download size={16} />
-              Download Template
-            </Button>
-            
-            <Sheet open={isNewClientOpen} onOpenChange={setIsNewClientOpen}>
-              <SheetTrigger asChild>
-                <Button className="gap-2">
-                  <Plus size={16} />
-                  Create New Client
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="sm:max-w-2xl overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>Create New Client</SheetTitle>
-                </SheetHeader>
-                <NewClientForm 
-                  teamMembers={teamMembers} 
-                  onSuccess={() => setIsNewClientOpen(false)}
-                  onCancel={() => setIsNewClientOpen(false)}
-                />
-              </SheetContent>
-            </Sheet>
-          </div>
+          <Button onClick={() => setShowClientForm(true)} className="bg-jetpack-blue hover:bg-blue-700">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Client
+          </Button>
         </div>
         
-        <div className="bg-white rounded-md shadow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead 
-                  className="cursor-pointer"
-                  onClick={() => handleSort('name')}
-                >
-                  <div className="flex items-center gap-2">
-                    Name
-                    {sortBy === 'name' && (
-                      sortOrder === 'asc' ? <ArrowUpAZ size={16} /> : <ArrowDownAZ size={16} />
-                    )}
-                  </div>
-                </TableHead>
-                <TableHead>Primary Contact</TableHead>
-                <TableHead>Assignee</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Services</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clientsLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10">
-                    Loading clients...
-                  </TableCell>
-                </TableRow>
-              ) : paginatedClients.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10">
-                    No clients found. Create your first client to get started.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.primaryContactName || '-'}</TableCell>
-                    <TableCell>{getAssigneeName(client.assigneeId)}</TableCell>
-                    <TableCell>
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                        client.priority === 'High' ? 'bg-red-100 text-red-800' :
-                        client.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
-                        client.priority === 'Low' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {client.priority}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {client.services.length > 0 
-                        ? client.services.slice(0, 2).join(', ') + (client.services.length > 2 ? '...' : '')
-                        : '-'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {client.isActive ? (
-                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                          Inactive
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          
-          <div className="flex items-center justify-between p-4 border-t">
-            <div className="text-sm text-gray-500">
-              Showing {filteredClients.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0}-
-              {Math.min(currentPage * rowsPerPage, filteredClients.length)} of {filteredClients.length} items
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Select 
-                value={rowsPerPage.toString()} 
-                onValueChange={(value) => {
-                  setRowsPerPage(Number(value));
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Rows per page" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5 rows per page</SelectItem>
-                  <SelectItem value="10">10 rows per page</SelectItem>
-                  <SelectItem value="20">20 rows per page</SelectItem>
-                  <SelectItem value="50">50 rows per page</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    />
-                  </PaginationItem>
-                  
-                  {[...Array(totalPages)].map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(i + 1)}
-                        isActive={currentPage === i + 1}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages || totalPages === 0}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+          <Input 
+            placeholder="Search clients..." 
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+        
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="grid grid-cols-2 w-56">
+            <TabsTrigger value="active">Active ({activeClients.length})</TabsTrigger>
+            <TabsTrigger value="inactive">Inactive ({inactiveClients.length})</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="active">
+            {activeClients.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Building className="mx-auto mb-3 text-gray-400" size={40} />
+                  <p className="text-gray-500">No active clients found</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setShowClientForm(true)}
+                  >
+                    Add Your First Client
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Primary Contact</TableHead>
+                    <TableHead>Services</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeClients.map((client) => (
+                    <TableRow 
+                      key={client.id} 
+                      className="cursor-pointer"
+                      onClick={() => handleClientClick(client.id)}
+                    >
+                      <TableCell className="font-medium hover:underline">
+                        {client.name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={`
+                            ${client.priority === 'High' ? 'bg-red-100 text-red-800' : 
+                              client.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
+                              client.priority === 'Low' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'}
+                          `}
+                        >
+                          {client.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{client.primaryContactName || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {client.services.slice(0, 2).map((service, index) => (
+                            <Badge key={index} variant="outline" className="bg-gray-50">
+                              {service}
+                            </Badge>
+                          ))}
+                          {client.services.length > 2 && (
+                            <Badge variant="outline" className="bg-gray-50">
+                              +{client.services.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-green-100 text-green-800">
+                          Active
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="inactive">
+            {inactiveClients.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <p className="text-gray-500">No inactive clients found</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Primary Contact</TableHead>
+                    <TableHead>Services</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inactiveClients.map((client) => (
+                    <TableRow 
+                      key={client.id} 
+                      className="cursor-pointer"
+                      onClick={() => handleClientClick(client.id)}
+                    >
+                      <TableCell className="font-medium hover:underline">
+                        {client.name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={`
+                            ${client.priority === 'High' ? 'bg-red-100 text-red-800' : 
+                              client.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
+                              client.priority === 'Low' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'}
+                          `}
+                        >
+                          {client.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{client.primaryContactName || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {client.services.slice(0, 2).map((service, index) => (
+                            <Badge key={index} variant="outline" className="bg-gray-50">
+                              {service}
+                            </Badge>
+                          ))}
+                          {client.services.length > 2 && (
+                            <Badge variant="outline" className="bg-gray-50">
+                              +{client.services.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-gray-100 text-gray-800">
+                          Inactive
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );
