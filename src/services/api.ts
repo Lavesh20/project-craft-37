@@ -1,3 +1,4 @@
+
 import { mockData } from './mockData';
 import { 
   Project, Task, Template, Client, TeamMember, Contact, 
@@ -534,4 +535,134 @@ export const fetchContact = async (id: string): Promise<Contact | undefined> => 
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.contacts.find(contact => contact.id === id);
+};
+
+// Function to update a contact
+export const updateContact = async (id: string, updates: Partial<Contact>): Promise<Contact> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const contactIndex = mockData.contacts.findIndex(contact => contact.id === id);
+  if (contactIndex === -1) {
+    throw new Error('Contact not found');
+  }
+  
+  mockData.contacts[contactIndex] = {
+    ...mockData.contacts[contactIndex],
+    ...updates,
+    lastEdited: new Date().toISOString(),
+  };
+  
+  return mockData.contacts[contactIndex];
+};
+
+// Function to create a project from a template
+export const createProjectFromTemplate = async (
+  templateId: string, 
+  projectData: Partial<CreateProjectFormData>
+): Promise<Project> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) {
+    throw new Error('Template not found');
+  }
+  
+  // Create project data from template
+  const newProjectData: CreateProjectFormData = {
+    name: projectData.name || template.name,
+    description: projectData.description || template.description || '',
+    clientId: projectData.clientId || '',
+    dueDate: projectData.dueDate || new Date().toISOString().split('T')[0],
+    status: 'Not Started',
+    assigneeId: projectData.assigneeId,
+    teamMemberIds: projectData.teamMemberIds || template.teamMemberIds || [],
+    repeating: projectData.repeating || false,
+    frequency: projectData.frequency,
+  };
+  
+  // Create the project
+  const newProject = await createProject({
+    ...newProjectData,
+    templateId
+  });
+  
+  // Create tasks from template tasks
+  if (template.tasks.length > 0) {
+    const projectDueDate = new Date(newProject.dueDate);
+    
+    // Create each task with dates relative to the project due date
+    for (const templateTask of template.tasks) {
+      const taskDueDate = new Date(projectDueDate);
+      
+      // Calculate due date based on relativeDueDate
+      const { value, unit, position } = templateTask.relativeDueDate;
+      if (position === 'before') {
+        if (unit === 'days') taskDueDate.setDate(taskDueDate.getDate() - value);
+        if (unit === 'weeks') taskDueDate.setDate(taskDueDate.getDate() - (value * 7));
+        if (unit === 'months') taskDueDate.setMonth(taskDueDate.getMonth() - value);
+      } else {
+        if (unit === 'days') taskDueDate.setDate(taskDueDate.getDate() + value);
+        if (unit === 'weeks') taskDueDate.setDate(taskDueDate.getDate() + (value * 7));
+        if (unit === 'months') taskDueDate.setMonth(taskDueDate.getMonth() + value);
+      }
+      
+      // Create task
+      await createTask(newProject.id, {
+        name: templateTask.name,
+        description: templateTask.description,
+        assigneeId: templateTask.assigneeId,
+        dueDate: taskDueDate.toISOString().split('T')[0],
+      });
+    }
+  }
+  
+  return newProject;
+};
+
+// Function to delete a project
+export const deleteProject = async (id: string): Promise<void> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const projectIndex = mockData.projects.findIndex(p => p.id === id);
+  if (projectIndex === -1) {
+    throw new Error('Project not found');
+  }
+  
+  // Remove all associated tasks
+  const projectTasks = mockData.tasks.filter(task => task.projectId === id);
+  for (const task of projectTasks) {
+    const taskIndex = mockData.tasks.findIndex(t => t.id === task.id);
+    if (taskIndex !== -1) {
+      mockData.tasks.splice(taskIndex, 1);
+    }
+  }
+  
+  // Remove all associated comments
+  const projectComments = mockData.comments.filter(comment => comment.projectId === id);
+  for (const comment of projectComments) {
+    const commentIndex = mockData.comments.findIndex(c => c.id === comment.id);
+    if (commentIndex !== -1) {
+      mockData.comments.splice(commentIndex, 1);
+    }
+  }
+  
+  // Remove the project
+  mockData.projects.splice(projectIndex, 1);
+};
+
+// Function to delete a contact
+export const deleteContact = async (id: string): Promise<void> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const contactIndex = mockData.contacts.findIndex(contact => contact.id === id);
+  if (contactIndex === -1) {
+    throw new Error('Contact not found');
+  }
+  
+  // Remove the contact
+  mockData.contacts.splice(contactIndex, 1);
 };

@@ -1,122 +1,88 @@
 
 import React, { useState } from 'react';
-import { updateProject } from '@/services/api';
+import { format, parseISO } from 'date-fns';
 import { Project } from '@/types';
-import { MoreHorizontal, Plus, Tags } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { updateProject } from '@/services/api';
+import { toast } from 'sonner';
 
 interface ProjectHeaderProps {
   project: Project;
   onEdit: () => void;
-  onProjectUpdate: (updatedProject: Project) => void;
+  onProjectUpdate: (project: Project) => void;
 }
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onEdit, onProjectUpdate }) => {
-  const [newLabel, setNewLabel] = useState('');
-  const [isAddingLabel, setIsAddingLabel] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleAddLabel = async () => {
-    if (!newLabel.trim()) return;
-
-    const updatedLabels = [...(project.labels || []), newLabel.trim()];
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === project.status) return;
     
     try {
-      const updatedProject = await updateProject(project.id, { labels: updatedLabels });
+      setIsUpdating(true);
+      const updatedProject = await updateProject(project.id, { 
+        status: newStatus,
+        lastEdited: new Date().toISOString(),
+        lastEditedBy: 'user-1' // Using placeholder user ID
+      });
+
       onProjectUpdate(updatedProject);
-      setNewLabel('');
-      setIsAddingLabel(false);
+      toast.success(`Project status updated to ${newStatus}`);
     } catch (error) {
-      console.error('Failed to add label:', error);
+      console.error('Failed to update project status:', error);
+      toast.error('Failed to update project status');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   return (
     <div className="mb-6">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{project.name}</h1>
-          {project.description && (
-            <p className="text-gray-500 mt-1">{project.description}</p>
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button onClick={onEdit} variant="outline" className="flex gap-2">
-            Edit Project
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-              <DropdownMenuItem>Archive</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      <div className="flex justify-between items-start mb-3">
+        <h1 className="text-2xl font-bold">{project.name}</h1>
+        <Button 
+          className="bg-jetpack-blue hover:bg-blue-700"
+          onClick={onEdit}
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit Project
+        </Button>
       </div>
-
-      <div className="flex flex-wrap gap-2 mt-4 items-center">
-        {project.labels?.map(label => (
-          <Badge key={label} variant="outline" className="bg-gray-100 px-3 py-1">
-            {label}
-          </Badge>
-        ))}
-        
-        <Dialog open={isAddingLabel} onOpenChange={setIsAddingLabel}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center text-gray-500 hover:text-gray-700"
-            >
-              <Tags size={16} className="mr-1" />
-              <span>Click here to create a label</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Label</DialogTitle>
-              <DialogDescription>
-                Create a new label to categorize your project.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Input
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                placeholder="Enter label name"
-                className="mb-4"
-              />
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button onClick={handleAddLabel}>Add Label</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      
+      <div className="mb-4 text-gray-600">
+        {project.description}
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <div className="text-sm mr-3">Project Status:</div>
+        <Button
+          variant={project.status === 'Not Started' ? "default" : "outline"}
+          size="sm"
+          className={project.status === 'Not Started' ? "bg-gray-500 hover:bg-gray-600" : ""}
+          onClick={() => handleStatusChange('Not Started')}
+          disabled={isUpdating}
+        >
+          Not Started
+        </Button>
+        <Button
+          variant={project.status === 'In Progress' ? "default" : "outline"}
+          size="sm"
+          className={project.status === 'In Progress' ? "bg-blue-500 hover:bg-blue-600" : ""}
+          onClick={() => handleStatusChange('In Progress')}
+          disabled={isUpdating}
+        >
+          In Progress
+        </Button>
+        <Button
+          variant={project.status === 'Complete' ? "default" : "outline"}
+          size="sm"
+          className={project.status === 'Complete' ? "bg-green-500 hover:bg-green-600" : ""}
+          onClick={() => handleStatusChange('Complete')}
+          disabled={isUpdating}
+        >
+          Complete
+        </Button>
       </div>
     </div>
   );

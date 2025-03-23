@@ -1,143 +1,318 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchClientContacts, createContact, associateContactWithClient, removeContactFromClient } from '@/services/api';
+import { 
+  fetchClientContacts, 
+  associateContactWithClient, 
+  removeContactFromClient, 
+  fetchContacts 
+} from '@/services/api';
 import { Contact } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+import { PlusCircle, User, Phone, Mail, ExternalLink, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Phone, UserPlus, X } from 'lucide-react';
-import NewContactForm from '@/components/contacts/NewContactForm';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  DialogFooter, DialogDescription
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 interface ClientContactsProps {
   clientId: string;
 }
 
 const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
-  const { toast } = useToast();
+  const [isAddContactDialogOpen, setIsAddContactDialogOpen] = useState(false);
+  const [isRemoveContactDialogOpen, setIsRemoveContactDialogOpen] = useState(false);
+  const [contactToRemove, setContactToRemove] = useState<Contact | null>(null);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const queryClient = useQueryClient();
-  const [isAddingContact, setIsAddingContact] = useState(false);
 
   // Fetch contacts for this client
-  const { data: clientContacts = [], isLoading } = useQuery({
+  const { 
+    data: clientContacts, 
+    isLoading: clientContactsLoading,
+  } = useQuery({
     queryKey: ['client-contacts', clientId],
     queryFn: () => fetchClientContacts(clientId),
   });
 
-  // Mutation to remove a contact from a client
+  // Fetch all contacts for the add dialog
+  const { 
+    data: allContacts, 
+    isLoading: allContactsLoading,
+  } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: fetchContacts,
+    enabled: isAddContactDialogOpen,
+  });
+
+  // Mutation to associate a contact with this client
+  const associateContactMutation = useMutation({
+    mutationFn: associateContactWithClient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-contacts', clientId] });
+      toast.success('Contact added successfully');
+      setIsAddContactDialogOpen(false);
+      setSelectedContacts([]);
+    },
+    onError: (error) => {
+      console.error('Error adding contact:', error);
+      toast.error('Failed to add contact');
+    },
+  });
+
+  // Mutation to remove a contact from this client
   const removeContactMutation = useMutation({
     mutationFn: removeContactFromClient,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-contacts', clientId] });
-      toast({
-        title: 'Success',
-        description: 'Contact removed from client',
-      });
+      toast.success('Contact removed successfully');
+      setIsRemoveContactDialogOpen(false);
+      setContactToRemove(null);
     },
     onError: (error) => {
-      toast({
-        title: 'Error',
-        description: `Failed to remove contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: 'destructive',
-      });
+      console.error('Error removing contact:', error);
+      toast.error('Failed to remove contact');
     },
   });
 
-  // Handle creating a new contact for this client
-  const handleCreateContact = async (contactData: any) => {
-    // Close the dialog
-    setIsAddingContact(false);
-    
-    // Invalidate queries to refresh the data
-    queryClient.invalidateQueries({ queryKey: ['client-contacts', clientId] });
-    
-    // Show success message
-    toast({
-      title: 'Success',
-      description: 'Contact added to client',
+  // Handler for adding selected contacts to client
+  const handleAddContacts = () => {
+    if (selectedContacts.length === 0) {
+      toast.error('Please select at least one contact');
+      return;
+    }
+
+    // Associate each selected contact with this client
+    selectedContacts.forEach(contactId => {
+      associateContactMutation.mutate({ contactId, clientId });
     });
   };
 
-  // Handle removing a contact from the client
-  const handleRemoveContact = (contactId: string) => {
-    removeContactMutation.mutate({ clientId, contactId });
+  // Handler for removing a contact from client
+  const handleRemoveContact = () => {
+    if (!contactToRemove) return;
+    
+    removeContactMutation.mutate({ 
+      contactId: contactToRemove.id, 
+      clientId 
+    });
   };
+
+  // Get available contacts (not already associated with this client)
+  const getAvailableContacts = () => {
+    if (!allContacts || !clientContacts) return [];
+    
+    return allContacts.filter(
+      contact => !clientContacts.some(
+        clientContact => clientContact.id === contact.id
+      )
+    );
+  };
+
+  // Toggle contact selection
+  const toggleContactSelection = (contactId: string) => {
+    if (selectedContacts.includes(contactId)) {
+      setSelectedContacts(selectedContacts.filter(id => id !== contactId));
+    } else {
+      setSelectedContacts([...selectedContacts, contactId]);
+    }
+  };
+
+  // Handler for opening remove contact dialog
+  const openRemoveDialog = (contact: Contact) => {
+    setContactToRemove(contact);
+    setIsRemoveContactDialogOpen(true);
+  };
+
+  if (clientContactsLoading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium">Contacts</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between py-4">
-        <CardTitle className="text-lg">Contacts</CardTitle>
-        <Dialog open={isAddingContact} onOpenChange={setIsAddingContact}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-medium">Contacts</CardTitle>
+        <Dialog open={isAddContactDialogOpen} onOpenChange={setIsAddContactDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800 hover:bg-blue-50">
-              <UserPlus className="mr-1 h-4 w-4" />
-              Add contact
+            <Button variant="outline" size="sm" className="h-8">
+              <PlusCircle className="h-3.5 w-3.5 mr-1" />
+              Add Contact
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Add New Contact</DialogTitle>
+              <DialogTitle>Add Contact to Client</DialogTitle>
+              <DialogDescription>
+                Select contacts to associate with this client
+              </DialogDescription>
             </DialogHeader>
-            <NewContactForm 
-              onCancel={() => setIsAddingContact(false)} 
-              afterSubmit={handleCreateContact} 
-            />
+            <div className="max-h-[300px] overflow-y-auto border rounded-md">
+              {allContactsLoading ? (
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {getAvailableContacts().length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      No additional contacts available
+                    </div>
+                  ) : (
+                    getAvailableContacts().map(contact => (
+                      <div 
+                        key={contact.id} 
+                        className="flex items-center p-3 hover:bg-gray-50"
+                      >
+                        <Checkbox
+                          id={`contact-${contact.id}`}
+                          checked={selectedContacts.includes(contact.id)}
+                          onCheckedChange={() => toggleContactSelection(contact.id)}
+                          className="mr-3"
+                        />
+                        <div className="ml-2 flex-1">
+                          <label
+                            htmlFor={`contact-${contact.id}`}
+                            className="font-medium cursor-pointer"
+                          >
+                            {contact.name}
+                          </label>
+                          <div className="text-sm text-gray-500">{contact.email}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsAddContactDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddContacts}
+                disabled={selectedContacts.length === 0 || associateContactMutation.isPending}
+              >
+                {associateContactMutation.isPending ? 'Adding...' : 'Add Selected Contacts'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="space-y-2">
-            <div className="h-12 bg-gray-100 animate-pulse rounded-md"></div>
-            <div className="h-12 bg-gray-100 animate-pulse rounded-md"></div>
-          </div>
-        ) : clientContacts.length === 0 ? (
-          <div className="text-center py-4 text-gray-500">
-            <User className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-            <p>No contacts associated with this client.</p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="mt-2 text-blue-600"
-              onClick={() => setIsAddingContact(true)}
-            >
-              Add your first contact
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {clientContacts.map((contact) => (
-              <div key={contact.id} className="flex items-center justify-between p-3 border rounded-md">
-                <div className="flex items-center gap-3">
-                  <div className="bg-gray-100 rounded-full p-2">
-                    <User className="h-4 w-4 text-gray-600" />
+        {clientContacts && clientContacts.length > 0 ? (
+          <div className="divide-y">
+            {clientContacts.map(contact => (
+              <div key={contact.id} className="py-3 flex justify-between items-center">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-gray-100 p-2 rounded-full">
+                    <User className="h-4 w-4 text-gray-500" />
                   </div>
                   <div>
-                    <div className="font-medium">{contact.name}</div>
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <Mail className="h-3 w-3 mr-1" /> {contact.email}
-                    </div>
-                    {contact.phone && (
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <Phone className="h-3 w-3 mr-1" /> {contact.phone}
+                    <Link 
+                      to={`/contacts/${contact.id}`}
+                      className="font-medium hover:text-blue-600"
+                    >
+                      {contact.name}
+                      {contact.isPrimaryContact && (
+                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                          Primary
+                        </span>
+                      )}
+                    </Link>
+                    <div className="text-sm flex items-center space-x-4 mt-1">
+                      <div className="flex items-center text-gray-500">
+                        <Mail className="h-3 w-3 mr-1" />
+                        {contact.email}
                       </div>
-                    )}
+                      {contact.phone && (
+                        <div className="flex items-center text-gray-500">
+                          <Phone className="h-3 w-3 mr-1" />
+                          {contact.phone}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleRemoveContact(contact.id)}
-                  className="text-gray-500 hover:text-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="flex space-x-2">
+                  <Link
+                    to={`/contacts/${contact.id}`}
+                    className="p-1 text-gray-500 hover:text-gray-700"
+                    title="View contact details"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={() => openRemoveDialog(contact)}
+                    className="p-1 text-gray-500 hover:text-red-600"
+                    title="Remove contact from client"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+        ) : (
+          <div className="text-center py-6 text-gray-500">
+            No contacts associated with this client
+          </div>
         )}
       </CardContent>
+
+      {/* Dialog for confirming contact removal */}
+      <Dialog 
+        open={isRemoveContactDialogOpen} 
+        onOpenChange={setIsRemoveContactDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Contact from Client</DialogTitle>
+          </DialogHeader>
+          <div className="py-3">
+            <p>
+              Are you sure you want to remove <span className="font-semibold">{contactToRemove?.name}</span> from this client?
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              This will not delete the contact, just remove the association with this client.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRemoveContactDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleRemoveContact}
+              disabled={removeContactMutation.isPending}
+            >
+              {removeContactMutation.isPending ? 'Removing...' : 'Remove Contact'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

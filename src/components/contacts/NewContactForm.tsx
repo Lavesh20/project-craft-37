@@ -1,248 +1,236 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { createContact } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
+import { createContact, fetchClients } from '@/services/api';
 import { CreateContactFormData } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from 'sonner';
 
-// Define the form validation schema
-const formSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  email: z.string().email({ message: 'Invalid email address' }),
+// Define form schema
+const contactSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email format'),
   phone: z.string().optional(),
   street: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   postalCode: z.string().optional(),
   clientId: z.string().optional(),
-  isPrimaryContact: z.boolean().optional(),
+  isPrimaryContact: z.boolean().optional()
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type ContactFormData = z.infer<typeof contactSchema>;
 
 interface NewContactFormProps {
   onCancel: () => void;
-  afterSubmit?: (contact: CreateContactFormData) => void;
+  afterSubmit: () => void;
+  preselectedClientId?: string;
 }
 
-const NewContactForm: React.FC<NewContactFormProps> = ({ onCancel, afterSubmit }) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const NewContactForm: React.FC<NewContactFormProps> = ({ 
+  onCancel, 
+  afterSubmit,
+  preselectedClientId
+}) => {
+  const [isCreatingPrimaryContact, setIsCreatingPrimaryContact] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize form
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  // Set up form with react-hook-form and zod validation
+  const { 
+    register, 
+    handleSubmit, 
+    watch,
+    setValue,
+    formState: { errors, isSubmitting } 
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      isPrimaryContact: false,
-    },
+      clientId: preselectedClientId || '',
+      isPrimaryContact: false
+    }
   });
+
+  // Fetch clients for dropdown
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: fetchClients
+  });
+
+  // Watch for client selection to enable/disable primary contact option
+  const selectedClientId = watch('clientId');
 
   // Create contact mutation
   const createContactMutation = useMutation({
-    mutationFn: createContact,
+    mutationFn: (data: CreateContactFormData) => createContact(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      toast({
-        title: 'Success',
-        description: 'Contact created successfully',
-      });
-      if (afterSubmit) {
-        afterSubmit(form.getValues() as CreateContactFormData);
-      } else {
-        navigate('/contacts');
+      // Also invalidate client-contacts if a client was selected
+      if (selectedClientId) {
+        queryClient.invalidateQueries({ queryKey: ['client-contacts', selectedClientId] });
+        queryClient.invalidateQueries({ queryKey: ['client', selectedClientId] });
       }
+      toast.success('Contact created successfully');
+      afterSubmit();
     },
     onError: (error) => {
-      toast({
-        title: 'Error',
-        description: `Failed to create contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: 'destructive',
-      });
-    },
+      console.error('Error creating contact:', error);
+      toast.error('Failed to create contact');
+    }
   });
 
   // Form submission handler
-  const onSubmit = async (data: FormValues) => {
-    createContactMutation.mutate(data as CreateContactFormData);
-  };
-
-  const handleCreateAndAddAnother = () => {
-    const isValid = form.trigger();
-    if (isValid) {
-      const data = form.getValues();
-      createContactMutation.mutate(data as CreateContactFormData, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['contacts'] });
-          toast({
-            title: 'Success',
-            description: 'Contact created successfully',
-          });
-          form.reset();
-        },
-      });
+  const onSubmit = async (data: ContactFormData) => {
+    try {
+      await createContactMutation.mutateAsync(data);
+    } catch (error) {
+      // Error will be handled by mutation callbacks
     }
   };
 
+  // Handle primary contact checkbox change
+  const handlePrimaryContactChange = (checked: boolean) => {
+    setValue('isPrimaryContact', checked);
+    setIsCreatingPrimaryContact(checked);
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base after:content-['*'] after:text-red-500 after:ml-0.5">Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+          <Input
+            id="name"
+            placeholder="John Doe"
+            {...register('name')}
+            className={errors.name ? 'border-red-300' : ''}
           />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="name@email.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="john.doe@example.com"
+            {...register('email')}
+            className={errors.email ? 'border-red-300' : ''}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            placeholder="(555) 123-4567"
+            {...register('phone')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="client">Associated Client</Label>
+          <Select
+            value={selectedClientId}
+            onValueChange={(value) => setValue('clientId', value)}
+            disabled={clientsLoading || preselectedClientId !== undefined}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a client (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No client</SelectItem>
+              {clients.map(client => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedClientId && (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="isPrimaryContact"
+              checked={watch('isPrimaryContact')}
+              onCheckedChange={handlePrimaryContactChange}
             />
-            
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="(999) 999 - 9999" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <Label htmlFor="isPrimaryContact" className="cursor-pointer">
+              Set as primary contact for this client
+            </Label>
+            {isCreatingPrimaryContact && (
+              <p className="text-amber-600 text-sm">
+                Note: This will replace the current primary contact, if one exists.
+              </p>
+            )}
+          </div>
+        )}
+
+        <div>
+          <Label htmlFor="street">Street Address</Label>
+          <Input
+            id="street"
+            placeholder="123 Main St"
+            {...register('street')}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              placeholder="New York"
+              {...register('city')}
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="street"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Street</FormLabel>
-                  <FormControl>
-                    <Input placeholder="123 River road" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Olympia" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div>
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              placeholder="NY"
+              {...register('state')}
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">State</FormLabel>
-                  <FormControl>
-                    <Input placeholder="WA" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="postalCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Postal Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="99999" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div>
+            <Label htmlFor="postalCode">Postal Code</Label>
+            <Input
+              id="postalCode"
+              placeholder="10001"
+              {...register('postalCode')}
             />
           </div>
         </div>
+      </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={handleCreateAndAddAnother}
-            className="flex-1 order-2 sm:order-1"
-          >
-            Create and add another
-          </Button>
-          <Button 
-            type="submit" 
-            className="bg-jetpack-blue hover:bg-blue-700 flex-1 order-1 sm:order-2"
-          >
-            Create Contact
-          </Button>
-        </div>
-        
-        <div className="flex justify-center">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            onClick={onCancel}
-            className="w-full"
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end space-x-4 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting} className="bg-jetpack-blue hover:bg-blue-700">
+          {isSubmitting ? 'Creating...' : 'Create Contact'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
