@@ -1,436 +1,226 @@
-import { v4 as uuidv4 } from 'uuid';
-import { 
-  Project, 
-  Task, 
-  Template, 
-  Client, 
-  TeamMember,
-  CreateProjectFormData,
-  CreateTaskFormData,
-  CreateTemplateFormData,
-  CreateTemplateTaskFormData,
-  CreateClientFormData,
-  Comment,
-  TemplateTask,
-  FilterOptions,
-  Contact,
-  CreateContactFormData
-} from '@/types';
 import { mockData } from './mockData';
+import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData } from '@/types';
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-export const fetchProjects = async (filter?: FilterOptions): Promise<Project[]> => {
-  await delay(500);
-  // In a real implementation, we would filter the projects based on the filter options
-  // For now, just return all projects
+// Function to fetch all projects
+export const fetchProjects = async (): Promise<Project[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.projects;
 };
 
-export const fetchProject = async (projectId: string): Promise<Project | undefined> => {
-  await delay(500);
-  return mockData.projects.find(project => project.id === projectId);
+// Function to fetch a single project by ID
+export const fetchProject = async (id: string): Promise<Project | undefined> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.projects.find(project => project.id === id);
 };
 
-// Alias for fetchProject to maintain compatibility
-export const getProject = fetchProject;
+// Function to create a new project
+export const createProject = async (projectData: CreateProjectFormData): Promise<Project> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-export const createProject = async (data: CreateProjectFormData): Promise<Project> => {
-  await delay(800);
   const newProject: Project = {
-    id: uuidv4(),
-    ...data,
+    id: `project-${Date.now()}`, // Generate a unique ID
+    ...projectData,
+    teamMemberIds: [],
     status: 'Not Started',
     lastEdited: new Date().toISOString(),
-    teamMemberIds: data.teamMemberIds || [],
+    repeating: false,
+    labels: [],
   };
-  
-  // If creating from a template, add template tasks
-  if (data.templateId) {
-    const template = mockData.templates.find(t => t.id === data.templateId);
-    
-    if (template) {
-      // If this client isn't already associated with the template, add it
-      if (!template.clientIds.includes(data.clientId)) {
-        template.clientIds.push(data.clientId);
-      }
-      
-      // Create tasks based on template tasks
-      const templateTasks = template.tasks || [];
-      const newTasks: Task[] = [];
-      
-      for (const templateTask of templateTasks) {
-        // Calculate due date based on relativeDueDate
-        const projectDueDate = new Date(data.dueDate);
-        const daysToAdd = templateTask.relativeDueDate.position === 'before' 
-          ? -templateTask.relativeDueDate.value 
-          : templateTask.relativeDueDate.value;
-          
-        const taskDueDate = new Date(projectDueDate);
-        taskDueDate.setDate(taskDueDate.getDate() + daysToAdd);
-        
-        // Create new task
-        const newTask: Task = {
-          id: uuidv4(),
-          projectId: newProject.id,
-          name: templateTask.name,
-          description: templateTask.description,
-          assigneeId: templateTask.assigneeId,
-          status: 'Not Started',
-          position: templateTask.position,
-          dueDate: taskDueDate.toISOString().split('T')[0],
-          lastEdited: new Date().toISOString(),
-        };
-        
-        newTasks.push(newTask);
-        mockData.tasks.push(newTask);
-      }
-      
-      // Attach tasks to the project
-      newProject.tasks = newTasks;
-    }
-  }
-  
+
   mockData.projects.push(newProject);
   return newProject;
 };
 
-export const updateProject = async (id: string, data: Partial<Project>): Promise<Project> => {
-  await delay(800);
-  const projectIndex = mockData.projects.findIndex(project => project.id === id);
-  if (projectIndex === -1) throw new Error('Project not found');
+// Function to update a project
+export const updateProject = async (updatedProject: Project): Promise<Project> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-  mockData.projects[projectIndex] = {
-    ...mockData.projects[projectIndex],
-    ...data,
-    lastEdited: new Date().toISOString(),
-  };
-  return mockData.projects[projectIndex];
+  const index = mockData.projects.findIndex(project => project.id === updatedProject.id);
+  if (index !== -1) {
+    mockData.projects[index] = { ...updatedProject, lastEdited: new Date().toISOString() };
+    return mockData.projects[index];
+  } else {
+    throw new Error('Project not found');
+  }
 };
 
-export const deleteTask = async (id: string): Promise<void> => {
-  await delay(500);
-  const taskIndex = mockData.tasks.findIndex(task => task.id === id);
-  if (taskIndex === -1) throw new Error('Task not found');
-
-  mockData.tasks.splice(taskIndex, 1);
+// Function to fetch all tasks for a project
+export const fetchTasks = async (projectId: string): Promise<Task[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.tasks.filter(task => task.projectId === projectId);
 };
 
-export const fetchTasks = async (): Promise<Task[]> => {
-  await delay(500);
-  return mockData.tasks;
-};
-
-export const createTask = async (projectId: string, data: CreateTaskFormData): Promise<Task> => {
-  await delay(800);
-  const newTask: Task = {
-    id: uuidv4(),
-    projectId: projectId,
-    name: data.name,
-    description: data.description,
-    assigneeId: data.assigneeId,
-    status: 'Not Started',
-    position: mockData.tasks.filter(task => task.projectId === projectId).length + 1,
-    dueDate: data.dueDate,
-    lastEdited: new Date().toISOString(),
-  };
-  mockData.tasks.push(newTask);
-  return newTask;
-};
-
-export const updateTask = async (projectId: string, taskId: string, data: Partial<Task>): Promise<Task> => {
-  await delay(800);
-  const taskIndex = mockData.tasks.findIndex(task => task.id === taskId);
-  if (taskIndex === -1) throw new Error('Task not found');
-
-  mockData.tasks[taskIndex] = {
-    ...mockData.tasks[taskIndex],
-    ...data,
-    lastEdited: new Date().toISOString(),
-  };
-  return mockData.tasks[taskIndex];
-};
-
-// Added for task list reordering
-export const reorderTasks = async (projectId: string, taskIds: string[]): Promise<Task[]> => {
-  await delay(500);
-  const tasks = mockData.tasks.filter(task => task.projectId === projectId);
-  
-  taskIds.forEach((taskId, index) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      task.position = index + 1;
-    }
-  });
-  
-  return tasks.sort((a, b) => a.position - b.position);
-};
-
+// Function to fetch all templates
 export const fetchTemplates = async (): Promise<Template[]> => {
-  await delay(500);
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.templates;
 };
 
-export const fetchTemplate = async (templateId: string): Promise<Template | undefined> => {
-  await delay(500);
-  return mockData.templates.find(template => template.id === templateId);
+// Function to fetch a single template by ID
+export const fetchTemplate = async (id: string): Promise<Template | undefined> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.templates.find(template => template.id === id);
 };
 
-// Alias for fetchTemplate to maintain compatibility
-export const getTemplate = fetchTemplate;
+// Function to create a new template
+export const createTemplate = async (templateData: CreateTemplateFormData): Promise<Template> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-export const createTemplate = async (data: CreateTemplateFormData): Promise<Template> => {
-  await delay(800);
   const newTemplate: Template = {
-    id: uuidv4(),
-    name: data.name,
-    description: data.description,
-    teamMemberIds: data.teamMemberIds || [],
+    id: `template-${Date.now()}`, // Generate a unique ID
+    name: templateData.name,
+    description: templateData.description,
+    teamMemberIds: [],
+    clientIds: [],
     tasks: [],
     lastEdited: new Date().toISOString(),
-    clientIds: [],
   };
+
   mockData.templates.push(newTemplate);
   return newTemplate;
 };
 
-export const updateTemplate = async (id: string, data: Partial<Template>): Promise<Template> => {
-  await delay(800);
-  const templateIndex = mockData.templates.findIndex(template => template.id === id);
-  if (templateIndex === -1) throw new Error('Template not found');
-
-  mockData.templates[templateIndex] = {
-    ...mockData.templates[templateIndex],
-    ...data,
-    lastEdited: new Date().toISOString(),
-  };
-  return mockData.templates[templateIndex];
-};
-
-// Template task functions
-export const createTemplateTask = async (templateId: string, taskData: Omit<TemplateTask, 'id' | 'templateId' | 'position'>): Promise<TemplateTask> => {
-  await delay(800);
-  const template = mockData.templates.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
-  
-  const newTask: TemplateTask = {
-    id: uuidv4(),
-    templateId,
-    position: template.tasks.length + 1,
-    name: taskData.name,
-    description: taskData.description,
-    assigneeId: taskData.assigneeId,
-    relativeDueDate: taskData.relativeDueDate,
-    timeEstimate: taskData.timeEstimate
-  };
-  
-  template.tasks.push(newTask);
-  return newTask;
-};
-
-export const updateTemplateTask = async (templateId: string, taskId: string, data: Partial<TemplateTask>): Promise<TemplateTask> => {
-  await delay(800);
-  const template = mockData.templates.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
-  
-  const taskIndex = template.tasks.findIndex(task => task.id === taskId);
-  if (taskIndex === -1) throw new Error('Task not found');
-  
-  template.tasks[taskIndex] = {
-    ...template.tasks[taskIndex],
-    ...data,
-  };
-  
-  return template.tasks[taskIndex];
-};
-
-export const deleteTemplateTask = async (templateId: string, taskId: string): Promise<void> => {
-  await delay(500);
-  const template = mockData.templates.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
-  
-  const taskIndex = template.tasks.findIndex(task => task.id === taskId);
-  if (taskIndex === -1) throw new Error('Task not found');
-  
-  template.tasks.splice(taskIndex, 1);
-  
-  // Update positions for remaining tasks
-  template.tasks.forEach((task, index) => {
-    task.position = index + 1;
-  });
-};
-
-export const reorderTemplateTasks = async (templateId: string, taskIds: string[]): Promise<TemplateTask[]> => {
-  await delay(500);
-  const template = mockData.templates.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
-  
-  taskIds.forEach((taskId, index) => {
-    const taskIndex = template.tasks.findIndex(t => t.id === taskId);
-    if (taskIndex !== -1) {
-      template.tasks[taskIndex].position = index + 1;
-    }
-  });
-  
-  return [...template.tasks].sort((a, b) => a.position - b.position);
-};
-
+// Function to fetch all clients
 export const fetchClients = async (): Promise<Client[]> => {
-  await delay(500);
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.clients;
 };
 
-export const fetchClient = async (clientId: string): Promise<Client> => {
-  await delay(500);
-  const client = mockData.clients.find(c => c.id === clientId);
-  if (!client) throw new Error('Client not found');
-  return client;
+// Function to fetch a single client by ID
+export const fetchClient = async (id: string): Promise<Client | undefined> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.clients.find(client => client.id === id);
 };
 
-export const createClient = async (data: CreateClientFormData): Promise<Client> => {
-  await delay(800);
-  const newClient: Client = {
-    id: uuidv4(),
-    ...data,
-    isActive: data.isActive ?? true,
-    services: data.services || [],
-  };
-  
-  mockData.clients.push(newClient);
-  return newClient;
-};
-
-export const updateClient = async (id: string, data: Partial<Client>): Promise<Client> => {
-  await delay(800);
-  const index = mockData.clients.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Client not found');
-  
-  mockData.clients[index] = {
-    ...mockData.clients[index],
-    ...data,
-  };
-  
-  return mockData.clients[index];
-};
-
-export const deleteClient = async (id: string): Promise<void> => {
-  await delay(500);
-  const index = mockData.clients.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Client not found');
-  
-  mockData.clients.splice(index, 1);
-};
-
+// Function to fetch all team members
 export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
-  await delay(500);
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.teamMembers;
 };
 
-// Add function to link templates to clients
-export const addClientToTemplate = async (templateId: string, clientId: string): Promise<Template> => {
-  await delay(500);
-  const template = mockData.templates.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
-  
-  if (!template.clientIds.includes(clientId)) {
-    template.clientIds.push(clientId);
-  }
-  
-  return template;
-};
-
-// Get all projects associated with a client
+// Function to get client projects
 export const getClientProjects = async (clientId: string): Promise<Project[]> => {
-  await delay(500);
-  return mockData.projects.filter(project => project.clientId === clientId);
+   // Simulate API delay
+   await new Promise(resolve => setTimeout(resolve, 500));
+   return mockData.projects.filter(project => project.clientId === clientId);
 };
 
-// Get all templates associated with a client
+// Function to get client templates
 export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
-  await delay(500);
-  return mockData.templates.filter(template => template.clientIds.includes(clientId));
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.templates.filter(template => template.clientIds?.includes(clientId));
 };
 
-// Add mock comments functionality
-export const fetchComments = async (projectId: string): Promise<Comment[]> => {
-  await delay(500);
-  // Mock data for comments
-  const mockComments: Comment[] = [
-    {
-      id: '1',
-      projectId,
-      authorId: 'user-1',
-      content: 'Initial client call completed. They need this by end of month.',
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: '2',
-      projectId,
-      authorId: 'user-2',
-      content: 'I\'ve started working on the first few tasks. Will update progress tomorrow.',
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
-  
-  return mockComments.filter(comment => comment.projectId === projectId);
-};
+// Function to create a new contact
+export const createContact = async (contactData: CreateContactFormData): Promise<Contact> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-export const createComment = async (projectId: string, content: string): Promise<Comment> => {
-  await delay(800);
-  
-  // Mock creating a new comment
-  const newComment: Comment = {
-    id: uuidv4(),
-    projectId,
-    authorId: 'user-1', // Hardcoded current user for now
-    content,
-    createdAt: new Date().toISOString()
-  };
-  
-  return newComment;
-};
-
-// Contacts API functions
-export const fetchContacts = async (): Promise<Contact[]> => {
-  await delay(500);
-  return mockData.contacts || [];
-};
-
-export const fetchContact = async (contactId: string): Promise<Contact | undefined> => {
-  await delay(500);
-  return mockData.contacts.find(contact => contact.id === contactId);
-};
-
-export const createContact = async (data: CreateContactFormData): Promise<Contact> => {
-  await delay(800);
   const newContact: Contact = {
-    id: uuidv4(),
-    ...data,
+    id: `contact-${Date.now()}`, // Generate a unique ID
+    ...contactData,
     lastEdited: new Date().toISOString(),
   };
-  
+
   mockData.contacts.push(newContact);
   return newContact;
 };
 
-export const updateContact = async (id: string, data: Partial<Contact>): Promise<Contact> => {
-  await delay(800);
-  const index = mockData.contacts.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Contact not found');
+// Function to fetch all contacts
+export const fetchContacts = async (): Promise<Contact[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.contacts;
+};
+
+// New function to fetch client contacts
+export const fetchClientContacts = async (clientId: string): Promise<Contact[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  mockData.contacts[index] = {
-    ...mockData.contacts[index],
-    ...data,
+  return mockData.contacts.filter(contact => contact.clientId === clientId);
+};
+
+// New function to associate a contact with a client
+export const associateContactWithClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<Contact> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const contactIndex = mockData.contacts.findIndex(contact => contact.id === contactId);
+  if (contactIndex === -1) {
+    throw new Error('Contact not found');
+  }
+  
+  // Update the contact with the client ID
+  mockData.contacts[contactIndex] = {
+    ...mockData.contacts[contactIndex],
+    clientId,
+  };
+  
+  return mockData.contacts[contactIndex];
+};
+
+// New function to remove a contact from a client
+export const removeContactFromClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<void> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const contactIndex = mockData.contacts.findIndex(contact => contact.id === contactId);
+  if (contactIndex === -1) {
+    throw new Error('Contact not found');
+  }
+  
+  // Make sure the contact belongs to this client
+  if (mockData.contacts[contactIndex].clientId !== clientId) {
+    throw new Error('Contact does not belong to this client');
+  }
+  
+  // Remove the client association
+  mockData.contacts[contactIndex] = {
+    ...mockData.contacts[contactIndex],
+    clientId: undefined,
+    isPrimaryContact: false,
+  };
+};
+
+// New function to update a client
+export const updateClient = async (client: Client): Promise<Client> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const clientIndex = mockData.clients.findIndex(c => c.id === client.id);
+  if (clientIndex === -1) {
+    throw new Error('Client not found');
+  }
+  
+  // Update the client
+  mockData.clients[clientIndex] = {
+    ...mockData.clients[clientIndex],
+    ...client,
     lastEdited: new Date().toISOString(),
   };
   
-  return mockData.contacts[index];
+  return mockData.clients[clientIndex];
 };
 
-export const deleteContact = async (id: string): Promise<void> => {
-  await delay(500);
-  const index = mockData.contacts.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Contact not found');
+// Mock function to get client series (empty for now)
+export const getClientSeries = async (clientId: string): Promise<any[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  mockData.contacts.splice(index, 1);
+  // This is a mock function that would typically fetch series for a client
+  // For now, we'll return an empty array since the series feature is not fully implemented
+  return [];
 };
