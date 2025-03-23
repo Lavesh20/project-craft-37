@@ -113,3 +113,26 @@ export interface Series {
   templateId?: string;
   templateName?: string;
 }
+
+// Add CreateTaskFormData interface
+export interface CreateTaskFormData {
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  dueDate: string;
+}
+
+// Add CreateProjectFormData interface
+export interface CreateProjectFormData {
+  name: string;
+  description?: string;
+  clientId?: string;
+  dueDate: string;
+  status: string;
+}
+
+// Add CreateTemplateFormData interface
+export interface CreateTemplateFormData {
+  name: string;
+  description?: string;
+}

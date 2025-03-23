@@ -1,5 +1,5 @@
 import { mockData } from './mockData';
-import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData } from '@/types';
+import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData, CreateTaskFormData } from '@/types';
 
 // Function to fetch all projects
 export const fetchProjects = async (): Promise<Project[]> => {
@@ -53,6 +53,97 @@ export const fetchTasks = async (projectId: string): Promise<Task[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.tasks.filter(task => task.projectId === projectId);
+};
+
+// Function to create a new task
+export const createTask = async (projectId: string, taskData: CreateTaskFormData): Promise<Task> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Find the project to get the last position
+  const projectTasks = mockData.tasks.filter(task => task.projectId === projectId);
+  const position = projectTasks.length > 0 
+    ? Math.max(...projectTasks.map(task => task.position)) + 1 
+    : 0;
+
+  const newTask: Task = {
+    id: `task-${Date.now()}`, // Generate a unique ID
+    projectId,
+    name: taskData.name,
+    description: taskData.description || '',
+    assigneeId: taskData.assigneeId,
+    status: 'Not Started',
+    dueDate: taskData.dueDate,
+    position,
+    lastEdited: new Date().toISOString(),
+  };
+
+  mockData.tasks.push(newTask);
+  
+  // Update the project's tasks array if it exists
+  const projectIndex = mockData.projects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1) {
+    if (!mockData.projects[projectIndex].tasks) {
+      mockData.projects[projectIndex].tasks = [];
+    }
+    mockData.projects[projectIndex].tasks?.push(newTask);
+    mockData.projects[projectIndex].lastEdited = new Date().toISOString();
+  }
+  
+  return newTask;
+};
+
+// Function to update a task
+export const updateTask = async (projectId: string, taskId: string, updates: Partial<Task>): Promise<Task> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const taskIndex = mockData.tasks.findIndex(task => task.id === taskId && task.projectId === projectId);
+  if (taskIndex === -1) {
+    throw new Error('Task not found');
+  }
+
+  // Update the task
+  mockData.tasks[taskIndex] = {
+    ...mockData.tasks[taskIndex],
+    ...updates,
+    lastEdited: new Date().toISOString(),
+  };
+
+  // Update the task in the project's tasks array if it exists
+  const projectIndex = mockData.projects.findIndex(p => p.id === projectId);
+  if (projectIndex !== -1 && mockData.projects[projectIndex].tasks) {
+    const projectTaskIndex = mockData.projects[projectIndex].tasks!.findIndex(t => t.id === taskId);
+    if (projectTaskIndex !== -1) {
+      mockData.projects[projectIndex].tasks![projectTaskIndex] = {
+        ...mockData.projects[projectIndex].tasks![projectTaskIndex],
+        ...updates,
+        lastEdited: new Date().toISOString(),
+      };
+    }
+    mockData.projects[projectIndex].lastEdited = new Date().toISOString();
+  }
+
+  return mockData.tasks[taskIndex];
+};
+
+// Function to reorder tasks
+export const reorderTasks = async (projectId: string, taskIds: string[]): Promise<Task[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Update positions for all tasks in the order
+  taskIds.forEach((taskId, index) => {
+    const taskIndex = mockData.tasks.findIndex(task => task.id === taskId && task.projectId === projectId);
+    if (taskIndex !== -1) {
+      mockData.tasks[taskIndex].position = index;
+    }
+  });
+
+  // Return tasks in new order
+  return mockData.tasks
+    .filter(task => task.projectId === projectId)
+    .sort((a, b) => a.position - b.position);
 };
 
 // Function to fetch all templates
