@@ -1,11 +1,36 @@
+
 import { mockData } from './mockData';
-import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData, CreateTaskFormData } from '@/types';
+import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData, CreateTaskFormData, Comment, CreateClientFormData, CreateTemplateTaskFormData } from '@/types';
 
 // Function to fetch all projects
-export const fetchProjects = async (): Promise<Project[]> => {
+export const fetchProjects = async (filter?: any): Promise<Project[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
-  return mockData.projects;
+  
+  let filteredProjects = [...mockData.projects];
+  
+  if (filter) {
+    // Filter by timeframe
+    if (filter.timeframe && filter.timeframe !== 'all') {
+      // Implement timeframe filtering logic here
+    }
+    
+    // Filter by status
+    if (filter.status && filter.status !== 'all') {
+      filteredProjects = filteredProjects.filter(project => 
+        project.status.toLowerCase().replace(' ', '-') === filter.status
+      );
+    }
+    
+    // Filter by client
+    if (filter.client && filter.client !== 'all') {
+      filteredProjects = filteredProjects.filter(project => 
+        project.clientId === filter.client
+      );
+    }
+  }
+  
+  return filteredProjects;
 };
 
 // Function to fetch a single project by ID
@@ -23,10 +48,10 @@ export const createProject = async (projectData: CreateProjectFormData): Promise
   const newProject: Project = {
     id: `project-${Date.now()}`, // Generate a unique ID
     ...projectData,
-    teamMemberIds: [],
-    status: 'Not Started',
+    teamMemberIds: projectData.teamMemberIds || [],
+    status: projectData.status || 'Not Started',
     lastEdited: new Date().toISOString(),
-    repeating: false,
+    repeating: projectData.repeating || false,
     labels: [],
   };
 
@@ -35,13 +60,17 @@ export const createProject = async (projectData: CreateProjectFormData): Promise
 };
 
 // Function to update a project
-export const updateProject = async (updatedProject: Project): Promise<Project> => {
+export const updateProject = async (id: string, updatedData: Partial<Project>): Promise<Project> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  const index = mockData.projects.findIndex(project => project.id === updatedProject.id);
+  const index = mockData.projects.findIndex(project => project.id === id);
   if (index !== -1) {
-    mockData.projects[index] = { ...updatedProject, lastEdited: new Date().toISOString() };
+    mockData.projects[index] = { 
+      ...mockData.projects[index], 
+      ...updatedData, 
+      lastEdited: new Date().toISOString() 
+    };
     return mockData.projects[index];
   } else {
     throw new Error('Project not found');
@@ -169,7 +198,7 @@ export const createTemplate = async (templateData: CreateTemplateFormData): Prom
     id: `template-${Date.now()}`, // Generate a unique ID
     name: templateData.name,
     description: templateData.description,
-    teamMemberIds: [],
+    teamMemberIds: templateData.teamMemberIds || [],
     clientIds: [],
     tasks: [],
     lastEdited: new Date().toISOString(),
@@ -177,6 +206,137 @@ export const createTemplate = async (templateData: CreateTemplateFormData): Prom
 
   mockData.templates.push(newTemplate);
   return newTemplate;
+};
+
+// Function to update a template
+export const updateTemplate = async (id: string, updatedData: Partial<Template>): Promise<Template> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const index = mockData.templates.findIndex(template => template.id === id);
+  if (index === -1) {
+    throw new Error('Template not found');
+  }
+
+  mockData.templates[index] = {
+    ...mockData.templates[index],
+    ...updatedData,
+    lastEdited: new Date().toISOString()
+  };
+
+  return mockData.templates[index];
+};
+
+// Function to create a template task
+export const createTemplateTask = async (
+  templateId: string, 
+  taskData: Omit<TemplateTask, 'id' | 'templateId' | 'position'>
+): Promise<TemplateTask> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const template = mockData.templates.find(t => t.id === templateId);
+  if (!template) {
+    throw new Error('Template not found');
+  }
+
+  const position = template.tasks.length;
+  const newTask: TemplateTask = {
+    id: `template-task-${Date.now()}`,
+    templateId,
+    position,
+    ...taskData
+  };
+
+  template.tasks.push(newTask);
+  template.lastEdited = new Date().toISOString();
+
+  return newTask;
+};
+
+// Function to update a template task
+export const updateTemplateTask = async (
+  templateId: string,
+  taskId: string,
+  updates: Partial<TemplateTask>
+): Promise<TemplateTask> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const templateIndex = mockData.templates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) {
+    throw new Error('Template not found');
+  }
+
+  const taskIndex = mockData.templates[templateIndex].tasks.findIndex(t => t.id === taskId);
+  if (taskIndex === -1) {
+    throw new Error('Task not found');
+  }
+
+  mockData.templates[templateIndex].tasks[taskIndex] = {
+    ...mockData.templates[templateIndex].tasks[taskIndex],
+    ...updates
+  };
+
+  mockData.templates[templateIndex].lastEdited = new Date().toISOString();
+
+  return mockData.templates[templateIndex].tasks[taskIndex];
+};
+
+// Function to delete a template task
+export const deleteTemplateTask = async (templateId: string, taskId: string): Promise<void> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const templateIndex = mockData.templates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) {
+    throw new Error('Template not found');
+  }
+
+  const taskIndex = mockData.templates[templateIndex].tasks.findIndex(t => t.id === taskId);
+  if (taskIndex === -1) {
+    throw new Error('Task not found');
+  }
+
+  mockData.templates[templateIndex].tasks.splice(taskIndex, 1);
+  
+  // Reposition remaining tasks
+  mockData.templates[templateIndex].tasks.forEach((task, idx) => {
+    task.position = idx;
+  });
+
+  mockData.templates[templateIndex].lastEdited = new Date().toISOString();
+};
+
+// Function to reorder template tasks
+export const reorderTemplateTasks = async (
+  templateId: string,
+  taskIds: string[]
+): Promise<TemplateTask[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const templateIndex = mockData.templates.findIndex(t => t.id === templateId);
+  if (templateIndex === -1) {
+    throw new Error('Template not found');
+  }
+
+  const template = mockData.templates[templateIndex];
+  
+  // Create a new array of tasks in the specified order
+  const reorderedTasks = taskIds.map((taskId, index) => {
+    const task = template.tasks.find(t => t.id === taskId);
+    if (!task) {
+      throw new Error(`Task with ID ${taskId} not found`);
+    }
+    return { ...task, position: index };
+  });
+
+  // Update template tasks
+  template.tasks = reorderedTasks;
+  template.lastEdited = new Date().toISOString();
+
+  return reorderedTasks;
 };
 
 // Function to fetch all clients
@@ -191,6 +351,21 @@ export const fetchClient = async (id: string): Promise<Client | undefined> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   return mockData.clients.find(client => client.id === id);
+};
+
+// Function to create a client
+export const createClient = async (clientData: CreateClientFormData): Promise<Client> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const newClient: Client = {
+    id: `client-${Date.now()}`,
+    ...clientData,
+    lastEdited: new Date().toISOString()
+  };
+
+  mockData.clients.push(newClient);
+  return newClient;
 };
 
 // Function to fetch all team members
@@ -236,7 +411,7 @@ export const fetchContacts = async (): Promise<Contact[]> => {
   return mockData.contacts;
 };
 
-// New function to fetch client contacts
+// Function to fetch client contacts
 export const fetchClientContacts = async (clientId: string): Promise<Contact[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -244,7 +419,7 @@ export const fetchClientContacts = async (clientId: string): Promise<Contact[]> 
   return mockData.contacts.filter(contact => contact.clientId === clientId);
 };
 
-// New function to associate a contact with a client
+// Function to associate a contact with a client
 export const associateContactWithClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<Contact> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -263,7 +438,7 @@ export const associateContactWithClient = async ({ contactId, clientId }: { cont
   return mockData.contacts[contactIndex];
 };
 
-// New function to remove a contact from a client
+// Function to remove a contact from a client
 export const removeContactFromClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<void> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -286,7 +461,7 @@ export const removeContactFromClient = async ({ contactId, clientId }: { contact
   };
 };
 
-// New function to update a client
+// Function to update a client
 export const updateClient = async (client: Client): Promise<Client> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -314,4 +489,38 @@ export const getClientSeries = async (clientId: string): Promise<any[]> => {
   // This is a mock function that would typically fetch series for a client
   // For now, we'll return an empty array since the series feature is not fully implemented
   return [];
+};
+
+// Function to fetch comments for a project
+export const fetchComments = async (projectId: string): Promise<Comment[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Mock comments for now
+  const comments = mockData.comments?.filter(comment => comment.projectId === projectId) || [];
+  return comments;
+};
+
+// Function to create a comment
+export const createComment = async (projectId: string, content: string): Promise<Comment> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // For simplicity, we'll assume the current user is user-1
+  const authorId = 'user-1';
+  
+  const newComment: Comment = {
+    id: `comment-${Date.now()}`,
+    projectId,
+    authorId,
+    content,
+    createdAt: new Date().toISOString()
+  };
+  
+  if (!mockData.comments) {
+    mockData.comments = [];
+  }
+  
+  mockData.comments.push(newComment);
+  return newComment;
 };

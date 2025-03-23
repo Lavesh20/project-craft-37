@@ -1,3 +1,4 @@
+
 export interface Project {
   id: string;
   name: string;
@@ -13,6 +14,7 @@ export interface Project {
   templateId?: string;
   repeating?: boolean;
   labels?: string[];
+  frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
 }
 
 export interface Task {
@@ -45,6 +47,7 @@ export interface TemplateTask {
   position: number;
   relativeDueDate: RelativeDueDate;
   timeEstimate: TimeEstimate;
+  assigneeId?: string;
 }
 
 export interface RelativeDueDate {
@@ -66,9 +69,10 @@ export interface Client {
   location?: string;
   website?: string;
   assigneeId?: string;
-  priority: string;
+  priority: 'None' | 'Low' | 'Medium' | 'High';
   services: string[];
   isActive: boolean;
+  lastEdited?: string;
 }
 
 export interface TeamMember {
@@ -129,10 +133,61 @@ export interface CreateProjectFormData {
   clientId?: string;
   dueDate: string;
   status: string;
+  assigneeId?: string;
+  teamMemberIds?: string[];
+  repeating?: boolean;
+  frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
 }
 
 // Add CreateTemplateFormData interface
 export interface CreateTemplateFormData {
   name: string;
   description?: string;
+  teamMemberIds?: string[];
+}
+
+// Add CreateClientFormData interface
+export interface CreateClientFormData {
+  name: string;
+  description?: string;
+  primaryContactName?: string;
+  location?: string;
+  website?: string;
+  assigneeId?: string;
+  priority: 'None' | 'Low' | 'Medium' | 'High';
+  services: string[];
+  isActive: boolean;
+}
+
+// Add Comment interface
+export interface Comment {
+  id: string;
+  projectId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+}
+
+// Add CreateTemplateTaskFormData interface
+export interface CreateTemplateTaskFormData {
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  relativeDueDate: RelativeDueDate;
+  timeEstimate: TimeEstimate;
+}
+
+// Add FilterOptions interface
+export interface FilterOptions {
+  timeframe?: string;
+  status?: string;
+  client?: string;
+}
+
+// Add TableColumn interface
+export interface TableColumn {
+  id: string;
+  label: string;
+  visible: boolean;
+  sortable?: boolean;
 }
