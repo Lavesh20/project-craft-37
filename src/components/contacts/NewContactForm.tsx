@@ -95,7 +95,20 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
   // Form submission handler
   const onSubmit = async (data: ContactFormData) => {
     try {
-      await createContactMutation.mutateAsync(data);
+      // Ensure we're passing valid CreateContactFormData with required fields
+      const contactData: CreateContactFormData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        street: data.street,
+        city: data.city,
+        state: data.state,
+        postalCode: data.postalCode,
+        clientId: data.clientId,
+        isPrimaryContact: data.isPrimaryContact
+      };
+      
+      await createContactMutation.mutateAsync(contactData);
     } catch (error) {
       // Error will be handled by mutation callbacks
     }

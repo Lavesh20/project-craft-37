@@ -136,6 +136,7 @@ export interface CreateProjectFormData {
   teamMemberIds?: string[];
   repeating?: boolean;
   frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
+  templateId?: string; // Add this field as it's being used in the API
 }
 
 // Add CreateTemplateFormData interface
