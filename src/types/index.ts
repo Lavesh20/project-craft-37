@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   name: string;
@@ -58,7 +57,7 @@ export interface RelativeDueDate {
 
 export interface TimeEstimate {
   value: number;
-  unit: 'm' | 'h' | 'd';
+  unit: 'm' | 'h';
 }
 
 export interface Client {
@@ -126,13 +125,13 @@ export interface CreateTaskFormData {
   dueDate: string;
 }
 
-// Add CreateProjectFormData interface
+// Update CreateProjectFormData to include status field
 export interface CreateProjectFormData {
   name: string;
   description?: string;
   clientId?: string;
   dueDate: string;
-  status: string;
+  status: string; // Add this field as it's required
   assigneeId?: string;
   teamMemberIds?: string[];
   repeating?: boolean;

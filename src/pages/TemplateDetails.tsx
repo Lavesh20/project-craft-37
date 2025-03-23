@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -48,7 +47,7 @@ const TemplateDetails: React.FC = () => {
     return `${value} ${value === 1 ? 'day' : 'days'} ${position}`;
   };
   
-  // Format time estimate
+  // Format time estimate - fix the type issue by only using 'h' or 'm'
   const formatTimeEstimate = (value: number, unit: 'h' | 'm') => {
     return `${value}${unit}`;
   };
@@ -188,7 +187,7 @@ const TemplateDetails: React.FC = () => {
                           <div className="text-sm px-2 py-1 bg-accent rounded">
                             {formatTimeEstimate(
                               task.timeEstimate.value,
-                              task.timeEstimate.unit
+                              task.timeEstimate.unit as 'h' | 'm' // Force the type to be only 'h' or 'm'
                             )}
                           </div>
                           {assignee && (

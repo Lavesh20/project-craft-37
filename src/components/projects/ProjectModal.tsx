@@ -46,7 +46,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
     assigneeId: '',
     teamMemberIds: [],
     repeating: false,
-    dueDate: format(new Date(), 'yyyy-MM-dd')
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    status: 'Not Started' // Add the missing status field with a default value
   });
 
   useEffect(() => {
@@ -67,12 +68,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
           setFormData({
             name: projectToEdit.name,
             description: projectToEdit.description || '',
-            clientId: projectToEdit.clientId,
+            clientId: projectToEdit.clientId || '',
             assigneeId: projectToEdit.assigneeId || '',
             teamMemberIds: projectToEdit.teamMemberIds || [],
-            repeating: projectToEdit.repeating,
+            repeating: projectToEdit.repeating || false,
             frequency: projectToEdit.frequency,
-            dueDate: projectToEdit.dueDate
+            dueDate: projectToEdit.dueDate,
+            status: projectToEdit.status
           });
         }
       } catch (error) {
@@ -178,7 +180,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
       const projectData = {
         ...formData,
         frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
-        status: projectToEdit?.status || 'Not Started' as const,
         templateId: selectedTemplateId
       };
       
