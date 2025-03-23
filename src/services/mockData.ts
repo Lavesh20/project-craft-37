@@ -1,4 +1,3 @@
-
 import { Project, Task, Template, Client, TeamMember, Contact, Comment } from '@/types';
 
 // Initialize empty arrays to hold our mock data
@@ -267,8 +266,8 @@ contacts.push(
   }
 );
 
-// Add some initial comments
-comments = [
+// Add some initial comments using push instead of reassignment
+comments.push(
   {
     id: 'comment-1',
     projectId: 'project-1',
@@ -290,7 +289,7 @@ comments = [
     content: 'Initial wireframes are ready for review. Let me know your thoughts!',
     createdAt: '2023-06-25T11:45:00Z'
   }
-];
+);
 
 // Export all the mock data
 export const mockData = {

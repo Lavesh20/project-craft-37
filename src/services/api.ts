@@ -1,6 +1,10 @@
-
 import { mockData } from './mockData';
-import { Project, Task, Template, Client, TeamMember, Contact, CreateProjectFormData, CreateTemplateFormData, CreateContactFormData, CreateTaskFormData, Comment, CreateClientFormData, CreateTemplateTaskFormData } from '@/types';
+import { 
+  Project, Task, Template, Client, TeamMember, Contact, 
+  CreateProjectFormData, CreateTemplateFormData, CreateContactFormData, 
+  CreateTaskFormData, Comment, CreateClientFormData, CreateTemplateTaskFormData,
+  TemplateTask
+} from '@/types';
 
 // Function to fetch all projects
 export const fetchProjects = async (filter?: any): Promise<Project[]> => {
@@ -230,7 +234,7 @@ export const updateTemplate = async (id: string, updatedData: Partial<Template>)
 // Function to create a template task
 export const createTemplateTask = async (
   templateId: string, 
-  taskData: Omit<TemplateTask, 'id' | 'templateId' | 'position'>
+  taskData: CreateTemplateTaskFormData
 ): Promise<TemplateTask> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -245,7 +249,11 @@ export const createTemplateTask = async (
     id: `template-task-${Date.now()}`,
     templateId,
     position,
-    ...taskData
+    name: taskData.name,
+    description: taskData.description,
+    relativeDueDate: taskData.relativeDueDate,
+    timeEstimate: taskData.timeEstimate,
+    assigneeId: taskData.assigneeId
   };
 
   template.tasks.push(newTask);
@@ -496,8 +504,8 @@ export const fetchComments = async (projectId: string): Promise<Comment[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Mock comments for now
-  const comments = mockData.comments?.filter(comment => comment.projectId === projectId) || [];
+  // Get comments for the project
+  const comments = mockData.comments.filter(comment => comment.projectId === projectId) || [];
   return comments;
 };
 
@@ -516,10 +524,6 @@ export const createComment = async (projectId: string, content: string): Promise
     content,
     createdAt: new Date().toISOString()
   };
-  
-  if (!mockData.comments) {
-    mockData.comments = [];
-  }
   
   mockData.comments.push(newComment);
   return newComment;
