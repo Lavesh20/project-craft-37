@@ -528,3 +528,10 @@ export const createComment = async (projectId: string, content: string): Promise
   mockData.comments.push(newComment);
   return newComment;
 };
+
+// Function to fetch a single contact by ID
+export const fetchContact = async (id: string): Promise<Contact | undefined> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockData.contacts.find(contact => contact.id === id);
+};

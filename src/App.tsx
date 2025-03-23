@@ -12,6 +12,7 @@ import NewTemplate from '@/pages/NewTemplate';
 import TemplateDetails from '@/pages/TemplateDetails';
 import Clients from '@/pages/Clients';
 import Contacts from '@/pages/Contacts';
+import ContactDetails from '@/pages/ContactDetails';
 import NotFound from '@/pages/NotFound';
 import ClientDetails from '@/pages/ClientDetails';
 
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
   {
     path: '/contacts',
     element: <Contacts />,
+  },
+  {
+    path: '/contacts/:contactId',
+    element: <ContactDetails />,
   },
   {
     path: '/my-work',

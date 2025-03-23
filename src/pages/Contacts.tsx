@@ -176,13 +176,18 @@ const Contacts: React.FC = () => {
                         {contact.isPrimaryContact ? 'Yes' : 'No'}
                       </TableCell>
                       <TableCell>
-                        {getClientName(contact.clientId)}
+                        {contact.clientId && (
+                          <Link to={`/clients/${contact.clientId}`} className="text-blue-600 hover:text-blue-800">
+                            {getClientName(contact.clientId)}
+                          </Link>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Link 
                             to={`/contacts/${contact.id}`} 
                             className="text-blue-600 hover:text-blue-800"
+                            title="View Contact Details"
                           >
                             <ExternalLink size={16} />
                           </Link>
