@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { createTask, updateTask, getTeamMembers } from '@/services/api';
@@ -97,15 +96,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
         });
         toast.success('Task updated successfully');
       } else {
-        // Fixed: Instead of including projectId in formData, pass it separately
+        // Fixed: Only pass the CreateTaskFormData properties and the projectId separately
         await createTask({
           name: formData.name,
           description: formData.description,
           assigneeId: formData.assigneeId,
           dueDate: formData.dueDate,
-          status: 'Not Started',
-          position: 999, // This will be adjusted on the server
-          projectId // This is the separate parameter
+          projectId // Pass projectId as a separate parameter
         });
         toast.success('Task created successfully');
       }

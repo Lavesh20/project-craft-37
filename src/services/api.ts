@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { Project, Task, Template, TemplateTask, Client, TeamMember, Contact, CreateContactFormData, Series, CreateTaskFormData, CreateProjectFormData, CreateTemplateFormData, CreateClientFormData, Comment, CreateTemplateTaskFormData, FilterOptions, TableColumn, MyWorkTask, TasksByStatus, TasksByProject } from '@/types';
 import { mockData } from './mock';
@@ -149,7 +148,7 @@ export const getTask = async (id: string): Promise<Task> => {
   }
 };
 
-export const createTask = async (data: CreateTaskFormData): Promise<Task> => {
+export const createTask = async (data: CreateTaskFormData & { projectId: string }): Promise<Task> => {
   try {
     const response = await axios.post('/api/tasks', data);
     return response.data;
@@ -158,7 +157,7 @@ export const createTask = async (data: CreateTaskFormData): Promise<Task> => {
     return apiCallWithFallback(() => {
       const newTask: Task = {
         id: Math.random().toString(36).substring(2, 15),
-        projectId: 'mock-project-id', // Replace with actual project ID if needed
+        projectId: data.projectId, // Use projectId from the expanded type
         name: data.name,
         description: data.description,
         assigneeId: data.assigneeId,
