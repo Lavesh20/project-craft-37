@@ -25,7 +25,8 @@ const TasksByProjectView: React.FC<TasksByProjectViewProps> = ({ tasksByProject,
     );
   }
 
-  const projectIds = Object.keys(tasksByProject);
+  // Ensure tasksByProject is an object before getting its keys
+  const projectIds = Object.keys(tasksByProject || {});
 
   if (projectIds.length === 0) {
     return (
@@ -39,7 +40,12 @@ const TasksByProjectView: React.FC<TasksByProjectViewProps> = ({ tasksByProject,
   return (
     <div className="space-y-8">
       {projectIds.map((projectId) => {
-        const { projectName, clientName, tasks } = tasksByProject[projectId];
+        // Make sure we have a valid project entry
+        const project = tasksByProject[projectId] || { projectName: 'Unknown Project', tasks: [] };
+        const { projectName, clientName, tasks = [] } = project;
+        
+        // Ensure tasks is always an array
+        const projectTasks = Array.isArray(tasks) ? tasks : [];
         
         return (
           <div key={projectId}>
@@ -57,7 +63,7 @@ const TasksByProjectView: React.FC<TasksByProjectViewProps> = ({ tasksByProject,
               )}
             </div>
 
-            {tasks.length === 0 ? (
+            {projectTasks.length === 0 ? (
               <div className="bg-gray-50 rounded-lg p-6 text-center">
                 <h3 className="text-lg font-semibold mb-2">All done!</h3>
                 <p className="text-gray-500">No tasks to display</p>
@@ -72,7 +78,7 @@ const TasksByProjectView: React.FC<TasksByProjectViewProps> = ({ tasksByProject,
                   </div>
                 </div>
                 
-                {tasks.map((task) => (
+                {projectTasks.map((task) => (
                   <div key={task.id} className="px-6 py-4 border-b last:border-b-0 hover:bg-gray-50">
                     <div className="grid grid-cols-12 gap-4 items-center">
                       <div className="col-span-7 flex items-center gap-3">
