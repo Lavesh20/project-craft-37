@@ -1,22 +1,23 @@
+
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { format, parseISO } from 'date-fns';
 import { Project, Task } from '@/types';
 import { CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { reorderTasks, updateTask, deleteTask } from '@/services/api';
+import { updateTask, deleteTask } from '@/services/api';
 import { toast } from 'sonner';
 import TaskModal from './TaskModal';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface TaskListProps {
-  project: Project;
-  tasks: Task[];
   projectId: string;
+  tasks: Task[];
   refetchProject: () => void;
+  project: Project;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ project, tasks, projectId, refetchProject }) => {
+const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, project }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [localTasks, setLocalTasks] = useState<Task[]>([]);
@@ -61,8 +62,10 @@ const TaskList: React.FC<TaskListProps> = ({ project, tasks, projectId, refetchP
 
   const handleReorder = async (tasks: Task[]) => {
     try {
-      const taskIds = tasks.map(task => task.id);
-      await reorderTasks(projectId, taskIds);
+      // Update each task with its new position
+      for (const task of tasks) {
+        await updateTask(task.id, task);
+      }
       toast.success('Tasks reordered successfully');
     } catch (error) {
       console.error('Failed to reorder tasks:', error);
@@ -79,7 +82,8 @@ const TaskList: React.FC<TaskListProps> = ({ project, tasks, projectId, refetchP
     try {
       const updatedTask = {
         ...task,
-        status: task.status === 'Complete' ? 'Not Started' : 'Complete'
+        status: task.status === 'Complete' ? 'Not Started' : 'Complete',
+        lastEdited: new Date().toISOString()
       };
       await updateTask(taskId, updatedTask);
       refetchProject();

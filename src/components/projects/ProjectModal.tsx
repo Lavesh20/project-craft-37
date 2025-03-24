@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Plus } from 'lucide-react';
 import { fetchClients, fetchTeamMembers, fetchTemplates, createProject, updateProject } from '@/services/api';
@@ -175,18 +176,28 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
     try {
       setSubmitting(true);
     
-      const projectData: Omit<Project, 'id' | 'lastEdited'> = {
-        ...formData,
-        lastEdited: new Date().toISOString(),
-        frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
-        templateId: selectedTemplateId
-      };
-      
       if (isEditMode && projectToEdit) {
-        await updateProject(projectToEdit.id, { ...projectToEdit, ...projectData });
+        await updateProject(projectToEdit.id, { 
+          ...projectToEdit,
+          name: formData.name,
+          description: formData.description,
+          clientId: formData.clientId,
+          assigneeId: formData.assigneeId,
+          teamMemberIds: formData.teamMemberIds,
+          repeating: formData.repeating,
+          frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
+          dueDate: formData.dueDate,
+          status: formData.status,
+          lastEditedBy: 'user-1', // Using placeholder user ID
+          lastEdited: new Date().toISOString()
+        });
         toast.success('Project updated successfully');
       } else {
-        await createProject(projectData);
+        await createProject({
+          ...formData,
+          frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
+          templateId: selectedTemplateId
+        });
         toast.success('Project created successfully');
       }
       

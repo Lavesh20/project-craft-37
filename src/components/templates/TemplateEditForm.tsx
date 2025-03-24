@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateTemplate } from '@/services/api';
-import { Template } from '@/types';
+import { Template, Client, TeamMember } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +34,8 @@ interface TemplateEditFormProps {
   template: Template;
   onCancel: () => void;
   onSuccess: (updatedTemplate: Template) => void;
-  teamMembers: { id: string; name: string }[];
-  clients: { id: string; name: string }[];
+  teamMembers: TeamMember[];
+  clients: Client[];
 }
 
 const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel, onSuccess, teamMembers, clients }) => {
@@ -63,7 +64,7 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel,
   });
 
   const updateTemplateMutation = useMutation({
-    mutationFn: (updatedTemplate: Template) => updateTemplate(updatedTemplate.id, updatedTemplate),
+    mutationFn: (data: Template) => updateTemplate(data.id, data),
     onSuccess: (updatedTemplate) => {
       queryClient.invalidateQueries({ queryKey: ['template', template.id] });
       queryClient.invalidateQueries({ queryKey: ['templates'] });
@@ -130,6 +131,7 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel,
                     placeholder="Template name" 
                     value={formData.name}
                     onChange={handleInputChange}
+                    name="name"
                     {...field} 
                   />
                 </FormControl>
@@ -149,6 +151,7 @@ const TemplateEditForm: React.FC<TemplateEditFormProps> = ({ template, onCancel,
                     placeholder="Brief description of template" 
                     value={formData.description}
                     onChange={handleInputChange}
+                    name="description"
                     {...field} 
                   />
                 </FormControl>

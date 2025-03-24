@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -61,7 +62,12 @@ const TemplateDetails: React.FC = () => {
   // Get associated clients
   const getAssociatedClients = () => {
     if (!template || !clients) return [];
-    return clients.filter((client) => template.clientIds.includes(client.id));
+    return clients.filter((client) => template.clientIds?.includes(client.id));
+  };
+  
+  const handleEditSuccess = (updatedTemplate: any) => {
+    setIsEditing(false);
+    toast.success("Template updated successfully");
   };
   
   // Handle error
@@ -92,12 +98,20 @@ const TemplateDetails: React.FC = () => {
     );
   }
   
-  if (isEditing && template) {
-    return <TemplateEditForm template={template} onCancel={() => setIsEditing(false)} />;
+  if (isEditing && template && teamMembers && clients) {
+    return (
+      <TemplateEditForm 
+        template={template}
+        onCancel={() => setIsEditing(false)}
+        onSuccess={handleEditSuccess}
+        teamMembers={teamMembers}
+        clients={clients}
+      />
+    );
   }
   
   const associatedClients = getAssociatedClients();
-  const assignedTeamMembers = teamMembers?.filter((member) => template.teamMemberIds.includes(member.id)) || [];
+  const assignedTeamMembers = teamMembers?.filter((member) => template.teamMemberIds?.includes(member.id)) || [];
   
   return (
     <div className="p-6">

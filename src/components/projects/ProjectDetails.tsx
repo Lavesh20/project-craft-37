@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { fetchProject, fetchTemplate, fetchClient, fetchTeamMembers, updateProject } from '@/services/api';
-import { Project, Template, Client, TeamMember } from '@/types';
+import { fetchProject, fetchTemplate } from '@/services/api';
+import { Project, Template } from '@/types';
 import ProjectHeader from './ProjectHeader';
 import ProjectInfo from './ProjectInfo';
 import TaskList from './TaskList';
@@ -20,7 +20,7 @@ const ProjectDetails: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Use tanstack query for data fetching
-  const { data: projectData, isLoading: projectLoading } = useQuery({
+  const { data: projectData, isLoading: projectLoading, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectId ? fetchProject(projectId) : undefined,
     enabled: !!projectId,
@@ -116,7 +116,8 @@ const ProjectDetails: React.FC = () => {
             <TaskList 
               projectId={project.id} 
               tasks={project.tasks || []}
-              onProjectUpdate={handleProjectUpdate}
+              refetchProject={refetchProject}
+              project={project}
             />
           </div>
           <div>
