@@ -25,6 +25,7 @@ const TasksByStatusView: React.FC<TasksByStatusViewProps> = ({ tasksByStatus, lo
     );
   }
 
+  // Ensure tasksByStatus is an object before getting its keys
   const statusOrder = ['Not Started', 'In Progress', 'Complete'];
   const statuses = Object.keys(tasksByStatus || {}).sort(
     (a, b) => statusOrder.indexOf(a) - statusOrder.indexOf(b)
@@ -55,8 +56,10 @@ const TasksByStatusView: React.FC<TasksByStatusViewProps> = ({ tasksByStatus, lo
   return (
     <div className="space-y-8">
       {statuses.map((status) => {
-        // Ensure we have an array of tasks for the current status
-        const tasksForStatus = Array.isArray(tasksByStatus[status]) ? tasksByStatus[status] : [];
+        // Make sure we always have an array, even if tasksByStatus[status] is undefined or not an array
+        const tasksForStatus = Array.isArray(tasksByStatus[status]) 
+          ? tasksByStatus[status] 
+          : [];
 
         return (
           <div key={status}>
