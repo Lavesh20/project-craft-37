@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Project, Task, Template, TemplateTask, Client, TeamMember, Contact, CreateContactFormData, Series, CreateTaskFormData, CreateProjectFormData, CreateTemplateFormData, CreateClientFormData, Comment, CreateTemplateTaskFormData, FilterOptions, TableColumn, MyWorkTask, TasksByStatus, TasksByProject } from '@/types';
 import { mockData } from './mock';
@@ -22,6 +23,9 @@ export const getProjects = async (): Promise<Project[]> => {
   }
 };
 
+// Alias for components using fetchProjects
+export const fetchProjects = getProjects;
+
 export const getProject = async (id: string): Promise<Project> => {
   try {
     const response = await axios.get(`/api/projects/${id}`);
@@ -35,6 +39,9 @@ export const getProject = async (id: string): Promise<Project> => {
     throw error;
   }
 };
+
+// Alias for components using fetchProject
+export const fetchProject = getProject;
 
 export const createProject = async (data: CreateProjectFormData): Promise<Project> => {
   try {
@@ -87,6 +94,32 @@ export const deleteProject = async (id: string): Promise<void> => {
     console.error(`Error deleting project with id ${id}:`, error);
     apiCallWithFallback(() => {
       mockData.projects = mockData.projects.filter((p) => p.id !== id);
+    });
+  }
+};
+
+// Get client projects
+export const getClientProjects = async (clientId: string): Promise<Project[]> => {
+  try {
+    const response = await axios.get(`/api/clients/${clientId}/projects`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching projects for client ${clientId}:`, error);
+    return apiCallWithFallback(() => {
+      return mockData.projects.filter(project => project.clientId === clientId);
+    });
+  }
+};
+
+// Get client series
+export const getClientSeries = async (clientId: string): Promise<Series[]> => {
+  try {
+    const response = await axios.get(`/api/clients/${clientId}/series`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching series for client ${clientId}:`, error);
+    return apiCallWithFallback(() => {
+      return mockData.series?.filter(series => series.clientId === clientId) || [];
     });
   }
 };
@@ -168,6 +201,25 @@ export const deleteTask = async (id: string): Promise<void> => {
   }
 };
 
+// Reorder tasks
+export const reorderTasks = async (projectId: string, taskIds: string[]): Promise<void> => {
+  try {
+    await axios.put(`/api/projects/${projectId}/tasks/reorder`, { taskIds });
+  } catch (error) {
+    console.error(`Error reordering tasks for project ${projectId}:`, error);
+    // Mock implementation for reordering tasks
+    apiCallWithFallback(() => {
+      const tasks = mockData.tasks.filter(task => task.projectId === projectId);
+      taskIds.forEach((taskId, index) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          task.position = index;
+        }
+      });
+    });
+  }
+};
+
 // Templates API
 export const getTemplates = async (): Promise<Template[]> => {
   try {
@@ -178,6 +230,9 @@ export const getTemplates = async (): Promise<Template[]> => {
     return apiCallWithFallback(() => mockData.templates);
   }
 };
+
+// Alias for components using fetchTemplates
+export const fetchTemplates = getTemplates;
 
 export const getTemplate = async (id: string): Promise<Template> => {
   try {
@@ -192,6 +247,9 @@ export const getTemplate = async (id: string): Promise<Template> => {
     throw error;
   }
 };
+
+// Alias for components using fetchTemplate
+export const fetchTemplate = getTemplate;
 
 export const createTemplate = async (data: CreateTemplateFormData): Promise<Template> => {
   try {
@@ -239,6 +297,19 @@ export const deleteTemplate = async (id: string): Promise<void> => {
     console.error(`Error deleting template with id ${id}:`, error);
     apiCallWithFallback(() => {
       mockData.templates = mockData.templates.filter((t) => t.id !== id);
+    });
+  }
+};
+
+// Function to get client templates
+export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
+  try {
+    const response = await axios.get(`/api/clients/${clientId}/templates`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching templates for client ${clientId}:`, error);
+    return apiCallWithFallback(() => {
+      return mockData.templates.filter(template => template.clientIds?.includes(clientId));
     });
   }
 };
@@ -303,6 +374,29 @@ export const deleteTemplateTask = async (templateId: string, taskId: string): Pr
   }
 };
 
+// Function to reorder template tasks
+export const reorderTemplateTasks = async (templateId: string, taskIds: string[]): Promise<void> => {
+  try {
+    await axios.put(`/api/templates/${templateId}/tasks/reorder`, { taskIds });
+  } catch (error) {
+    console.error(`Error reordering tasks for template ${templateId}:`, error);
+    // Mock implementation for reordering tasks
+    apiCallWithFallback(() => {
+      const template = mockData.templates.find(t => t.id === templateId);
+      if (!template) {
+        throw new Error(`Template with id ${templateId} not found in mock data`);
+      }
+      
+      taskIds.forEach((taskId, index) => {
+        const task = template.tasks.find(t => t.id === taskId);
+        if (task) {
+          task.position = index;
+        }
+      });
+    });
+  }
+};
+
 // Clients API
 export const getClients = async (): Promise<Client[]> => {
   try {
@@ -313,6 +407,9 @@ export const getClients = async (): Promise<Client[]> => {
     return apiCallWithFallback(() => mockData.clients);
   }
 };
+
+// Alias for components using fetchClients
+export const fetchClients = getClients;
 
 export const getClient = async (id: string): Promise<Client> => {
   try {
@@ -327,6 +424,9 @@ export const getClient = async (id: string): Promise<Client> => {
     throw error;
   }
 };
+
+// Alias for components using fetchClient
+export const fetchClient = getClient;
 
 export const createClient = async (data: CreateClientFormData): Promise<Client> => {
   try {
@@ -393,6 +493,9 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
   }
 };
 
+// Alias for components using fetchTeamMembers
+export const fetchTeamMembers = getTeamMembers;
+
 export const getTeamMember = async (id: string): Promise<TeamMember> => {
   try {
     const response = await axios.get(`/api/team-members/${id}`);
@@ -418,6 +521,9 @@ export const getContacts = async (): Promise<Contact[]> => {
   }
 };
 
+// Alias for components using fetchContacts
+export const fetchContacts = getContacts;
+
 export const getContact = async (id: string): Promise<Contact> => {
   try {
     const response = await axios.get(`/api/contacts/${id}`);
@@ -431,6 +537,9 @@ export const getContact = async (id: string): Promise<Contact> => {
     throw error;
   }
 };
+
+// Alias for components using fetchContact
+export const fetchContact = getContact;
 
 export const createContact = async (data: CreateContactFormData): Promise<Contact> => {
   try {
@@ -486,6 +595,53 @@ export const deleteContact = async (id: string): Promise<void> => {
   }
 };
 
+// Client contacts functions
+export const fetchClientContacts = async (clientId: string): Promise<Contact[]> => {
+  try {
+    const response = await axios.get(`/api/clients/${clientId}/contacts`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching contacts for client ${clientId}:`, error);
+    return apiCallWithFallback(() => {
+      return mockData.contacts.filter(contact => contact.clientId === clientId);
+    });
+  }
+};
+
+export const associateContactWithClient = async (params: { contactId: string, clientId: string }): Promise<Contact> => {
+  try {
+    const response = await axios.put(`/api/contacts/${params.contactId}/client`, { clientId: params.clientId });
+    return response.data;
+  } catch (error) {
+    console.error(`Error associating contact ${params.contactId} with client ${params.clientId}:`, error);
+    return apiCallWithFallback(() => {
+      const contact = mockData.contacts.find(c => c.id === params.contactId);
+      if (!contact) {
+        throw new Error(`Contact with id ${params.contactId} not found`);
+      }
+      contact.clientId = params.clientId;
+      return contact;
+    });
+  }
+};
+
+export const removeContactFromClient = async (params: { contactId: string, clientId: string }): Promise<Contact> => {
+  try {
+    const response = await axios.delete(`/api/contacts/${params.contactId}/client`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error removing client association from contact ${params.contactId}:`, error);
+    return apiCallWithFallback(() => {
+      const contact = mockData.contacts.find(c => c.id === params.contactId);
+      if (!contact) {
+        throw new Error(`Contact with id ${params.contactId} not found`);
+      }
+      contact.clientId = undefined;
+      return contact;
+    });
+  }
+};
+
 // Series API
 export const getSeries = async (): Promise<Series[]> => {
   try {
@@ -493,7 +649,7 @@ export const getSeries = async (): Promise<Series[]> => {
     return response.data;
   } catch (error) {
     console.error('Error fetching series:', error);
-    return apiCallWithFallback(() => mockData.series);
+    return apiCallWithFallback(() => mockData.series || []);
   }
 };
 
@@ -503,7 +659,7 @@ export const getSeriesItem = async (id: string): Promise<Series> => {
     return response.data;
   } catch (error) {
     console.error(`Error fetching series with id ${id}:`, error);
-    const series = mockData.series.find((s) => s.id === id);
+    const series = mockData.series?.find((s) => s.id === id);
     if (series) {
       return series;
     }
@@ -513,45 +669,48 @@ export const getSeriesItem = async (id: string): Promise<Series> => {
 
 // Comments API
 export const getComments = async (projectId: string): Promise<Comment[]> => {
-    try {
-      const response = await axios.get(`/api/projects/${projectId}/comments`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching comments for project with id ${projectId}:`, error);
-      return apiCallWithFallback(() => mockData.comments.filter(comment => comment.projectId === projectId));
-    }
-  };
-  
-  export const createComment = async (projectId: string, content: string): Promise<Comment> => {
-    try {
-      const response = await axios.post(`/api/projects/${projectId}/comments`, { content });
-      return response.data;
-    } catch (error) {
-      console.error(`Error creating comment for project with id ${projectId}:`, error);
-      return apiCallWithFallback(() => {
-        const newComment: Comment = {
-          id: Math.random().toString(36).substring(2, 15),
-          projectId: projectId,
-          authorId: 'mock-user-id', // Replace with actual user ID if needed
-          content: content,
-          createdAt: new Date().toISOString(),
-        };
-        mockData.comments.push(newComment);
-        return newComment;
-      });
-    }
-  };
-  
-  export const deleteComment = async (projectId: string, commentId: string): Promise<void> => {
-    try {
-      await axios.delete(`/api/projects/${projectId}/comments/${commentId}`);
-    } catch (error) {
-      console.error(`Error deleting comment with id ${commentId} for project with id ${projectId}:`, error);
-      apiCallWithFallback(() => {
-        mockData.comments = mockData.comments.filter(comment => comment.id !== commentId);
-      });
-    }
-  };
+  try {
+    const response = await axios.get(`/api/projects/${projectId}/comments`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching comments for project with id ${projectId}:`, error);
+    return apiCallWithFallback(() => mockData.comments.filter(comment => comment.projectId === projectId));
+  }
+};
+
+// Alias for components using fetchComments
+export const fetchComments = getComments;
+
+export const createComment = async (projectId: string, content: string): Promise<Comment> => {
+  try {
+    const response = await axios.post(`/api/projects/${projectId}/comments`, { content });
+    return response.data;
+  } catch (error) {
+    console.error(`Error creating comment for project with id ${projectId}:`, error);
+    return apiCallWithFallback(() => {
+      const newComment: Comment = {
+        id: Math.random().toString(36).substring(2, 15),
+        projectId: projectId,
+        authorId: 'mock-user-id', // Replace with actual user ID if needed
+        content: content,
+        createdAt: new Date().toISOString(),
+      };
+      mockData.comments.push(newComment);
+      return newComment;
+    });
+  }
+};
+
+export const deleteComment = async (projectId: string, commentId: string): Promise<void> => {
+  try {
+    await axios.delete(`/api/projects/${projectId}/comments/${commentId}`);
+  } catch (error) {
+    console.error(`Error deleting comment with id ${commentId} for project with id ${projectId}:`, error);
+    apiCallWithFallback(() => {
+      mockData.comments = mockData.comments.filter(comment => comment.id !== commentId);
+    });
+  }
+};
 
 // My Work APIs
 export const getMyOverdueTasks = async (): Promise<MyWorkTask[]> => {
