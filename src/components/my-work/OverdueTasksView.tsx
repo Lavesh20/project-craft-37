@@ -10,6 +10,9 @@ interface OverdueTasksViewProps {
 }
 
 const OverdueTasksView: React.FC<OverdueTasksViewProps> = ({ tasks, loading }) => {
+  // Ensure tasks is an array before processing
+  const taskList = Array.isArray(tasks) ? tasks : [];
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -20,7 +23,7 @@ const OverdueTasksView: React.FC<OverdueTasksViewProps> = ({ tasks, loading }) =
     );
   }
 
-  if (tasks.length === 0) {
+  if (taskList.length === 0) {
     return (
       <div className="bg-gray-50 rounded-lg p-8 text-center">
         <h3 className="text-xl font-semibold mb-2">All done!</h3>
@@ -37,7 +40,7 @@ const OverdueTasksView: React.FC<OverdueTasksViewProps> = ({ tasks, loading }) =
       </div>
       
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {tasks.map((task) => (
+        {taskList.map((task) => (
           <div key={task.id} className="p-4 border-b last:border-b-0 hover:bg-gray-50">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 pt-1">

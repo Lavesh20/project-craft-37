@@ -27,20 +27,20 @@ const MyWorkDashboard = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [selectedDate]);
+  }, [selectedDate, activeTab]); // Added activeTab as dependency to refetch when tab changes
 
   const fetchTasks = async () => {
     setLoading(true);
     try {
       if (activeTab === 'overdue') {
         const tasks = await getMyOverdueTasks();
-        setOverdueTasks(tasks);
+        setOverdueTasks(Array.isArray(tasks) ? tasks : []);
       } else if (activeTab === 'status') {
         const tasks = await getMyTasksByStatus(format(selectedDate, 'yyyy-MM-dd'));
-        setTasksByStatus(tasks);
+        setTasksByStatus(tasks || {});
       } else if (activeTab === 'project') {
         const tasks = await getMyTasksByProject(format(selectedDate, 'yyyy-MM-dd'));
-        setTasksByProject(tasks);
+        setTasksByProject(tasks || {});
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -49,6 +49,15 @@ const MyWorkDashboard = () => {
         description: 'Failed to load tasks. Please try again.',
         variant: 'destructive',
       });
+      
+      // Initialize with empty values in case of error
+      if (activeTab === 'overdue') {
+        setOverdueTasks([]);
+      } else if (activeTab === 'status') {
+        setTasksByStatus({});
+      } else if (activeTab === 'project') {
+        setTasksByProject({});
+      }
     } finally {
       setLoading(false);
     }
@@ -56,7 +65,7 @@ const MyWorkDashboard = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    fetchTasks();
+    // fetchTasks will be called by the useEffect since activeTab is now a dependency
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
