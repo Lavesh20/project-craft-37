@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Project } from '@/types';
@@ -21,7 +20,8 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onEdit, onProjec
     
     try {
       setIsUpdating(true);
-      const updatedProject = await updateProject(project.id, { 
+      const updatedProject = await updateProject(project.id, {
+        ...project,
         status: newStatus,
         lastEdited: new Date().toISOString(),
         lastEditedBy: 'user-1' // Using placeholder user ID

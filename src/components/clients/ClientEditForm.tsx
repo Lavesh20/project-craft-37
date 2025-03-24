@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +85,7 @@ const ClientEditForm: React.FC<ClientEditFormProps> = ({ client, onCancel, onSuc
 
   // Update client mutation
   const updateClientMutation = useMutation({
-    mutationFn: updateClient,
+    mutationFn: (updatedClient: Client) => updateClient(updatedClient.id, updatedClient),
     onSuccess: (updatedClient) => {
       queryClient.invalidateQueries({ queryKey: ['client', client.id] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
@@ -107,9 +106,10 @@ const ClientEditForm: React.FC<ClientEditFormProps> = ({ client, onCancel, onSuc
 
   // Form submission handler
   const onSubmit = async (data: FormValues) => {
-    const updatedClient = {
+    const updatedClient: Client = {
       ...client,
       ...data,
+      lastEdited: new Date().toISOString()
     };
     updateClientMutation.mutate(updatedClient);
   };

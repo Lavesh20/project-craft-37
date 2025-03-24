@@ -1,4 +1,4 @@
-import { Project, Task, Template, Client, TeamMember, Contact, Comment } from '@/types';
+import { Project, Task, Template, Client, TeamMember, Contact, Comment, Series } from '@/types';
 
 // Initialize empty arrays to hold our mock data
 const projects: Project[] = [];
@@ -291,6 +291,9 @@ comments.push(
   }
 );
 
+// Add initial series data
+const series: Series[] = [];
+
 // Export all the mock data
 export const mockData = {
   projects,
@@ -299,5 +302,6 @@ export const mockData = {
   clients,
   teamMembers,
   contacts,
-  comments
+  comments,
+  series
 };

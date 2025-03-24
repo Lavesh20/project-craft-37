@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Plus } from 'lucide-react';
 import { fetchClients, fetchTeamMembers, fetchTemplates, createProject, updateProject } from '@/services/api';
@@ -175,20 +174,18 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
     
     try {
       setSubmitting(true);
-      
-      // Create project object from form data
-      const projectData = {
+    
+      const projectData: Omit<Project, 'id' | 'lastEdited'> = {
         ...formData,
+        lastEdited: new Date().toISOString(),
         frequency: formData.frequency as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom' | undefined,
         templateId: selectedTemplateId
       };
       
       if (isEditMode && projectToEdit) {
-        // Update existing project
-        await updateProject(projectToEdit.id, projectData);
+        await updateProject(projectToEdit.id, { ...projectToEdit, ...projectData });
         toast.success('Project updated successfully');
       } else {
-        // Create new project
         await createProject(projectData);
         toast.success('Project created successfully');
       }

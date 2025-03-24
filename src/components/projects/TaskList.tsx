@@ -1,341 +1,213 @@
-
-import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { Task, Project, CreateTaskFormData, TeamMember } from '@/types';
-import { createTask, updateTask, reorderTasks, fetchTeamMembers, fetchProject } from '@/services/api';
-import { Plus, Check, Calendar, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { format, parseISO } from 'date-fns';
+import { Project, Task } from '@/types';
+import { CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { useQuery } from '@tanstack/react-query';
-import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { reorderTasks, updateTask, deleteTask } from '@/services/api';
+import { toast } from 'sonner';
+import TaskModal from './TaskModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TaskListProps {
-  projectId: string;
+  project: Project;
   tasks: Task[];
-  onProjectUpdate: (project: Project) => void;
+  projectId: string;
+  refetchProject: () => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, onProjectUpdate }) => {
-  const [isAddingTask, setIsAddingTask] = useState(false);
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const [newTaskData, setNewTaskData] = useState<CreateTaskFormData>({
-    name: '',
-    description: '',
-    assigneeId: undefined,
-    dueDate: new Date().toISOString().split('T')[0]
-  });
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+const TaskList: React.FC<TaskListProps> = ({ project, tasks, projectId, refetchProject }) => {
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [localTasks, setLocalTasks] = useState<Task[]>([]);
+  const queryClient = useQueryClient();
 
-  // Fetch team members for the assignee dropdown
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['teamMembers'],
-    queryFn: fetchTeamMembers
-  });
+  useEffect(() => {
+    // Sort tasks by position
+    const sortedTasks = [...tasks].sort((a, b) => a.position - b.position);
+    setLocalTasks(sortedTasks);
+  }, [tasks]);
 
-  // Helper to get team member by ID
-  const getTeamMemberById = (memberId: string): TeamMember | undefined => {
-    return teamMembers.find(member => member.id === memberId);
+  const handleOpenTaskModal = (task?: Task) => {
+    if (task) {
+      setTaskToEdit(task);
+    } else {
+      setTaskToEdit(null);
+    }
+    setIsTaskModalOpen(true);
   };
 
-  // Helper to get initials from name
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setTaskToEdit(null);
   };
 
-  // Toggle task expand
-  const toggleTaskExpand = (taskId: string) => {
-    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(localTasks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update positions
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      position: index
+    }));
+    
+    setLocalTasks(updatedItems);
+    handleReorder(updatedItems);
   };
 
-  // Handle task completion toggle
-  const handleTaskStatusChange = async (taskId: string, isComplete: boolean) => {
+  const handleReorder = async (tasks: Task[]) => {
     try {
-      const status = isComplete ? 'Complete' : 'In Progress';
-      await updateTask(projectId, taskId, { status });
-      
-      // Refresh project to update UI and status
-      const updatedProject = await fetchProject(projectId);
-      if (updatedProject) {
-        onProjectUpdate(updatedProject);
-      }
+      const taskIds = tasks.map(task => task.id);
+      await reorderTasks(projectId, taskIds);
+      toast.success('Tasks reordered successfully');
     } catch (error) {
-      console.error('Failed to update task status:', error);
+      console.error('Failed to reorder tasks:', error);
+      toast.error('Failed to reorder tasks');
+      // Refresh project data to reset order
+      refetchProject();
     }
   };
 
-  // Handle new task creation
-  const handleCreateTask = async () => {
-    if (!newTaskData.name.trim()) return;
+  const handleStatusChange = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
     
     try {
-      await createTask(projectId, {
-        ...newTaskData,
-        dueDate: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-      });
-      
-      // Reset form and close dialog
-      setNewTaskData({
-        name: '',
-        description: '',
-        assigneeId: undefined,
-        dueDate: new Date().toISOString().split('T')[0]
-      });
-      setSelectedDate(new Date());
-      setIsAddingTask(false);
-      
-      // Refresh project to update UI
-      const updatedProject = await fetchProject(projectId);
-      if (updatedProject) {
-        onProjectUpdate(updatedProject);
-      }
+      const updatedTask = {
+        ...task,
+        status: task.status === 'Complete' ? 'Not Started' : 'Complete'
+      };
+      await updateTask(taskId, updatedTask);
+      refetchProject();
     } catch (error) {
-      console.error('Failed to create task:', error);
+      console.error('Failed to update task status:', error);
+      toast.error('Failed to update task status');
     }
   };
 
-  // Count completed tasks
-  const completedTaskCount = tasks.filter(task => task.status === 'Complete').length;
-  
-  // Sort tasks by position
-  const sortedTasks = [...tasks].sort((a, b) => a.position - b.position);
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      await deleteTask(taskId);
+      toast.success('Task deleted successfully');
+      refetchProject();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task');
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Task List</CardTitle>
-        <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-1">
-              <Plus size={16} /> Add task
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
-              <DialogDescription>
-                Create a new task for this project.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="taskName" className="text-sm font-medium">Task Name</label>
-                <Input
-                  id="taskName"
-                  value={newTaskData.name}
-                  onChange={(e) => setNewTaskData({ ...newTaskData, name: e.target.value })}
-                  placeholder="Enter task name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="taskDescription" className="text-sm font-medium">Description (Optional)</label>
-                <Textarea
-                  id="taskDescription"
-                  value={newTaskData.description || ''}
-                  onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}
-                  placeholder="Describe what needs to be done"
-                  rows={3}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="taskAssignee" className="text-sm font-medium">Assignee (Optional)</label>
-                <Select 
-                  value={newTaskData.assigneeId} 
-                  onValueChange={(value) => setNewTaskData({ ...newTaskData, assigneeId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Assign to..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        <div className="flex items-center">
-                          <Avatar className="h-6 w-6 mr-2">
-                            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                          </Avatar>
-                          {member.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="taskDueDate" className="text-sm font-medium">Due Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button onClick={handleCreateTask}>Create Task</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-
-      <CardContent>
-        {sortedTasks.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
-            No tasks yet. Add a task to get started.
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Tasks</h2>
+        <Button 
+          onClick={() => handleOpenTaskModal()}
+          className="bg-jetpack-blue hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Task
+        </Button>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {localTasks.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No tasks yet. Click "Add Task" to create your first task.
           </div>
         ) : (
-          <div className="divide-y">
-            {sortedTasks.map((task) => {
-              const isExpanded = expandedTaskId === task.id;
-              const assignee = task.assigneeId ? getTeamMemberById(task.assigneeId) : undefined;
-              
-              return (
-                <Collapsible
-                  key={task.id}
-                  open={isExpanded}
-                  className="py-3"
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="tasks">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="divide-y divide-gray-200"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="cursor-grab text-gray-400">
-                      <GripVertical size={16} />
-                    </div>
-                    
-                    <Checkbox
-                      checked={task.status === 'Complete'}
-                      onCheckedChange={(checked) => handleTaskStatusChange(task.id, !!checked)}
-                    />
-                    
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => toggleTaskExpand(task.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium ${task.status === 'Complete' ? 'line-through text-gray-400' : ''}`}>
-                            {task.name}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className="bg-gray-100 text-gray-800 text-xs"
-                          >
-                            {format(new Date(task.dueDate), 'MMM dd')}
-                          </Badge>
-                          <Badge
-                            className={`text-xs ${
-                              task.status === 'Complete' 
-                                ? 'bg-jetpack-green text-green-800' 
-                                : task.status === 'In Progress' 
-                                  ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {task.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-gray-500">
-                            {task.status === 'Complete' ? '1/1' : '0/1'}
-                          </span>
-                          {assignee && (
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback>{getInitials(assignee.name)}</AvatarFallback>
-                            </Avatar>
-                          )}
-                          <CollapsibleTrigger asChild>
-                            <button className="text-gray-400 hover:text-gray-600">
-                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </button>
-                          </CollapsibleTrigger>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <CollapsibleContent className="pt-3 pl-10">
-                    {task.description && (
-                      <div className="mb-4 text-gray-600 text-sm">
-                        {task.description}
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="font-medium text-gray-500">Assignee</div>
-                        <div className="mt-1">
-                          {assignee ? (
-                            <div className="flex items-center">
-                              <Avatar className="h-6 w-6 mr-2">
-                                <AvatarFallback>{getInitials(assignee.name)}</AvatarFallback>
-                              </Avatar>
-                              {assignee.name}
+                  {localTasks.map((task, index) => (
+                    <Draggable key={task.id} draggableId={task.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="p-4 hover:bg-gray-50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 pt-1">
+                              <button
+                                onClick={() => handleStatusChange(task.id)}
+                                className="focus:outline-none"
+                              >
+                                <CheckCircle 
+                                  className={`h-5 w-5 ${
+                                    task.status === 'Complete' 
+                                      ? 'text-green-500 fill-green-500' 
+                                      : 'text-gray-400'
+                                  }`} 
+                                />
+                              </button>
                             </div>
-                          ) : (
-                            <span className="text-gray-400">No assignee</span>
-                          )}
+                            <div 
+                              className="flex-grow cursor-pointer"
+                              onClick={() => handleOpenTaskModal(task)}
+                            >
+                              <h3 className={`font-medium ${
+                                task.status === 'Complete' ? 'line-through text-gray-500' : 'text-gray-900'
+                              }`}>
+                                {task.name}
+                              </h3>
+                              {task.description && (
+                                <p className="text-sm text-gray-500 mt-1">{task.description}</p>
+                              )}
+                              <div className="mt-2 flex items-center text-xs text-gray-500">
+                                <span className="mr-2">
+                                  Due: {format(parseISO(task.dueDate), 'MMM d, yyyy')}
+                                </span>
+                                {task.assigneeId && (
+                                  <span className="mr-2">
+                                    Assignee: {task.assigneeId === 'user-1' ? 'John Doe' : 
+                                              task.assigneeId === 'user-2' ? 'Jane Smith' : 
+                                              task.assigneeId === 'user-3' ? 'Vyas' : 'Unknown'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <button
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="text-gray-400 hover:text-red-500 focus:outline-none"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <div className="font-medium text-gray-500">Due Date</div>
-                        <div className="mt-1">
-                          {format(new Date(task.dueDate), 'MMMM d, yyyy')}
-                        </div>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-          </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
-        
-        <div className="mt-4 text-sm text-gray-500">
-          {completedTaskCount}/{tasks.length} tasks complete
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {isTaskModalOpen && (
+        <TaskModal
+          projectId={projectId}
+          onClose={handleCloseTaskModal}
+          onSuccess={refetchProject}
+          taskToEdit={taskToEdit}
+        />
+      )}
+    </div>
   );
 };
 

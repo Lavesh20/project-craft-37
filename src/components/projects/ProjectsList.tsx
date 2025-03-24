@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,8 +20,8 @@ const ProjectsList: React.FC = () => {
   
   // Use React Query to fetch projects and clients
   const { data: projects = [], isLoading: projectsLoading, refetch: refetchProjects } = useQuery({
-    queryKey: ['projects', filter],
-    queryFn: () => fetchProjects(filter),
+    queryKey: ['projects'],
+    queryFn: fetchProjects,
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery({
