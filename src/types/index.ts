@@ -117,7 +117,7 @@ export interface Series {
   templateName?: string;
 }
 
-// Add CreateTaskFormData interface
+// Update CreateTaskFormData interface to include projectId
 export interface CreateTaskFormData {
   name: string;
   description?: string;

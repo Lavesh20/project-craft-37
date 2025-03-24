@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { createTask, updateTask, fetchTeamMembers } from '@/services/api';
+import { createTask, updateTask, getTeamMembers } from '@/services/api';
 import { CreateTaskFormData, Task, TeamMember } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
     const loadData = async () => {
       try {
         setLoading(true);
-        const teamMembersData = await fetchTeamMembers();
+        const teamMembersData = await getTeamMembers();
         setTeamMembers(teamMembersData);
         
         // If in edit mode, populate form with task data
@@ -97,14 +97,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
         });
         toast.success('Task updated successfully');
       } else {
+        // Fixed: Instead of including projectId in formData, pass it separately
         await createTask({
-          projectId,
           name: formData.name,
           description: formData.description,
           assigneeId: formData.assigneeId,
           dueDate: formData.dueDate,
           status: 'Not Started',
-          position: 999 // This will be adjusted on the server
+          position: 999, // This will be adjusted on the server
+          projectId // This is the separate parameter
         });
         toast.success('Task created successfully');
       }
