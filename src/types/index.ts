@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   name: string;
@@ -191,4 +190,22 @@ export interface TableColumn {
   label: string;
   visible: boolean;
   sortable?: boolean;
+}
+
+// Add or update types for my-work related features
+export interface MyWorkTask extends Task {
+  projectName?: string;
+  clientName?: string;
+}
+
+export interface TasksByStatus {
+  [status: string]: MyWorkTask[];
+}
+
+export interface TasksByProject {
+  [projectId: string]: {
+    projectName: string;
+    clientName?: string;
+    tasks: MyWorkTask[];
+  };
 }

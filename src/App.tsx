@@ -15,6 +15,7 @@ import Contacts from '@/pages/Contacts';
 import ContactDetails from '@/pages/ContactDetails';
 import NotFound from '@/pages/NotFound';
 import ClientDetails from '@/pages/ClientDetails';
+import MyWork from '@/pages/MyWork';
 
 // Routes definition
 const router = createBrowserRouter([
@@ -60,7 +61,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/my-work',
-    element: <Index />, // Temporarily using Index component for My Work route
+    element: <MyWork />,
   },
   {
     path: '*',
