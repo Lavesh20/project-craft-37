@@ -171,7 +171,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">No client</SelectItem>
-              {clients.map(client => (
+              {Array.isArray(clients) && clients.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
                 </SelectItem>

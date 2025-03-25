@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
@@ -86,7 +87,7 @@ const ProjectsList: React.FC = () => {
   };
 
   const getSortedProjects = () => {
-    if (!sortColumn) return projects;
+    if (!sortColumn || !Array.isArray(projects)) return projects || [];
 
     return [...projects].sort((a, b) => {
       let valueA, valueB;
@@ -201,7 +202,7 @@ const ProjectsList: React.FC = () => {
                     </Select>
                   </div>
                   
-                  {clients?.length > 0 && (
+                  {Array.isArray(clients) && clients.length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium mb-1">Client</h4>
                       <Select
@@ -265,7 +266,7 @@ const ProjectsList: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {sortedProjects.length === 0 ? (
+                  {!Array.isArray(sortedProjects) || sortedProjects.length === 0 ? (
                     <tr>
                       <td colSpan={visibleColumns.length} className="px-6 py-8 text-center text-gray-500">
                         No projects found matching your criteria
@@ -295,7 +296,7 @@ const ProjectsList: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-1">
-                            {project.labels?.map(label => (
+                            {Array.isArray(project.labels) && project.labels.map(label => (
                               <Badge key={label} variant="outline" className="bg-gray-100 text-gray-800">
                                 {label}
                               </Badge>
@@ -343,7 +344,7 @@ const ProjectsList: React.FC = () => {
             
             <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
               <div>
-                Showing 1-{sortedProjects.length} of {sortedProjects.length} items
+                Showing 1-{Array.isArray(sortedProjects) ? sortedProjects.length : 0} of {Array.isArray(sortedProjects) ? sortedProjects.length : 0} items
               </div>
               <div>
                 20 rows per page

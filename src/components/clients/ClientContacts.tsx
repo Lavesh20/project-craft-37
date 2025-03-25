@@ -33,7 +33,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
 
   // Fetch contacts for this client
   const { 
-    data: clientContacts, 
+    data: clientContacts = [], 
     isLoading: clientContactsLoading,
   } = useQuery({
     queryKey: ['client-contacts', clientId],
@@ -42,7 +42,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
 
   // Fetch all contacts for the add dialog
   const { 
-    data: allContacts, 
+    data: allContacts = [], 
     isLoading: allContactsLoading,
   } = useQuery({
     queryKey: ['contacts'],
@@ -105,7 +105,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
 
   // Get available contacts (not already associated with this client)
   const getAvailableContacts = () => {
-    if (!allContacts || !clientContacts) return [];
+    if (!Array.isArray(allContacts) || !Array.isArray(clientContacts)) return [];
     
     return allContacts.filter(
       contact => !clientContacts.some(
@@ -219,7 +219,11 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
         </Dialog>
       </CardHeader>
       <CardContent>
-        {clientContacts && clientContacts.length > 0 ? (
+        {!Array.isArray(clientContacts) || clientContacts.length === 0 ? (
+          <div className="text-center py-6 text-gray-500">
+            No contacts associated with this client
+          </div>
+        ) : (
           <div className="divide-y">
             {clientContacts.map(contact => (
               <div key={contact.id} className="py-3 flex justify-between items-center">
@@ -271,10 +275,6 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
                 </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 text-gray-500">
-            No contacts associated with this client
           </div>
         )}
       </CardContent>

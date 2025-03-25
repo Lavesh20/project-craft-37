@@ -2,7 +2,7 @@
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Plus, ExternalLink, CalendarIcon, UsersIcon } from 'lucide-react';
+import { Plus, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchTemplates, fetchClients } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -27,7 +27,8 @@ const Templates: React.FC = () => {
 
   // Helper function to get client names for a template
   const getClientNames = (clientIds: string[]) => {
-    if (!clients.length) return 'Loading clients...';
+    if (!Array.isArray(clientIds)) return 'No clients';
+    if (!Array.isArray(clients) || clients.length === 0) return 'Loading clients...';
     
     const templateClients = clients.filter(client => clientIds.includes(client.id));
     if (!templateClients.length) return 'No clients';
@@ -64,7 +65,7 @@ const Templates: React.FC = () => {
               <Skeleton className="h-12 w-full" />
             </div>
           </div>
-        ) : templates.length === 0 ? (
+        ) : !Array.isArray(templates) || templates.length === 0 ? (
           <div className="bg-white rounded-md shadow p-6">
             <p className="text-gray-500 text-center py-8">
               No templates available. Create your first template to get started.
@@ -93,12 +94,12 @@ const Templates: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          {template.tasks.length} tasks
+                          {Array.isArray(template.tasks) ? template.tasks.length : 0} tasks
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {getClientNames(template.clientIds)}
+                          {getClientNames(Array.isArray(template.clientIds) ? template.clientIds : [])}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

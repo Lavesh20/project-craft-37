@@ -31,7 +31,7 @@ const NewTemplate: React.FC = () => {
   const { toast } = useToast();
   
   // Fetch team members
-  const { data: teamMembers } = useQuery({
+  const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers,
   });
@@ -129,7 +129,7 @@ const NewTemplate: React.FC = () => {
                 <FormItem>
                   <FormLabel>Team Members</FormLabel>
                   <div className="flex flex-wrap gap-2">
-                    {teamMembers?.map(member => (
+                    {Array.isArray(teamMembers) && teamMembers.map(member => (
                       <Button
                         key={member.id}
                         type="button"
