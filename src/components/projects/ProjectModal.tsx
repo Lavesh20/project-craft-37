@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Plus } from 'lucide-react';
 import { fetchClients, fetchTeamMembers, fetchTemplates, createProject, updateProject } from '@/services/api';
@@ -59,9 +58,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
           fetchTeamMembers(),
           fetchTemplates()
         ]);
-        setClients(clientsData);
-        setTeamMembers(teamMembersData);
-        setTemplates(templatesData);
+        // Ensure we're working with arrays
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+        setTeamMembers(Array.isArray(teamMembersData) ? teamMembersData : []);
+        setTemplates(Array.isArray(templatesData) ? templatesData : []);
         
         // If in edit mode, populate form with project data
         if (projectToEdit) {
@@ -79,6 +79,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, projectToEdit }) =
         }
       } catch (error) {
         console.error('Failed to load data:', error);
+        toast.error('Failed to load form data');
       } finally {
         setLoading(false);
       }

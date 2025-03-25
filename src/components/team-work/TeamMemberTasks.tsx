@@ -19,31 +19,31 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
   tasks = [], 
   isLoading 
 }) => {
-  const { data: projects = [] } = useQuery({
+  const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: fetchProjects,
   });
 
-  const { data: clients = [] } = useQuery({
+  const { data: clientsData, isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
   });
 
   // Ensure we have arrays
-  const projectsArray = Array.isArray(projects) ? projects : [];
-  const clientsArray = Array.isArray(clients) ? clients : [];
+  const projects = Array.isArray(projectsData) ? projectsData : [];
+  const clients = Array.isArray(clientsData) ? clientsData : [];
   const tasksArray = Array.isArray(tasks) ? tasks : [];
 
   const getProjectName = (projectId: string) => {
-    const project = projectsArray.find(p => p.id === projectId);
+    const project = projects.find(p => p.id === projectId);
     return project?.name || 'Unknown Project';
   };
 
   const getClientName = (projectId: string) => {
-    const project = projectsArray.find(p => p.id === projectId);
+    const project = projects.find(p => p.id === projectId);
     if (!project || !project.clientId) return 'No Client';
     
-    const client = clientsArray.find(c => c.id === project.clientId);
+    const client = clients.find(c => c.id === project.clientId);
     return client?.name || 'Unknown Client';
   };
 
@@ -55,7 +55,7 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || projectsLoading || clientsLoading) {
     return (
       <div className="bg-white rounded-md shadow">
         <div className="px-4 py-3 border-b">

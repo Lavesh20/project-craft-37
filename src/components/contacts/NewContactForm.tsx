@@ -172,7 +172,8 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
               <SelectValue placeholder="Select a client (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No client</SelectItem>
+              {/* Fix: changed empty string to "none" with display text "No client" */}
+              <SelectItem value="none">No client</SelectItem>
               {clientsArray.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
@@ -182,7 +183,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
           </Select>
         </div>
 
-        {selectedClientId && (
+        {selectedClientId && selectedClientId !== "none" && (
           <div className="flex items-center space-x-2">
             <Checkbox
               id="isPrimaryContact"
