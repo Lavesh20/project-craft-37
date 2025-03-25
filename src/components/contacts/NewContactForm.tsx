@@ -64,13 +64,13 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
   });
 
   // Fetch clients for dropdown
-  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+  const { data: fetchedClients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients
   });
 
   // Ensure clients is an array
-  const clientsArray = Array.isArray(clients) ? clients : [];
+  const clients = Array.isArray(fetchedClients) ? fetchedClients : [];
 
   // Watch for client selection to enable/disable primary contact option
   const selectedClientId = watch('clientId');
@@ -81,7 +81,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       // Also invalidate client-contacts if a client was selected
-      if (selectedClientId) {
+      if (selectedClientId && selectedClientId !== 'none') {
         queryClient.invalidateQueries({ queryKey: ['client-contacts', selectedClientId] });
         queryClient.invalidateQueries({ queryKey: ['client', selectedClientId] });
       }
@@ -106,7 +106,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
         city: data.city,
         state: data.state,
         postalCode: data.postalCode,
-        clientId: data.clientId,
+        clientId: data.clientId === 'none' ? undefined : data.clientId,
         isPrimaryContact: data.isPrimaryContact
       };
       
@@ -172,9 +172,8 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
               <SelectValue placeholder="Select a client (optional)" />
             </SelectTrigger>
             <SelectContent>
-              {/* Fix: changed empty string to "none" with display text "No client" */}
               <SelectItem value="none">No client</SelectItem>
-              {clientsArray.map(client => (
+              {clients.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
                 </SelectItem>

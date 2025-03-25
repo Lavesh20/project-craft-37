@@ -2,8 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTemplate } from '@/services/api';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { createTemplate, fetchTeamMembers } from '@/services/api';
 import { CreateTemplateFormData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { fetchTeamMembers } from '@/services/api';
-import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@/components/ui/avatar';
 import { AlertTriangle } from 'lucide-react';
 
@@ -31,10 +29,13 @@ const NewTemplate: React.FC = () => {
   const { toast } = useToast();
   
   // Fetch team members
-  const { data: teamMembers = [] } = useQuery({
+  const { data: fetchedTeamMembers = [], isLoading: teamMembersLoading } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers,
   });
+  
+  // Ensure teamMembers is an array
+  const teamMembers = Array.isArray(fetchedTeamMembers) ? fetchedTeamMembers : [];
   
   // Setup form
   const form = useForm<FormData>({
@@ -129,7 +130,7 @@ const NewTemplate: React.FC = () => {
                 <FormItem>
                   <FormLabel>Team Members</FormLabel>
                   <div className="flex flex-wrap gap-2">
-                    {Array.isArray(teamMembers) && teamMembers.map(member => (
+                    {teamMembers.map(member => (
                       <Button
                         key={member.id}
                         type="button"

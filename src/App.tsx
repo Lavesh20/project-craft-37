@@ -19,6 +19,7 @@ import NotFound from '@/pages/NotFound';
 import ClientDetails from '@/pages/ClientDetails';
 import MyWork from '@/pages/MyWork';
 import TeamWork from '@/pages/TeamWork';
+import { toast } from 'sonner';
 
 // Error boundary as a class component
 class ErrorBoundary extends Component<{ children: ReactNode }> {
@@ -30,6 +31,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    toast.error("Something went wrong. Please refresh the page and try again.");
   }
 
   render() {
@@ -165,9 +167,11 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <ErrorBoundary>
-      <RouterProvider router={router} />
-    </ErrorBoundary>
+    <>
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
+    </>
   );
 }
 
