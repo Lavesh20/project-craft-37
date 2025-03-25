@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -30,7 +30,10 @@ const Clients = () => {
     queryFn: fetchClients,
   });
   
-  const filteredClients = clients.filter(client => 
+  // Ensure clients is an array before using filter
+  const clientsArray = Array.isArray(clients) ? clients : [];
+  
+  const filteredClients = clientsArray.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.description && client.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -136,12 +139,12 @@ const Clients = () => {
                       <TableCell>{client.primaryContactName || '-'}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {client.services.slice(0, 2).map((service, index) => (
+                          {Array.isArray(client.services) && client.services.slice(0, 2).map((service, index) => (
                             <Badge key={index} variant="outline" className="bg-gray-50">
                               {service}
                             </Badge>
                           ))}
-                          {client.services.length > 2 && (
+                          {Array.isArray(client.services) && client.services.length > 2 && (
                             <Badge variant="outline" className="bg-gray-50">
                               +{client.services.length - 2}
                             </Badge>
@@ -203,12 +206,12 @@ const Clients = () => {
                       <TableCell>{client.primaryContactName || '-'}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {client.services.slice(0, 2).map((service, index) => (
+                          {Array.isArray(client.services) && client.services.slice(0, 2).map((service, index) => (
                             <Badge key={index} variant="outline" className="bg-gray-50">
                               {service}
                             </Badge>
                           ))}
-                          {client.services.length > 2 && (
+                          {Array.isArray(client.services) && client.services.length > 2 && (
                             <Badge variant="outline" className="bg-gray-50">
                               +{client.services.length - 2}
                             </Badge>

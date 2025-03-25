@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, Plus, User, ExternalLink } from 'lucide-react';
+import { ArrowUpDown, Plus, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchContacts, fetchClients } from '@/services/api';
 import { Contact } from '@/types';
 import MainLayout from '@/components/layout/MainLayout';
@@ -44,16 +44,20 @@ const Contacts: React.FC = () => {
     queryFn: fetchClients,
   });
 
+  // Make sure contacts and clients are arrays
+  const contactsArray = Array.isArray(contacts) ? contacts : [];
+  const clientsArray = Array.isArray(clients) ? clients : [];
+
   const isLoading = contactsLoading || clientsLoading;
 
   // Sorting function
   const sortedContacts = React.useMemo(() => {
-    const sortableItems = [...contacts];
+    const sortableItems = [...contactsArray];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         if (sortConfig.key === 'client') {
-          const clientA = clients.find(c => c.id === a.clientId)?.name || '';
-          const clientB = clients.find(c => c.id === b.clientId)?.name || '';
+          const clientA = clientsArray.find(c => c.id === a.clientId)?.name || '';
+          const clientB = clientsArray.find(c => c.id === b.clientId)?.name || '';
           if (clientA < clientB) return sortConfig.direction === 'asc' ? -1 : 1;
           if (clientA > clientB) return sortConfig.direction === 'asc' ? 1 : -1;
           return 0;
@@ -72,7 +76,7 @@ const Contacts: React.FC = () => {
       });
     }
     return sortableItems;
-  }, [contacts, clients, sortConfig]);
+  }, [contactsArray, clientsArray, sortConfig]);
 
   // Request sort function
   const requestSort = (key: 'name' | 'email' | 'isPrimaryContact' | 'client') => {
@@ -86,7 +90,7 @@ const Contacts: React.FC = () => {
   // Get client name by ID
   const getClientName = (clientId?: string) => {
     if (!clientId) return '';
-    const client = clients.find(c => c.id === clientId);
+    const client = clientsArray.find(c => c.id === clientId);
     return client ? client.name : '';
   };
 
@@ -120,6 +124,12 @@ const Contacts: React.FC = () => {
           </div>
         ) : (
           <div className="bg-white rounded-md shadow">
+            <div className="flex justify-between items-center p-4 border-b">
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Filter size={14} />
+                Filter
+              </Button>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -160,7 +170,6 @@ const Contacts: React.FC = () => {
                         <ArrowUpDown size={14} />
                       </div>
                     </TableHead>
-                    <TableHead>ACTIONS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -182,17 +191,6 @@ const Contacts: React.FC = () => {
                           </Link>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Link 
-                            to={`/contacts/${contact.id}`} 
-                            className="text-blue-600 hover:text-blue-800"
-                            title="View Contact Details"
-                          >
-                            <ExternalLink size={16} />
-                          </Link>
-                        </div>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -200,10 +198,20 @@ const Contacts: React.FC = () => {
             </div>
             <div className="flex justify-between items-center p-4 border-t">
               <div className="text-sm text-gray-500">
-                Showing {sortedContacts.length} of {sortedContacts.length} items
+                Showing 1-{sortedContacts.length} of {sortedContacts.length} items
               </div>
-              <div className="text-sm text-gray-500">
-                20 rows per page
+              <div className="flex items-center space-x-2">
+                <div className="text-sm text-gray-500">
+                  20 rows per page
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Button variant="outline" size="icon" className="h-7 w-7">
+                    <ChevronLeft size={14} />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7">
+                    <ChevronRight size={14} />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

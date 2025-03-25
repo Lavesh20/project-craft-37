@@ -8,7 +8,6 @@ import { createContact, fetchClients } from '@/services/api';
 import { CreateContactFormData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
@@ -69,6 +68,9 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
     queryKey: ['clients'],
     queryFn: fetchClients
   });
+
+  // Ensure clients is an array
+  const clientsArray = Array.isArray(clients) ? clients : [];
 
   // Watch for client selection to enable/disable primary contact option
   const selectedClientId = watch('clientId');
@@ -171,7 +173,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">No client</SelectItem>
-              {Array.isArray(clients) && clients.map(client => (
+              {clientsArray.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
                 </SelectItem>

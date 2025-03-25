@@ -23,14 +23,18 @@ const Templates: React.FC = () => {
     queryFn: fetchClients,
   });
 
+  // Ensure templates and clients are arrays
+  const templatesArray = Array.isArray(templates) ? templates : [];
+  const clientsArray = Array.isArray(clients) ? clients : [];
+
   const isLoading = templatesLoading || clientsLoading;
 
   // Helper function to get client names for a template
   const getClientNames = (clientIds: string[]) => {
     if (!Array.isArray(clientIds)) return 'No clients';
-    if (!Array.isArray(clients) || clients.length === 0) return 'Loading clients...';
+    if (clientsArray.length === 0) return 'Loading clients...';
     
-    const templateClients = clients.filter(client => clientIds.includes(client.id));
+    const templateClients = clientsArray.filter(client => clientIds.includes(client.id));
     if (!templateClients.length) return 'No clients';
     
     return templateClients.map(client => client.name).join(', ');
@@ -65,7 +69,7 @@ const Templates: React.FC = () => {
               <Skeleton className="h-12 w-full" />
             </div>
           </div>
-        ) : !Array.isArray(templates) || templates.length === 0 ? (
+        ) : templatesArray.length === 0 ? (
           <div className="bg-white rounded-md shadow p-6">
             <p className="text-gray-500 text-center py-8">
               No templates available. Create your first template to get started.
@@ -85,7 +89,7 @@ const Templates: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {templates.map((template) => (
+                  {templatesArray.map((template) => (
                     <tr key={template.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
