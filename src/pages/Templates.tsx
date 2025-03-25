@@ -30,8 +30,8 @@ const Templates: React.FC = () => {
   const isLoading = templatesLoading || clientsLoading;
 
   // Helper function to get client names for a template
-  const getClientNames = (clientIds: string[]) => {
-    if (!Array.isArray(clientIds)) return 'No clients';
+  const getClientNames = (clientIds: string[] = []) => {
+    if (!Array.isArray(clientIds) || clientIds.length === 0) return 'No clients';
     if (clientsArray.length === 0) return 'Loading clients...';
     
     const templateClients = clientsArray.filter(client => clientIds.includes(client.id));
@@ -103,7 +103,7 @@ const Templates: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {getClientNames(Array.isArray(template.clientIds) ? template.clientIds : [])}
+                          {getClientNames(template.clientIds)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

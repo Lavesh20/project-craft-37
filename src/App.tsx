@@ -16,6 +16,7 @@ import ContactDetails from '@/pages/ContactDetails';
 import NotFound from '@/pages/NotFound';
 import ClientDetails from '@/pages/ClientDetails';
 import MyWork from '@/pages/MyWork';
+import TeamWork from '@/pages/TeamWork';
 
 // Routes definition
 const router = createBrowserRouter([
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
   {
     path: '/my-work',
     element: <MyWork />,
+  },
+  {
+    path: '/team-work',
+    element: <TeamWork />,
   },
   {
     path: '*',
