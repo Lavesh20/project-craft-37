@@ -28,16 +28,18 @@ const NewTemplate: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Fetch team members
-  const { data: fetchedTeamMembers = [], isLoading: teamMembersLoading } = useQuery({
+  // Fetch team members with proper error handling
+  const { data: teamMembersData, isLoading: teamMembersLoading } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers,
+    // Ensure we have a default empty array for teamMembers
+    initialData: [],
   });
   
-  // Ensure teamMembers is an array
-  const teamMembers = Array.isArray(fetchedTeamMembers) ? fetchedTeamMembers : [];
+  // Ensure teamMembers is always an array
+  const teamMembers = Array.isArray(teamMembersData) ? teamMembersData : [];
   
-  // Setup form
+  // Setup form with proper defaults
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -146,7 +148,7 @@ const NewTemplate: React.FC = () => {
                       >
                         <Avatar className="size-5">
                           <div className="flex items-center justify-center w-full h-full bg-primary-foreground text-primary text-xs uppercase">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                            {member.name && member.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         </Avatar>
                         {member.name}
