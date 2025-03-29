@@ -221,7 +221,13 @@ const Contacts: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Create New Contact</DialogTitle>
           </DialogHeader>
-          <NewContactForm />
+          <NewContactForm 
+            onCancel={() => setIsNewContactDialogOpen(false)}
+            afterSubmit={() => {
+              setIsNewContactDialogOpen(false);
+              refetchContacts();
+            }}
+          />
         </DialogContent>
       </Dialog>
 
