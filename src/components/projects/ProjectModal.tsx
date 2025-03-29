@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, InfoCircle } from 'lucide-react';
+import { CalendarIcon, Info } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { MultiSelect } from '@/components/ui/multi-select';
 import {
@@ -34,7 +33,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-// Define schema for project form with new fields
 const projectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
@@ -60,13 +58,11 @@ interface ProjectModalProps {
   projectToEdit?: Project;
 }
 
-// Helper function to parse a date string to a Date
 const parseDate = (dateStr: string): Date => {
   const date = new Date(dateStr);
   return isNaN(date.getTime()) ? new Date() : date;
 };
 
-// Label options for the project
 const labelOptions = [
   { label: 'Urgent', value: 'urgent' },
   { label: 'High Priority', value: 'high-priority' },
@@ -79,25 +75,21 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
   const isEditMode = !!projectToEdit;
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
-  // Fetch clients for dropdown
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients
   });
 
-  // Fetch team members for assignee dropdown
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers
   });
 
-  // Fetch templates for dropdown
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates
   });
 
-  // Set up form with react-hook-form and zod validation
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -116,11 +108,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
     },
   });
 
-  // Watch fields for conditional rendering
   const watchedTemplateId = form.watch('templateId');
   const watchedRepeating = form.watch('repeating');
 
-  // Update selected template when templateId changes
   useEffect(() => {
     if (watchedTemplateId && watchedTemplateId !== 'none') {
       const template = templates.find(t => t.id === watchedTemplateId) || null;
@@ -130,7 +120,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
     }
   }, [watchedTemplateId, templates]);
 
-  // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: createProject,
     onSuccess: (data) => {
@@ -147,7 +136,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
     }
   });
 
-  // Update project mutation
   const updateProjectMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Project> }) => 
       updateProject(id, data),
@@ -161,11 +149,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
     }
   });
 
-  // Form submission handler
   const onSubmit = async (data: ProjectFormValues) => {
     try {
       if (isEditMode && projectToEdit) {
-        // Prepare update data
         const updateData: Partial<Project> = {
           name: data.name,
           description: data.description,
@@ -180,13 +166,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
           labels: data.labels,
         };
         
-        // Update existing project
         await updateProjectMutation.mutateAsync({ 
           id: projectToEdit.id, 
           data: updateData 
         });
       } else {
-        // Prepare create data
         const createData: Partial<Project> = {
           name: data.name,
           description: data.description,
@@ -204,11 +188,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
           labels: data.labels,
         };
         
-        // Create new project
         await createProjectMutation.mutateAsync(createData);
       }
     } catch (error) {
-      // Error will be handled by mutation callbacks
     }
   };
 
@@ -223,7 +205,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Project Name */}
             <FormField
               control={form.control}
               name="name"
@@ -238,7 +219,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Project Description */}
             <FormField
               control={form.control}
               name="description"
@@ -258,7 +238,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
             />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Client Selection */}
               <FormField
                 control={form.control}
                 name="clientId"
@@ -269,7 +248,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
-                        disabled={isEditMode} // Disable in edit mode
+                        disabled={isEditMode}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -298,7 +277,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                 )}
               />
               
-              {/* Project Assignee */}
               <FormField
                 control={form.control}
                 name="assigneeId"
@@ -329,7 +307,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               />
             </div>
             
-            {/* Team Members Multi-select */}
             <FormField
               control={form.control}
               name="teamMemberIds"
@@ -349,7 +326,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Is this a repeating project */}
             <FormField
               control={form.control}
               name="repeating"
@@ -381,10 +357,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Conditional fields for repeating projects */}
             {watchedRepeating && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Frequency */}
                 <FormField
                   control={form.control}
                   name="frequency"
@@ -414,7 +388,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                   )}
                 />
                 
-                {/* Start Date */}
                 <FormField
                   control={form.control}
                   name="startDate"
@@ -457,7 +430,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               </div>
             )}
             
-            {/* Due Date */}
             <FormField
               control={form.control}
               name="dueDate"
@@ -498,7 +470,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Project Status */}
             <FormField
               control={form.control}
               name="status"
@@ -522,7 +493,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Project Labels */}
             <FormField
               control={form.control}
               name="labels"
@@ -542,7 +512,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            {/* Template Selection (only for new projects) */}
             {!isEditMode && (
               <FormField
                 control={form.control}
@@ -574,7 +543,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               />
             )}
             
-            {/* Form Actions */}
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button type="button" variant="outline" onClick={onClose} className="w-full md:w-auto">
                 Cancel
