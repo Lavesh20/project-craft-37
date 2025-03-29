@@ -170,7 +170,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
           teamMemberIds: data.assigneeId ? [data.assigneeId] : [],
           templateId: data.templateId,
           tasks: [],
-          position: 0, // Add position field
+          // Remove position field as it's not in the Project type
           lastEdited: new Date().toISOString(),
         };
         
