@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import {
   createBrowserRouter,
@@ -19,6 +18,8 @@ import NotFound from '@/pages/NotFound';
 import ClientDetails from '@/pages/ClientDetails';
 import MyWork from '@/pages/MyWork';
 import TeamWork from '@/pages/TeamWork';
+import Notifications from '@/pages/Notifications';
+import Account from '@/pages/Account';
 import { toast } from 'sonner';
 
 // Error boundary as a class component
@@ -156,6 +157,16 @@ const router = createBrowserRouter([
   {
     path: '/team-work',
     element: <TeamWork />,
+    errorElement: <RouteErrorBoundary />
+  },
+  {
+    path: '/notifications',
+    element: <Notifications />,
+    errorElement: <RouteErrorBoundary />
+  },
+  {
+    path: '/account',
+    element: <Account />,
     errorElement: <RouteErrorBoundary />
   },
   {
