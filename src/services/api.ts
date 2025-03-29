@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Project, 
@@ -10,6 +9,7 @@ import {
   TeamMember,
   CreateClientFormData,
   CreateContactFormData,
+  CreateTaskFormData,
   TasksByStatus,
   TasksByProject,
   Series,
@@ -770,4 +770,97 @@ export const getMyTasksByProject = async (dateStr: string): Promise<TasksByProje
   });
 
   return tasksByProject;
+};
+
+export const createTask = async (taskData: CreateTaskFormData): Promise<Task> => {
+  await delay(500);
+  const newTask: Task = {
+    id: uuidv4(),
+    name: taskData.name,
+    description: taskData.description || '',
+    status: 'Not Started',
+    assigneeId: taskData.assigneeId,
+    dueDate: taskData.dueDate,
+    projectId: taskData.projectId || '',
+    position: Math.max(0, ...projects.flatMap(p => p.tasks?.map(t => t.position) || [0])) + 1,
+    lastEdited: new Date().toISOString()
+  };
+  
+  // Find project and add task
+  const projectIndex = projects.findIndex(p => p.id === taskData.projectId);
+  if (projectIndex !== -1) {
+    if (!projects[projectIndex].tasks) {
+      projects[projectIndex].tasks = [];
+    }
+    projects[projectIndex].tasks?.push(newTask);
+  }
+  
+  return { ...newTask };
+};
+
+export const updateTask = async (id: string, taskData: Partial<Task>): Promise<Task> => {
+  await delay(500);
+  let updatedTask: Task | undefined;
+  
+  // Find the task in all projects
+  for (let i = 0; i < projects.length; i++) {
+    if (!projects[i].tasks) continue;
+    
+    const taskIndex = projects[i].tasks.findIndex(t => t.id === id);
+    if (taskIndex !== -1) {
+      updatedTask = {
+        ...projects[i].tasks[taskIndex],
+        ...taskData,
+        lastEdited: new Date().toISOString()
+      };
+      
+      projects[i].tasks[taskIndex] = updatedTask;
+      break;
+    }
+  }
+  
+  if (!updatedTask) {
+    throw new Error(`Task with ID ${id} not found`);
+  }
+  
+  return { ...updatedTask };
+};
+
+export const deleteTask = async (id: string): Promise<void> => {
+  await delay(500);
+  let found = false;
+  
+  // Find and remove the task from its project
+  for (let i = 0; i < projects.length; i++) {
+    if (!projects[i].tasks) continue;
+    
+    const taskIndex = projects[i].tasks.findIndex(t => t.id === id);
+    if (taskIndex !== -1) {
+      projects[i].tasks.splice(taskIndex, 1);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    throw new Error(`Task with ID ${id} not found`);
+  }
+};
+
+export const getTasks = async (): Promise<Task[]> => {
+  await delay(500);
+  return projects.flatMap(project => project.tasks || []);
+};
+
+export const getTeamMembers = async (): Promise<TeamMember[]> => {
+  await delay(500);
+  return fetchTeamMembers();
+};
+
+export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
+  await delay(500);
+  return templates.filter(template => 
+    template.clientId === clientId || 
+    (template.clientIds && template.clientIds.includes(clientId))
+  );
 };

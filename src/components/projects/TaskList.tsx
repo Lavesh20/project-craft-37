@@ -25,7 +25,14 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
 
   useEffect(() => {
     // Sort tasks by position
-    const sortedTasks = [...tasks].sort((a, b) => a.position - b.position);
+    if (!tasks) return;
+    
+    const sortedTasks = [...tasks].sort((a, b) => {
+      // Make sure tasks have position property
+      const posA = a.position !== undefined ? a.position : 0;
+      const posB = b.position !== undefined ? b.position : 0;
+      return posA - posB;
+    });
     setLocalTasks(sortedTasks);
   }, [tasks]);
 

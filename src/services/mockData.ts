@@ -1,4 +1,5 @@
-import { Project, Task, Template, Client, TeamMember, Contact, Comment, Series } from '@/types';
+
+import { Project, Task, Template, Client, TeamMember, Contact, Comment, Series, RelativeDueDate, TimeEstimate } from '@/types';
 
 // Initialize empty arrays to hold our mock data
 const projects: Project[] = [];
@@ -37,25 +38,25 @@ clients.push(
     id: 'client-1',
     name: 'Acme Corporation',
     description: 'A leading widget manufacturer',
-    primaryContactName: 'John Contact',
     location: 'New York, NY',
     website: 'https://acmecorp.example.com',
     assigneeId: 'user-1',
     priority: 'High',
     services: ['Accounting - Quarter-End Close', 'Accounting - Year-End Close'],
-    isActive: true
+    isActive: true,
+    primaryContactName: 'John Contact'
   },
   {
     id: 'client-2',
     name: 'Smith & Co',
     description: 'Boutique consulting firm',
-    primaryContactName: 'Jane Client',
     location: 'Chicago, IL',
     website: 'https://smithco.example.com',
     assigneeId: 'user-2',
     priority: 'Medium',
     services: ['Web Development', 'Web Design'],
-    isActive: true
+    isActive: true,
+    primaryContactName: 'Jane Client'
   },
   {
     id: 'client-3',
@@ -83,9 +84,9 @@ projects.push(
     dueDate: '2023-07-30',
     lastEdited: '2023-06-15T10:30:00Z',
     lastEditedBy: 'user-1',
+    labels: ['Finance', 'Q1'],
     repeating: true,
-    frequency: 'Quarterly',
-    labels: ['Finance', 'Q1']
+    frequency: 'Quarterly'
   },
   {
     id: 'project-2',
@@ -97,8 +98,8 @@ projects.push(
     status: 'Not Started',
     dueDate: '2023-09-15',
     lastEdited: '2023-06-10T14:45:00Z',
-    repeating: false,
-    labels: ['Web Design', 'Marketing']
+    labels: ['Web Design', 'Marketing'],
+    repeating: false
   },
   {
     id: 'project-3',
@@ -110,9 +111,9 @@ projects.push(
     status: 'Complete',
     dueDate: '2023-04-15',
     lastEdited: '2023-04-10T09:15:00Z',
+    labels: ['Tax', '2023'],
     repeating: true,
-    frequency: 'Yearly',
-    labels: ['Tax', '2023']
+    frequency: 'Yearly'
   }
 );
 
@@ -204,6 +205,7 @@ templates.push(
         assigneeId: 'user-1'
       }
     ],
+    createdAt: '2023-05-10T13:30:00Z',
     lastEdited: '2023-05-10T13:30:00Z'
   },
   {
@@ -232,6 +234,7 @@ templates.push(
         assigneeId: 'user-2'
       }
     ],
+    createdAt: '2023-04-15T09:45:00Z',
     lastEdited: '2023-04-15T09:45:00Z'
   }
 );
@@ -245,6 +248,7 @@ contacts.push(
     phone: '555-123-4567',
     clientId: 'client-1',
     isPrimaryContact: true,
+    createdAt: '2023-05-20T11:30:00Z',
     lastEdited: '2023-05-20T11:30:00Z'
   },
   {
@@ -253,6 +257,7 @@ contacts.push(
     email: 'sarah.manager@acmecorp.example.com',
     phone: '555-987-6543',
     clientId: 'client-1',
+    createdAt: '2023-05-22T14:45:00Z',
     lastEdited: '2023-05-22T14:45:00Z'
   },
   {
@@ -262,6 +267,7 @@ contacts.push(
     phone: '555-567-8901',
     clientId: 'client-2',
     isPrimaryContact: true,
+    createdAt: '2023-05-18T10:15:00Z',
     lastEdited: '2023-05-18T10:15:00Z'
   }
 );

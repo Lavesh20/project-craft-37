@@ -32,7 +32,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
     name: '',
     description: '',
     assigneeId: '',
-    dueDate: format(new Date(), 'yyyy-MM-dd')
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    projectId
   });
 
   useEffect(() => {
@@ -48,7 +49,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
             name: taskToEdit.name,
             description: taskToEdit.description || '',
             assigneeId: taskToEdit.assigneeId || '',
-            dueDate: taskToEdit.dueDate
+            dueDate: taskToEdit.dueDate,
+            projectId
           });
         }
       } catch (error) {
@@ -60,7 +62,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
     };
     
     loadData();
-  }, [taskToEdit]);
+  }, [taskToEdit, projectId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -96,14 +98,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
         });
         toast.success('Task updated successfully');
       } else {
-        // Fixed: Only pass the CreateTaskFormData properties and the projectId separately
-        await createTask({
-          name: formData.name,
-          description: formData.description,
-          assigneeId: formData.assigneeId,
-          dueDate: formData.dueDate,
-          projectId // Pass projectId as a separate parameter
-        });
+        await createTask(formData);
         toast.success('Task created successfully');
       }
       

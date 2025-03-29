@@ -14,6 +14,9 @@ export interface Project {
   templateId?: string;
   lastEdited: string;
   lastEditedBy?: string;
+  labels?: string[];
+  repeating?: boolean;
+  frequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Custom';
 }
 
 export interface Client {
@@ -28,6 +31,7 @@ export interface Client {
   isActive?: boolean;
   createdAt?: string;
   lastEdited?: string;
+  primaryContactName?: string;
 }
 
 export interface Contact {
@@ -42,6 +46,7 @@ export interface Contact {
   clientId?: string;
   isPrimaryContact?: boolean;
   createdAt?: string;
+  lastEdited?: string;
 }
 
 export interface Task {
@@ -55,6 +60,8 @@ export interface Task {
   clientId?: string;
   clientName?: string;
   projectName?: string;
+  position: number;
+  lastEdited?: string;
 }
 
 export interface Template {
@@ -62,6 +69,8 @@ export interface Template {
   name: string;
   description?: string;
   clientId?: string;
+  teamMemberIds?: string[];
+  clientIds?: string[];
   tasks: TemplateTask[];
   category?: string;
   createdAt: string;
@@ -73,7 +82,21 @@ export interface TemplateTask {
   name: string;
   description?: string;
   assigneeId?: string;
-  relativeDueDate: number; // Number of days from project start
+  relativeDueDate: RelativeDueDate;
+  templateId?: string;
+  position?: number;
+  timeEstimate?: TimeEstimate;
+}
+
+export interface RelativeDueDate {
+  value: number;
+  unit: 'days' | 'weeks' | 'months';
+  position: 'before' | 'after';
+}
+
+export interface TimeEstimate {
+  value: number;
+  unit: 'm' | 'h';
 }
 
 export interface Comment {
@@ -98,6 +121,7 @@ export interface Series {
   frequency: string;
   templateId?: string;
   templateName?: string;
+  clientId: string;
 }
 
 // Data structures for API responses
@@ -139,7 +163,36 @@ export interface CreateContactFormData {
   isPrimaryContact?: boolean;
 }
 
+export interface CreateTaskFormData {
+  name: string;
+  description?: string;
+  assigneeId?: string;
+  dueDate: string;
+  projectId?: string;
+}
+
+export interface CreateTemplateFormData {
+  name: string;
+  description?: string;
+  teamMemberIds?: string[];
+  clientIds?: string[];
+}
+
 export interface MyWorkTask extends Task {
   projectName?: string;
   clientName?: string;
+}
+
+// Filter and table options
+export interface FilterOptions {
+  timeframe?: string;
+  status?: string;
+  client?: string;
+}
+
+export interface TableColumn {
+  id: string;
+  label: string;
+  visible: boolean;
+  sortable?: boolean;
 }

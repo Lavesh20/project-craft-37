@@ -41,7 +41,10 @@ const TasksByProjectView: React.FC<TasksByProjectViewProps> = ({ tasksByProject,
     <div className="space-y-8">
       {projectIds.map((projectId) => {
         // Make sure we have a valid project entry
-        const project = tasksByProject[projectId] || { projectName: 'Unknown Project', tasks: [] };
+        const project = tasksByProject[projectId];
+        
+        if (!project) return null;
+        
         const { projectName, clientName, tasks = [] } = project;
         
         // Ensure tasks is always an array

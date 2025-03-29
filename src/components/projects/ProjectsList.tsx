@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchProjects, fetchClients } from '@/services/api';
-import { Project, FilterOptions, TableColumn, Client } from '@/types';
+import { Project, Client, FilterOptions, TableColumn } from '@/types';
 import { Filter, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +18,6 @@ const ProjectsList: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>('dueDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
-  // Use React Query to fetch projects and clients
   const { data: projects = [], isLoading: projectsLoading, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: fetchProjects,
@@ -50,10 +48,8 @@ const ProjectsList: React.FC = () => {
 
   const handleSort = (columnId: string) => {
     if (sortColumn === columnId) {
-      // Toggle sort direction if clicking the same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new sort column and default to ascending
       setSortColumn(columnId);
       setSortDirection('asc');
     }
@@ -68,7 +64,6 @@ const ProjectsList: React.FC = () => {
     refetchProjects();
   };
 
-  // Get client name by ID with proper logging
   const getClientNameById = (clientId: string): string => {
     if (clientsLoading) {
       return 'Loading...';
@@ -126,13 +121,11 @@ const ProjectsList: React.FC = () => {
     });
   };
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, 'MMM dd');
   };
 
-  // Calculate relative time for last edited
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     return formatDistanceToNow(date, { addSuffix: false });
@@ -296,7 +289,7 @@ const ProjectsList: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-1">
-                            {Array.isArray(project.labels) && project.labels.map(label => (
+                            {Array.isArray(project.labels) && project.labels && project.labels.map(label => (
                               <Badge key={label} variant="outline" className="bg-gray-100 text-gray-800">
                                 {label}
                               </Badge>
@@ -324,7 +317,6 @@ const ProjectsList: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {/* This would be a team member lookup in a real app */}
                             {project.assigneeId === 'user-1' ? 'John Doe' : 
                              project.assigneeId === 'user-2' ? 'Jane Smith' : 
                              project.assigneeId === 'user-3' ? 'Vyas' : '—'}
