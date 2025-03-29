@@ -161,6 +161,8 @@ export interface CreateContactFormData {
   postalCode?: string;
   clientId?: string;
   isPrimaryContact?: boolean;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export interface CreateTaskFormData {

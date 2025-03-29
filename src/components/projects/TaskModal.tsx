@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { createTask, updateTask, getTeamMembers } from '@/services/api';
+import { createTask, updateTask, fetchTeamMembers } from '@/services/api';
 import { CreateTaskFormData, Task, TeamMember } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +41,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
     const loadData = async () => {
       try {
         setLoading(true);
-        const teamMembersData = await getTeamMembers();
+        const teamMembersData = await fetchTeamMembers();
         setTeamMembers(teamMembersData);
         
         // If in edit mode, populate form with task data

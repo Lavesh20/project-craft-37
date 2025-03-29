@@ -13,7 +13,10 @@ import {
   TasksByStatus,
   TasksByProject,
   Series,
-  MyWorkTask
+  MyWorkTask,
+  RelativeDueDate,
+  TimeEstimate,
+  TemplateTask
 } from '@/types';
 
 // Mock data storage
@@ -37,6 +40,8 @@ let projects: Project[] = [
         dueDate: '2023-11-15',
         projectId: 'project-1',
         clientId: 'client-1',
+        position: 0,
+        lastEdited: '2023-11-10T10:30:00Z'
       },
       {
         id: 'task-2',
@@ -46,6 +51,8 @@ let projects: Project[] = [
         dueDate: '2023-11-25',
         projectId: 'project-1',
         clientId: 'client-1',
+        position: 1,
+        lastEdited: '2023-11-10T11:30:00Z'
       },
       {
         id: 'task-3',
@@ -55,6 +62,8 @@ let projects: Project[] = [
         dueDate: '2023-12-10',
         projectId: 'project-1',
         clientId: 'client-1',
+        position: 2,
+        lastEdited: '2023-11-10T12:30:00Z'
       }
     ],
     lastEdited: '2023-11-10T14:30:00Z',
@@ -78,6 +87,8 @@ let projects: Project[] = [
         dueDate: '2023-12-15',
         projectId: 'project-2',
         clientId: 'client-2',
+        position: 0,
+        lastEdited: '2023-11-10T10:30:00Z'
       }
     ],
     lastEdited: '2023-11-08T09:15:00Z',
@@ -102,6 +113,8 @@ let projects: Project[] = [
         dueDate: '2023-10-25',
         projectId: 'project-3',
         clientId: 'client-3',
+        position: 0,
+        lastEdited: '2023-11-10T10:45:00Z'
       }
     ],
     templateId: 'template-1',
@@ -213,36 +226,78 @@ let templates: Template[] = [
         id: 'temp-task-1',
         name: 'Initial client meeting',
         description: 'Set up initial meeting to discuss audit scope and expectations',
-        relativeDueDate: 0,
+        relativeDueDate: {
+          value: 0,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 2,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-2',
         name: 'Document collection',
         description: 'Gather all necessary financial documents',
-        relativeDueDate: 7,
+        relativeDueDate: {
+          value: 7,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 4,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-3',
         name: 'Financial analysis',
         description: 'Analyze financial statements and records',
-        relativeDueDate: 14,
+        relativeDueDate: {
+          value: 14,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 8,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-4',
         name: 'Prepare audit report',
         description: 'Compile findings into comprehensive audit report',
-        relativeDueDate: 21,
+        relativeDueDate: {
+          value: 21,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 6,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-5',
         name: 'Client review meeting',
         description: 'Review audit findings with client',
-        relativeDueDate: 28,
+        relativeDueDate: {
+          value: 28,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 2,
+          unit: 'h'
+        }
       }
     ],
     category: 'Audit',
     createdAt: '2023-01-05T09:00:00Z',
     lastEdited: '2023-09-20T11:15:00Z',
+    clientIds: [],
+    teamMemberIds: []
   },
   {
     id: 'template-2',
@@ -253,36 +308,78 @@ let templates: Template[] = [
         id: 'temp-task-6',
         name: 'Client intake',
         description: 'Collect client information and tax documents',
-        relativeDueDate: 0,
+        relativeDueDate: {
+          value: 0,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 1,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-7',
         name: 'Document review',
         description: 'Review tax documents for completeness',
-        relativeDueDate: 3,
+        relativeDueDate: {
+          value: 3,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 2,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-8',
         name: 'Tax return preparation',
         description: 'Prepare tax return forms',
-        relativeDueDate: 7,
+        relativeDueDate: {
+          value: 7,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 4,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-9',
         name: 'Quality review',
         description: 'Perform quality check on completed tax return',
-        relativeDueDate: 10,
+        relativeDueDate: {
+          value: 10,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 1,
+          unit: 'h'
+        }
       },
       {
         id: 'temp-task-10',
         name: 'Client review and filing',
         description: 'Review return with client and file',
-        relativeDueDate: 14,
+        relativeDueDate: {
+          value: 14,
+          unit: 'days',
+          position: 'after'
+        },
+        timeEstimate: {
+          value: 2,
+          unit: 'h'
+        }
       }
     ],
     category: 'Tax',
     createdAt: '2023-02-10T14:30:00Z',
     lastEdited: '2023-10-15T16:45:00Z',
+    clientIds: [],
+    teamMemberIds: []
   }
 ];
 
@@ -331,10 +428,8 @@ let comments: Comment[] = [
   }
 ];
 
-// Introduce a delay to simulate network latency
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// API Helper Functions
 export const fetchProjects = async (): Promise<Project[]> => {
   await delay(500);
   return [...projects];
@@ -364,7 +459,7 @@ export const createProject = async (projectData: Partial<Project>): Promise<Proj
     tasks: projectData.tasks || [],
     templateId: projectData.templateId,
     lastEdited: new Date().toISOString(),
-    lastEditedBy: 'user-1', // Assuming current user
+    lastEditedBy: 'user-1',
   };
   
   projects.push(newProject);
@@ -430,7 +525,6 @@ export const createClient = async (clientData: CreateClientFormData): Promise<Cl
   
   clients.push(newClient);
   
-  // If primaryContactName is provided, create a contact
   if (clientData.primaryContactName) {
     const newContact: Contact = {
       id: uuidv4(),
@@ -473,10 +567,8 @@ export const deleteClient = async (id: string): Promise<void> => {
   
   clients.splice(index, 1);
   
-  // Remove associated contacts
   contacts = contacts.filter(contact => contact.clientId !== id);
   
-  // Remove or update associated projects
   projects = projects.filter(project => project.clientId !== id);
 };
 
@@ -497,7 +589,6 @@ export const fetchContact = async (id: string): Promise<Contact> => {
 export const createContact = async (contactData: CreateContactFormData): Promise<Contact> => {
   await delay(500);
   
-  // If this is a primary contact for a client, update existing contacts
   if (contactData.clientId && contactData.isPrimaryContact) {
     contacts = contacts.map(contact => {
       if (contact.clientId === contactData.clientId && contact.isPrimaryContact) {
@@ -532,7 +623,6 @@ export const updateContact = async (id: string, contactData: Partial<Contact>): 
     throw new Error(`Contact with ID ${id} not found`);
   }
   
-  // If updating to primary contact, update other contacts
   if (contactData.clientId && contactData.isPrimaryContact) {
     contacts = contacts.map(contact => {
       if (contact.id !== id && contact.clientId === contactData.clientId && contact.isPrimaryContact) {
@@ -665,7 +755,7 @@ export const createComment = async (projectId: string, content: string): Promise
   const newComment: Comment = {
     id: uuidv4(),
     projectId,
-    authorId: 'user-1', // Assuming current user
+    authorId: 'user-1',
     content,
     createdAt: new Date().toISOString(),
   };
@@ -679,9 +769,16 @@ export const getClientProjects = async (clientId: string): Promise<Project[]> =>
   return projects.filter(project => project.clientId === clientId);
 };
 
+export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
+  await delay(500);
+  return templates.filter(template => 
+    template.clientId === clientId || 
+    (template.clientIds && template.clientIds.includes(clientId))
+  );
+};
+
 export const getClientSeries = async (clientId: string): Promise<Series[]> => {
   await delay(500);
-  // Typically this would fetch from an API, but we'll mock some data
   return [
     {
       id: 'series-1',
@@ -689,6 +786,7 @@ export const getClientSeries = async (clientId: string): Promise<Series[]> => {
       frequency: 'Monthly',
       templateId: 'template-2',
       templateName: 'Bookkeeping Template',
+      clientId: clientId
     },
     {
       id: 'series-2',
@@ -696,6 +794,7 @@ export const getClientSeries = async (clientId: string): Promise<Series[]> => {
       frequency: 'Quarterly',
       templateId: 'template-1',
       templateName: 'Tax Filing Template',
+      clientId: clientId
     },
   ];
 };
@@ -705,7 +804,6 @@ export const getMyOverdueTasks = async (): Promise<MyWorkTask[]> => {
   const today = new Date();
   const overdueTasks: MyWorkTask[] = [];
 
-  // Collect tasks from all projects that are overdue
   projects.forEach(project => {
     const clientName = clients.find(c => c.id === project.clientId)?.name;
     
@@ -786,7 +884,6 @@ export const createTask = async (taskData: CreateTaskFormData): Promise<Task> =>
     lastEdited: new Date().toISOString()
   };
   
-  // Find project and add task
   const projectIndex = projects.findIndex(p => p.id === taskData.projectId);
   if (projectIndex !== -1) {
     if (!projects[projectIndex].tasks) {
@@ -802,7 +899,6 @@ export const updateTask = async (id: string, taskData: Partial<Task>): Promise<T
   await delay(500);
   let updatedTask: Task | undefined;
   
-  // Find the task in all projects
   for (let i = 0; i < projects.length; i++) {
     if (!projects[i].tasks) continue;
     
@@ -830,7 +926,6 @@ export const deleteTask = async (id: string): Promise<void> => {
   await delay(500);
   let found = false;
   
-  // Find and remove the task from its project
   for (let i = 0; i < projects.length; i++) {
     if (!projects[i].tasks) continue;
     
@@ -853,14 +948,5 @@ export const getTasks = async (): Promise<Task[]> => {
 };
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
-  await delay(500);
   return fetchTeamMembers();
-};
-
-export const getClientTemplates = async (clientId: string): Promise<Template[]> => {
-  await delay(500);
-  return templates.filter(template => 
-    template.clientId === clientId || 
-    (template.clientIds && template.clientIds.includes(clientId))
-  );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +33,6 @@ const Contacts: React.FC = () => {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch contacts data
   const { 
     data: contacts = [], 
     isLoading: contactsLoading,
@@ -44,7 +42,6 @@ const Contacts: React.FC = () => {
     queryFn: fetchContacts
   });
 
-  // Fetch clients for displaying client names
   const { 
     data: clients = [], 
     isLoading: clientsLoading
@@ -53,7 +50,6 @@ const Contacts: React.FC = () => {
     queryFn: fetchClients
   });
 
-  // Filter contacts based on search
   const filteredContacts = React.useMemo(() => {
     return contacts.filter(contact => {
       const searchLower = searchQuery.toLowerCase();
@@ -65,20 +61,17 @@ const Contacts: React.FC = () => {
     });
   }, [contacts, searchQuery]);
 
-  // Helper to get client name by ID
   const getClientName = (clientId?: string): string => {
     if (!clientId) return 'No Associated Client';
     const client = clients.find(c => c.id === clientId);
     return client ? client.name : 'Unknown Client';
   };
 
-  // Handle opening delete confirmation
   const handleDeleteClick = (contact: Contact) => {
     setContactToDelete(contact);
     setIsDeleteDialogOpen(true);
   };
 
-  // Handle contact deletion
   const handleConfirmDelete = async () => {
     if (!contactToDelete) return;
     
@@ -223,23 +216,15 @@ const Contacts: React.FC = () => {
         </div>
       </div>
 
-      {/* New Contact Dialog */}
       <Dialog open={isNewContactDialogOpen} onOpenChange={setIsNewContactDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Create New Contact</DialogTitle>
           </DialogHeader>
-          <NewContactForm 
-            onSuccess={() => {
-              setIsNewContactDialogOpen(false);
-              refetchContacts();
-            }}
-            onCancel={() => setIsNewContactDialogOpen(false)}
-          />
+          <NewContactForm />
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

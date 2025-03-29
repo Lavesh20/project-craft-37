@@ -87,9 +87,10 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
     if (!task) return;
     
     try {
+      const newStatus: 'Complete' | 'Not Started' = task.status === 'Complete' ? 'Not Started' : 'Complete';
       const updatedTask = {
         ...task,
-        status: task.status === 'Complete' ? 'Not Started' : 'Complete',
+        status: newStatus,
         lastEdited: new Date().toISOString()
       };
       await updateTask(taskId, updatedTask);
