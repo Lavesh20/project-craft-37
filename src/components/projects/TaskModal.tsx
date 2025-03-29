@@ -182,7 +182,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
                 onChange={handleInputChange}
                 className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">Select a Team Member</option>
+                <option value="unassigned">Select a Team Member</option>
                 {teamMembers.map(member => (
                   <option key={member.id} value={member.id}>
                     {member.name}

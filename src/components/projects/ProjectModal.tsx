@@ -333,7 +333,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {teamMembers.map(member => (
                           <SelectItem key={member.id} value={member.id}>
                             {member.name}
@@ -364,7 +364,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {templates.map(template => (
                           <SelectItem key={template.id} value={template.id}>
                             {template.name}
