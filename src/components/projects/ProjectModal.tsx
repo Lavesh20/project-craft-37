@@ -169,7 +169,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
           assigneeId: data.assigneeId,
           teamMemberIds: data.assigneeId ? [data.assigneeId] : [],
           templateId: data.templateId,
-          tasks: []
+          tasks: [],
+          position: 0, // Add position field
+          lastEdited: new Date().toISOString(),
         };
         
         // Create new project

@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreateClientFormData, TeamMember } from '@/types';
 import { createClient } from '@/services/api';
 import { toast } from 'sonner';
+import { Card } from '@/components/ui/card';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Client name is required'),
@@ -115,222 +117,259 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Name <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="Enter client name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter description"
-                  className="min-h-24"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="primaryContactName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Primary Contact</FormLabel>
-                <FormControl>
-                  <Input placeholder="Contact name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter location" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="website"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Website URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="assigneeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Assignee</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
+        <Card className="p-6 shadow-sm border border-gray-100">
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold">
+                    Name <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select team member" />
-                    </SelectTrigger>
+                    <Input 
+                      placeholder="Enter client name" 
+                      {...field} 
+                      className="focus-visible:ring-jetpack-blue" 
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="unassigned">None</SelectItem>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold">Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter description"
+                      className="min-h-24 focus-visible:ring-jetpack-blue"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-gray-500">
+                    Provide a brief description of the client's business or needs.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </Card>
+        
+        <Card className="p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Contact Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="primaryContactName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Primary Contact</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Contact name" 
+                      {...field} 
+                      className="focus-visible:ring-jetpack-blue" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Location</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter location" 
+                      {...field} 
+                      className="focus-visible:ring-jetpack-blue" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="website"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Website URL</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://example.com" 
+                      {...field} 
+                      className="focus-visible:ring-jetpack-blue" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="assigneeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Assignee</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="focus-visible:ring-jetpack-blue">
+                        <SelectValue placeholder="Select team member" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="unassigned">None</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </Card>
+        
+        <Card className="p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Additional Information</h3>
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem className="space-y-3 mb-6">
+                <FormLabel className="text-base">Priority Level</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-row space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <RadioGroupItem value="None" />
+                      </FormControl>
+                      <FormLabel className="font-normal">None</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <RadioGroupItem value="Low" />
+                      </FormControl>
+                      <FormLabel className="font-normal">Low</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <RadioGroupItem value="Medium" />
+                      </FormControl>
+                      <FormLabel className="font-normal">Medium</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
+                        <RadioGroupItem value="High" />
+                      </FormControl>
+                      <FormLabel className="font-normal">High</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="priority"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>Priority Level</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  className="flex flex-row space-x-4"
-                >
-                  <FormItem className="flex items-center space-x-2">
-                    <FormControl>
-                      <RadioGroupItem value="None" />
-                    </FormControl>
-                    <FormLabel className="font-normal">None</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-2">
-                    <FormControl>
-                      <RadioGroupItem value="Low" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Low</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-2">
-                    <FormControl>
-                      <RadioGroupItem value="Medium" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Medium</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-2">
-                    <FormControl>
-                      <RadioGroupItem value="High" />
-                    </FormControl>
-                    <FormLabel className="font-normal">High</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="services"
-          render={() => (
-            <FormItem>
-              <FormLabel>Services</FormLabel>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                {availableServices.map((service) => (
-                  <FormField
-                    key={service.value}
-                    control={form.control}
-                    name="services"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={service.value}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(service.value)}
-                              onCheckedChange={(checked) => {
-                                const currentServices = field.value || [];
-                                if (checked) {
-                                  field.onChange([...currentServices, service.value]);
-                                } else {
-                                  field.onChange(
-                                    currentServices.filter((value) => value !== service.value)
-                                  );
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">{service.label}</FormLabel>
-                        </FormItem>
-                      );
-                    }}
+          
+          <FormField
+            control={form.control}
+            name="services"
+            render={() => (
+              <FormItem>
+                <FormLabel className="text-base">Services</FormLabel>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 bg-gray-50 p-4 rounded-md">
+                  {availableServices.map((service) => (
+                    <FormField
+                      key={service.value}
+                      control={form.control}
+                      name="services"
+                      render={({ field }) => {
+                        return (
+                          <FormItem
+                            key={service.value}
+                            className="flex flex-row items-start space-x-3 space-y-0 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(service.value)}
+                                onCheckedChange={(checked) => {
+                                  const currentServices = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentServices, service.value]);
+                                  } else {
+                                    field.onChange(
+                                      currentServices.filter((value) => value !== service.value)
+                                    );
+                                  }
+                                }}
+                                className="data-[state=checked]:bg-jetpack-blue data-[state=checked]:border-jetpack-blue"
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">{service.label}</FormLabel>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-6">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-jetpack-blue data-[state=checked]:border-jetpack-blue"
                   />
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormLabel className="font-normal">Active Status</FormLabel>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal">Active Status</FormLabel>
+                  <FormDescription className="text-xs">
+                    Mark this client as active in your system
+                  </FormDescription>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Card>
         
         <div className="flex flex-col md:flex-row gap-3 pt-4 border-t">
           <Button 
             type="submit"
             disabled={createClientMutation.isPending}
+            className="bg-jetpack-blue hover:bg-blue-700 transition-colors"
           >
             Create Client
           </Button>
@@ -342,6 +381,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
               form.handleSubmit(onSubmit)();
             }}
             disabled={createClientMutation.isPending}
+            className="border-jetpack-blue text-jetpack-blue hover:bg-blue-50"
           >
             Create and Add Another
           </Button>
@@ -349,6 +389,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
             type="button"
             variant="ghost"
             onClick={onCancel}
+            className="hover:bg-gray-100"
           >
             Cancel
           </Button>
