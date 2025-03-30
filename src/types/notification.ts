@@ -8,3 +8,10 @@ export interface Notification {
   read: boolean;
   entityId?: string;
 }
+
+export interface NotificationPreference {
+  id: string;
+  type: string;
+  label: string;
+  enabled: boolean;
+}

@@ -1,92 +1,27 @@
+
 import React, { useState } from 'react';
 import { Bell, Settings, Check } from 'lucide-react';
-import { mockData } from '@/services/mock';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Notification } from '@/types/notification';
+import { useNotifications } from '@/context/NotificationContext';
+import NotificationSettings from './NotificationSettings';
 
 const NotificationsContent = () => {
   const { toast } = useToast();
-  
-  // Generate notifications based on overdue tasks and projects
-  const generateNotifications = (): Notification[] => {
-    const today = new Date();
-    
-    // Get upcoming/overdue tasks
-    const taskNotifications = mockData.tasks
-      .filter(task => {
-        const dueDate = new Date(task.dueDate);
-        const timeDiff = dueDate.getTime() - today.getTime();
-        // Get tasks due within 3 days or overdue
-        return timeDiff <= 3 * 24 * 60 * 60 * 1000;
-      })
-      .map(task => {
-        const project = mockData.projects.find(p => p.id === task.projectId);
-        const isOverdue = new Date(task.dueDate) < today;
-        
-        return {
-          id: `task-${task.id}`,
-          type: 'task' as const,
-          title: `Task ${isOverdue ? 'overdue' : 'due soon'}`,
-          message: `"${task.name}" for ${project?.name || 'Unknown Project'} is ${isOverdue ? 'overdue' : 'due today'}.`,
-          date: new Date(task.dueDate),
-          read: false,
-          entityId: task.id
-        };
-      });
+  const [showSettings, setShowSettings] = useState(false);
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
 
-    // Get project deadlines notifications
-    const projectNotifications = mockData.projects
-      .filter(project => {
-        const dueDate = new Date(project.dueDate);
-        const timeDiff = dueDate.getTime() - today.getTime();
-        // Get projects due within 5 days or overdue
-        return timeDiff <= 5 * 24 * 60 * 60 * 1000;
-      })
-      .map(project => ({
-        id: `project-${project.id}`,
-        type: 'project' as const,
-        title: 'Project deadline approaching',
-        message: `Project "${project.name}" is due on ${format(new Date(project.dueDate), 'MMM dd')}.`,
-        date: new Date(project.dueDate),
-        read: false,
-        entityId: project.id
-      }));
-    
-    // Add some system notifications
-    const systemNotifications: Notification[] = [
-      {
-        id: 'system-trial',
-        type: 'system',
-        title: 'Trial ending soon',
-        message: 'Your free trial expires in 5 days. Upgrade to keep access to all features.',
-        date: new Date(today.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-        read: true
-      },
-      {
-        id: 'system-new-feature',
-        type: 'system',
-        title: 'New feature available',
-        message: 'Check out our new team collaboration tools!',
-        date: new Date(today.getTime() - 24 * 60 * 60 * 1000), // 1 day ago
-        read: false
-      }
-    ];
-    
-    // Combine all notifications and sort by date (newest first)
-    return [...taskNotifications, ...projectNotifications, ...systemNotifications]
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
-  };
-
-  const [notifications, setNotifications] = useState<Notification[]>(generateNotifications());
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
     toast({
       title: "Notifications marked as read",
       description: "All notifications have been marked as read.",
     });
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    markAsRead(id);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -118,15 +53,19 @@ const NotificationsContent = () => {
     }
   };
 
+  if (showSettings) {
+    return <NotificationSettings onBack={() => setShowSettings(false)} />;
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-5xl">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={markAllAsRead}>
+          <Button variant="outline" onClick={handleMarkAllAsRead}>
             <Check className="mr-2 h-4 w-4" /> Mark all as read
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setShowSettings(true)}>
             <Settings className="mr-2 h-4 w-4" /> Settings
           </Button>
         </div>
@@ -144,7 +83,8 @@ const NotificationsContent = () => {
             {notifications.map((notification) => (
               <li 
                 key={notification.id} 
-                className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
+                className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                onClick={() => handleMarkAsRead(notification.id)}
               >
                 {getNotificationIcon(notification.type)}
                 <div className="flex-1 min-w-0">

@@ -1,188 +1,56 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  useRouteError,
-  isRouteErrorResponse
-} from "react-router-dom";
-import Index from '@/pages/Index';
-import Projects from '@/pages/Projects';
-import ProjectDetailsPage from '@/pages/ProjectDetails';
-import Templates from '@/pages/Templates';
-import NewTemplate from '@/pages/NewTemplate';
-import TemplateDetails from '@/pages/TemplateDetails';
-import Clients from '@/pages/Clients';
-import Contacts from '@/pages/Contacts';
-import ContactDetails from '@/pages/ContactDetails';
-import NotFound from '@/pages/NotFound';
-import ClientDetails from '@/pages/ClientDetails';
-import MyWork from '@/pages/MyWork';
-import TeamWork from '@/pages/TeamWork';
-import Notifications from '@/pages/Notifications';
-import Account from '@/pages/Account';
-import { toast } from 'sonner';
 
-// Error boundary as a class component
-class ErrorBoundary extends Component<{ children: ReactNode }> {
-  state = { hasError: false, error: null };
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
+import Index from './pages/Index';
+import Projects from './pages/Projects';
+import ProjectDetails from './pages/ProjectDetails';
+import TeamWork from './pages/TeamWork';
+import MyWork from './pages/MyWork';
+import Clients from './pages/Clients';
+import ClientDetails from './pages/ClientDetails';
+import Contacts from './pages/Contacts';
+import ContactDetails from './pages/ContactDetails';
+import Templates from './pages/Templates';
+import TemplateDetails from './pages/TemplateDetails';
+import NewTemplate from './pages/NewTemplate';
+import Account from './pages/Account';
+import Notifications from './pages/Notifications';
+import NotFound from './pages/NotFound';
+import { NotificationProvider } from './context/NotificationContext';
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-    toast.error("Something went wrong. Please refresh the page and try again.");
-  }
+import './App.css';
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
-            <p className="text-gray-600 mb-4">
-              We're sorry, but an error occurred while rendering this page.
-            </p>
-            <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
-              <pre className="text-sm text-gray-800">{this.state.error?.toString()}</pre>
-            </div>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              Go to Home Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Route error component using React Router's error handling
-function RouteErrorBoundary() {
-  const error = useRouteError();
-  
-  let errorMessage = "An unexpected error occurred";
-  
-  if (isRouteErrorResponse(error)) {
-    errorMessage = error.statusText || error.data?.message || "Unknown error";
-  } else if (error instanceof Error) {
-    errorMessage = error.message;
-  } else if (typeof error === 'string') {
-    errorMessage = error;
-  }
-  
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
-        <p className="text-gray-600 mb-4">
-          We're sorry, but an error occurred while rendering this page.
-        </p>
-        <div className="bg-gray-100 p-4 rounded mb-4 overflow-auto">
-          <pre className="text-sm text-gray-800">{errorMessage}</pre>
-        </div>
-        <button
-          onClick={() => window.location.href = '/'}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-        >
-          Go to Home Page
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Routes definition with error boundaries
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Index />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/projects',
-    element: <Projects />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/projects/:projectId',
-    element: <ProjectDetailsPage />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/templates',
-    element: <Templates />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/templates/new',
-    element: <NewTemplate />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/templates/:templateId',
-    element: <TemplateDetails />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/clients',
-    element: <Clients />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/clients/:clientId',
-    element: <ClientDetails />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/contacts',
-    element: <Contacts />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/contacts/:contactId',
-    element: <ContactDetails />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/my-work',
-    element: <MyWork />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/team-work',
-    element: <TeamWork />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/notifications',
-    element: <Notifications />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '/account',
-    element: <Account />,
-    errorElement: <RouteErrorBoundary />
-  },
-  {
-    path: '*',
-    element: <NotFound />,
-    errorElement: <RouteErrorBoundary />
-  },
-]);
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <>
-      <ErrorBoundary>
-        <RouterProvider router={router} />
-      </ErrorBoundary>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/planning" element={<Index />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectDetails />} />
+            <Route path="/team-work" element={<TeamWork />} />
+            <Route path="/my-work" element={<MyWork />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientDetails />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/contacts/:id" element={<ContactDetails />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/templates/:id" element={<TemplateDetails />} />
+            <Route path="/templates/new" element={<NewTemplate />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+        <Toaster position="top-center" />
+      </NotificationProvider>
+    </QueryClientProvider>
   );
 }
 
