@@ -5,6 +5,8 @@ import { mockData } from '@/services/mock';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import NotificationSettings from './NotificationSettings';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface Notification {
   id: string;
@@ -18,6 +20,13 @@ interface Notification {
 
 const NotificationsContent = () => {
   const { toast } = useToast();
+  const [notificationSettings, setNotificationSettings] = useState({
+    tasks: true,
+    projects: true,
+    comments: true,
+    system: true,
+  });
+  
   // Generate notifications based on overdue tasks and projects
   const generateNotifications = (): Notification[] => {
     const today = new Date();
@@ -98,6 +107,35 @@ const NotificationsContent = () => {
     });
   };
 
+  const markAsRead = (id: string) => {
+    setNotifications(notifications.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
+    ));
+  };
+
+  const handleSettingsChange = (newSettings: typeof notificationSettings) => {
+    setNotificationSettings(newSettings);
+    toast({
+      title: "Notification settings updated",
+      description: "Your notification preferences have been saved.",
+    });
+  };
+
+  const filteredNotifications = notifications.filter(notification => {
+    switch (notification.type) {
+      case 'task':
+        return notificationSettings.tasks;
+      case 'project': 
+        return notificationSettings.projects;
+      case 'comment':
+        return notificationSettings.comments;
+      case 'system':
+        return notificationSettings.system;
+      default:
+        return true;
+    }
+  });
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'task':
@@ -135,14 +173,24 @@ const NotificationsContent = () => {
           <Button variant="outline" onClick={markAllAsRead}>
             <Check className="mr-2 h-4 w-4" /> Mark all as read
           </Button>
-          <Button variant="outline">
-            <Settings className="mr-2 h-4 w-4" /> Settings
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline">
+                <Settings className="mr-2 h-4 w-4" /> Settings
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <NotificationSettings 
+                settings={notificationSettings} 
+                onSettingsChange={handleSettingsChange} 
+              />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
-        {notifications.length === 0 ? (
+        {filteredNotifications.length === 0 ? (
           <div className="p-10 text-center">
             <Bell className="mx-auto h-10 w-10 text-gray-400 mb-2" />
             <h3 className="text-lg font-medium">No notifications</h3>
@@ -150,10 +198,11 @@ const NotificationsContent = () => {
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {notifications.map((notification) => (
+            {filteredNotifications.map((notification) => (
               <li 
                 key={notification.id} 
                 className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
+                onClick={() => markAsRead(notification.id)}
               >
                 {getNotificationIcon(notification.type)}
                 <div className="flex-1 min-w-0">
