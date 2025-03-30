@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { useNotifications } from '@/context/NotificationContext';
 import { Button } from '@/components/ui/button';
-import { Cog } from 'lucide-react';
+import { Cog, Bell } from 'lucide-react';
 import NotificationSettings from './NotificationSettings';
+import { format } from 'date-fns';
 
 const NotificationsContent = () => {
   const { notifications, markAllAsRead, markAsRead } = useNotifications();
@@ -68,7 +69,7 @@ const NotificationsContent = () => {
                   <div>
                     <div className="font-medium">{notification.title}</div>
                     <p className="text-gray-600 mt-1">{notification.message}</p>
-                    <div className="text-gray-400 text-xs mt-2">{notification.time}</div>
+                    <div className="text-gray-400 text-xs mt-2">{format(notification.date, 'MMM dd, h:mm a')}</div>
                   </div>
                 </div>
               </div>
@@ -79,8 +80,5 @@ const NotificationsContent = () => {
     </div>
   );
 };
-
-// Add the missing Bell component
-import { Bell } from 'lucide-react';
 
 export default NotificationsContent;
