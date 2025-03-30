@@ -1,23 +1,14 @@
-
 import React, { useState } from 'react';
 import { Bell, Settings, Check } from 'lucide-react';
 import { mockData } from '@/services/mock';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-
-interface Notification {
-  id: string;
-  type: 'task' | 'project' | 'comment' | 'system';
-  title: string;
-  message: string;
-  date: Date;
-  read: boolean;
-  entityId?: string;
-}
+import { Notification } from '@/types/notification';
 
 const NotificationsContent = () => {
   const { toast } = useToast();
+  
   // Generate notifications based on overdue tasks and projects
   const generateNotifications = (): Notification[] => {
     const today = new Date();
@@ -36,9 +27,9 @@ const NotificationsContent = () => {
         
         return {
           id: `task-${task.id}`,
-          type: 'task',
+          type: 'task' as const,
           title: `Task ${isOverdue ? 'overdue' : 'due soon'}`,
-          message: `"${task.title}" for ${project?.name || 'Unknown Project'} is ${isOverdue ? 'overdue' : 'due today'}.`,
+          message: `"${task.name}" for ${project?.name || 'Unknown Project'} is ${isOverdue ? 'overdue' : 'due today'}.`,
           date: new Date(task.dueDate),
           read: false,
           entityId: task.id
@@ -48,17 +39,17 @@ const NotificationsContent = () => {
     // Get project deadlines notifications
     const projectNotifications = mockData.projects
       .filter(project => {
-        const deadline = new Date(project.deadline);
-        const timeDiff = deadline.getTime() - today.getTime();
+        const dueDate = new Date(project.dueDate);
+        const timeDiff = dueDate.getTime() - today.getTime();
         // Get projects due within 5 days or overdue
         return timeDiff <= 5 * 24 * 60 * 60 * 1000;
       })
       .map(project => ({
         id: `project-${project.id}`,
-        type: 'project',
+        type: 'project' as const,
         title: 'Project deadline approaching',
-        message: `Project "${project.name}" is due on ${format(new Date(project.deadline), 'MMM dd')}.`,
-        date: new Date(project.deadline),
+        message: `Project "${project.name}" is due on ${format(new Date(project.dueDate), 'MMM dd')}.`,
+        date: new Date(project.dueDate),
         read: false,
         entityId: project.id
       }));

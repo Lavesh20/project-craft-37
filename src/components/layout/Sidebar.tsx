@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -63,8 +62,8 @@ const Sidebar: React.FC = () => {
     
     // Count upcoming project deadlines
     const projectNotifications = mockData.projects.filter(project => {
-      const deadline = new Date(project.deadline);
-      const timeDiff = deadline.getTime() - today.getTime();
+      const dueDate = new Date(project.dueDate);
+      const timeDiff = dueDate.getTime() - today.getTime();
       // Get projects due within 5 days or overdue
       return timeDiff <= 5 * 24 * 60 * 60 * 1000;
     }).length;
