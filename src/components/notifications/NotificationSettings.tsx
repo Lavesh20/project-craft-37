@@ -24,29 +24,31 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({ onBack }) =
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-5xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">Notification Settings</h1>
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-6 space-y-6">
-        <div className="space-y-4">
-          {preferences.map((preference) => (
-            <div key={preference.id} className="flex items-center justify-between">
-              <span className="text-sm font-medium">{preference.label}</span>
-              <Switch 
-                checked={preference.enabled} 
-                onCheckedChange={() => togglePreference(preference.id)}
-              />
-            </div>
-          ))}
+    <div className="w-full h-full bg-gray-50">
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Notification Settings</h1>
         </div>
 
-        <div className="pt-4 border-t border-gray-200">
-          <Button onClick={saveSettings}>Save Settings</Button>
+        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+          <div className="space-y-4">
+            {preferences.map((preference) => (
+              <div key={preference.id} className="flex items-center justify-between">
+                <span className="text-sm font-medium">{preference.label}</span>
+                <Switch 
+                  checked={preference.enabled} 
+                  onCheckedChange={() => togglePreference(preference.id)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <Button onClick={saveSettings}>Save Settings</Button>
+          </div>
         </div>
       </div>
     </div>
