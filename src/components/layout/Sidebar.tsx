@@ -14,7 +14,7 @@ import {
   HelpCircle, 
   LogOut 
 } from 'lucide-react';
-import { useNotifications } from '@/context/NotificationContext';
+import { mockData } from '@/services/mock';
 
 interface SidebarLinkProps {
   icon: React.ElementType;
@@ -48,7 +48,32 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ icon: Icon, label, to, badge,
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { unreadCount } = useNotifications();
+  
+  // Calculate notifications count based on overdue tasks
+  const calculateNotificationsCount = () => {
+    const today = new Date();
+    
+    // Count upcoming/overdue tasks
+    const taskNotifications = mockData.tasks.filter(task => {
+      const dueDate = new Date(task.dueDate);
+      const timeDiff = dueDate.getTime() - today.getTime();
+      // Get tasks due within 3 days or overdue
+      return timeDiff <= 3 * 24 * 60 * 60 * 1000;
+    }).length;
+    
+    // Count upcoming project deadlines
+    const projectNotifications = mockData.projects.filter(project => {
+      const deadline = new Date(project.deadline);
+      const timeDiff = deadline.getTime() - today.getTime();
+      // Get projects due within 5 days or overdue
+      return timeDiff <= 5 * 24 * 60 * 60 * 1000;
+    }).length;
+    
+    // Add 2 for system notifications (trial ending, new feature)
+    return taskNotifications + projectNotifications + 2;
+  };
+  
+  const notificationsCount = calculateNotificationsCount();
 
   return (
     <div className="bg-jetpack-blue w-64 h-screen flex flex-col overflow-y-auto">
@@ -114,7 +139,7 @@ const Sidebar: React.FC = () => {
             icon={Bell} 
             label="Notifications" 
             to="/notifications" 
-            badge={unreadCount > 0 ? unreadCount : undefined}
+            badge={notificationsCount} 
             isActive={currentPath === '/notifications'} 
           />
           <SidebarLink 
