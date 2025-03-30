@@ -1,62 +1,20 @@
 
 import React, { useState } from 'react';
-import { Bell, Settings, Check, Calendar, MessageSquare, Briefcase } from 'lucide-react';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/context/NotificationContext';
+import { Button } from '@/components/ui/button';
+import { Cog } from 'lucide-react';
 import NotificationSettings from './NotificationSettings';
 
 const NotificationsContent = () => {
-  const { toast } = useToast();
+  const { notifications, markAllAsRead, markAsRead } = useNotifications();
   const [showSettings, setShowSettings] = useState(false);
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
 
   const handleMarkAllAsRead = () => {
     markAllAsRead();
-    toast({
-      title: "Notifications marked as read",
-      description: "All notifications have been marked as read.",
-    });
   };
 
-  const handleMarkAsRead = (id: string) => {
+  const handleNotificationClick = (id: string) => {
     markAsRead(id);
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'task':
-        return (
-          <div className="rounded-full p-2 bg-orange-500 text-white">
-            <Calendar size={20} />
-          </div>
-        );
-      case 'project':
-        return (
-          <div className="rounded-full p-2 bg-purple-500 text-white">
-            <Briefcase size={20} />
-          </div>
-        );
-      case 'comment':
-        return (
-          <div className="rounded-full p-2 bg-green-500 text-white">
-            <MessageSquare size={20} />
-          </div>
-        );
-      case 'system':
-        return (
-          <div className="rounded-full p-2 bg-blue-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-      default:
-        return (
-          <div className="rounded-full p-2 bg-gray-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-    }
   };
 
   if (showSettings) {
@@ -64,53 +22,65 @@ const NotificationsContent = () => {
   }
 
   return (
-    <div className="w-full h-full bg-gray-50">
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Notifications</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleMarkAllAsRead}>
-              <Check className="mr-2 h-4 w-4" /> Mark all as read
-            </Button>
-            <Button variant="outline" onClick={() => setShowSettings(true)}>
-              <Settings className="mr-2 h-4 w-4" /> Settings
-            </Button>
-          </div>
+    <div className="container mx-auto max-w-5xl p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Notifications</h1>
+        <div className="flex space-x-3">
+          <Button 
+            variant="outline" 
+            onClick={handleMarkAllAsRead}
+            className="border-gray-300"
+          >
+            Mark all as read
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowSettings(true)}
+            className="border-gray-300"
+          >
+            <Cog className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow">
-          {notifications.length === 0 ? (
-            <div className="p-10 text-center">
-              <Bell className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-              <h3 className="text-lg font-medium">No notifications</h3>
-              <p className="text-gray-500">You're all caught up!</p>
+      <div className="bg-white rounded-lg shadow">
+        {notifications.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <Bell className="h-6 w-6 text-gray-500" />
             </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {notifications.map((notification) => (
-                <li 
-                  key={notification.id} 
-                  className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
-                  onClick={() => handleMarkAsRead(notification.id)}
-                >
-                  {getNotificationIcon(notification.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between">
-                      <p className="font-medium text-gray-900">{notification.title}</p>
-                      <span className="text-sm text-gray-500">
-                        {format(notification.date, 'MMM dd')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">{notification.message}</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+            <p className="text-gray-500">You're all caught up!</p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                  !notification.read ? 'bg-blue-50' : ''
+                }`}
+                onClick={() => handleNotificationClick(notification.id)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`w-2 h-2 mt-2 rounded-full ${!notification.read ? 'bg-blue-500' : 'bg-transparent'}`} />
+                  <div>
+                    <div className="font-medium">{notification.title}</div>
+                    <p className="text-gray-600 mt-1">{notification.message}</p>
+                    <div className="text-gray-400 text-xs mt-2">{notification.time}</div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+// Add the missing Bell component
+import { Bell } from 'lucide-react';
 
 export default NotificationsContent;
