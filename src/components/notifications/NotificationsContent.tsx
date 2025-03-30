@@ -1,182 +1,205 @@
 
-import React, { useState } from 'react';
-import { Bell, Settings, Check } from 'lucide-react';
-import { mockData } from '@/services/mock';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { 
+  Bell, 
+  Clock, 
+  AlertCircle, 
+  CheckCircle, 
+  MessageCircle,
+  Settings as SettingsIcon,
+  X
+} from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import NotificationSettings from './NotificationSettings';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { mockData } from '@/services/mock';
+import axios from 'axios';
 
+// Define the Notification type
 interface Notification {
   id: string;
-  type: 'task' | 'project' | 'comment' | 'system';
+  type: 'system' | 'task' | 'project' | 'comment';
   title: string;
   message: string;
   date: Date;
   read: boolean;
-  entityId?: string;
+  entityId: string; // The ID of the project, task, or comment
 }
 
 const NotificationsContent = () => {
   const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     tasks: true,
     projects: true,
     comments: true,
-    system: true,
+    system: true
   });
-  
-  // Generate notifications based on overdue tasks and projects
-  const generateNotifications = (): Notification[] => {
-    const today = new Date();
-    
-    // Get upcoming/overdue tasks
-    const taskNotifications = mockData.tasks
-      .filter(task => {
-        const dueDate = new Date(task.dueDate);
-        const timeDiff = dueDate.getTime() - today.getTime();
-        // Get tasks due within 3 days or overdue
-        return timeDiff <= 3 * 24 * 60 * 60 * 1000;
-      })
-      .map(task => {
-        const project = mockData.projects.find(p => p.id === task.projectId);
-        const isOverdue = new Date(task.dueDate) < today;
-        
-        return {
-          id: `task-${task.id}`,
-          type: 'task',
-          title: `Task ${isOverdue ? 'overdue' : 'due soon'}`,
-          message: `"${task.title}" for ${project?.name || 'Unknown Project'} is ${isOverdue ? 'overdue' : 'due today'}.`,
-          date: new Date(task.dueDate),
-          read: false,
-          entityId: task.id
-        };
-      });
 
-    // Get project deadlines notifications
-    const projectNotifications = mockData.projects
-      .filter(project => {
-        const deadline = new Date(project.deadline);
-        const timeDiff = deadline.getTime() - today.getTime();
-        // Get projects due within 5 days or overdue
-        return timeDiff <= 5 * 24 * 60 * 60 * 1000;
-      })
-      .map(project => ({
+  // Initialize notifications
+  useEffect(() => {
+    // This would be replaced with an API call in the future
+    // Example: axios.get('/api/notifications')
+    const initialNotifications: Notification[] = [
+      // Task notifications
+      ...mockData.tasks.filter(task => !task.status.includes('Complete')).slice(0, 3).map(task => ({
+        id: `task-${task.id}`,
+        type: 'task' as const,
+        title: task.name,
+        message: `Task "${task.name}" is due soon.`,
+        date: new Date(task.dueDate),
+        read: false,
+        entityId: task.id
+      })),
+      // Project notifications
+      ...mockData.projects.slice(0, 2).map(project => ({
         id: `project-${project.id}`,
-        type: 'project',
-        title: 'Project deadline approaching',
-        message: `Project "${project.name}" is due on ${format(new Date(project.deadline), 'MMM dd')}.`,
-        date: new Date(project.deadline),
+        type: 'project' as const,
+        title: project.name,
+        message: `Project "${project.name}" deadline is approaching.`,
+        date: new Date(project.dueDate),
         read: false,
         entityId: project.id
-      }));
-    
-    // Add some system notifications
-    const systemNotifications: Notification[] = [
+      })),
+      // System notifications
       {
         id: 'system-trial',
-        type: 'system',
-        title: 'Trial ending soon',
-        message: 'Your free trial expires in 5 days. Upgrade to keep access to all features.',
-        date: new Date(today.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-        read: true
+        type: 'system' as const,
+        title: 'Trial Ending Soon',
+        message: 'Your free trial will end in 5 days. Upgrade now to continue using all features.',
+        date: new Date(),
+        read: false,
+        entityId: 'trial'
       },
       {
-        id: 'system-new-feature',
-        type: 'system',
-        title: 'New feature available',
-        message: 'Check out our new team collaboration tools!',
-        date: new Date(today.getTime() - 24 * 60 * 60 * 1000), // 1 day ago
-        read: false
+        id: 'system-feature',
+        type: 'system' as const,
+        title: 'New Feature Available',
+        message: 'We\'ve added new reporting capabilities! Check it out in the dashboard.',
+        date: new Date(Date.now() - 86400000), // Yesterday
+        read: false,
+        entityId: 'feature'
       }
     ];
+
+    setNotifications(initialNotifications);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      // This would be replaced with an API call in the future
+      // const response = await axios.get('/api/notifications');
+      // setNotifications(response.data);
+      console.log('Notifications would be fetched from backend');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch notifications",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      // This would be replaced with an API call in the future
+      // await axios.put(`/api/notifications/${notificationId}/read`);
+      
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, read: true } 
+            : notification
+        )
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      // This would be replaced with an API call in the future
+      // await axios.put('/api/notifications/mark-all-read');
+      
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+      
+      toast({
+        title: "Success",
+        description: "All notifications marked as read",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    markAsRead(notification.id);
     
-    // Combine all notifications and sort by date (newest first)
-    return [...taskNotifications, ...projectNotifications, ...systemNotifications]
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    // Navigate to the relevant page based on notification type
+    // This would be implemented with react-router in a real application
+    if (notification.type === 'task') {
+      toast({
+        title: "Navigation",
+        description: `Navigating to task ${notification.entityId} (not implemented)`,
+      });
+    } else if (notification.type === 'project') {
+      toast({
+        title: "Navigation",
+        description: `Navigating to project ${notification.entityId} (not implemented)`,
+      });
+    } else if (notification.type === 'system' && notification.entityId === 'trial') {
+      toast({
+        title: "Navigation",
+        description: "Navigating to account page (not implemented)",
+      });
+    }
   };
 
-  const [notifications, setNotifications] = useState<Notification[]>(generateNotifications());
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  const handleSettingsChange = (settings: typeof notificationSettings) => {
+    setNotificationSettings(settings);
+    setSettingsOpen(false);
+    
+    // This would be replaced with an API call in the future
+    // axios.put('/api/user/notification-settings', settings);
+    
     toast({
-      title: "Notifications marked as read",
-      description: "All notifications have been marked as read.",
-    });
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
-  };
-
-  const handleSettingsChange = (newSettings: typeof notificationSettings) => {
-    setNotificationSettings(newSettings);
-    toast({
-      title: "Notification settings updated",
+      title: "Settings Updated",
       description: "Your notification preferences have been saved.",
     });
   };
 
-  const filteredNotifications = notifications.filter(notification => {
-    switch (notification.type) {
-      case 'task':
-        return notificationSettings.tasks;
-      case 'project': 
-        return notificationSettings.projects;
-      case 'comment':
-        return notificationSettings.comments;
-      case 'system':
-        return notificationSettings.system;
-      default:
-        return true;
-    }
-  });
+  const filteredNotifications = activeTab === 'all' 
+    ? notifications 
+    : notifications.filter(notification => notification.type === activeTab);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'task':
-        return (
-          <div className="rounded-full p-2 bg-orange-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-      case 'project':
-        return (
-          <div className="rounded-full p-2 bg-purple-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-      case 'system':
-        return (
-          <div className="rounded-full p-2 bg-blue-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-      default:
-        return (
-          <div className="rounded-full p-2 bg-gray-500 text-white">
-            <Bell size={20} />
-          </div>
-        );
-    }
-  };
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="container mx-auto p-6 max-w-5xl">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Notifications</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={markAllAsRead}>
-            <Check className="mr-2 h-4 w-4" /> Mark all as read
-          </Button>
-          <Sheet>
+        <div className="flex space-x-2">
+          <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline">
-                <Settings className="mr-2 h-4 w-4" /> Settings
+              <Button variant="outline" size="sm">
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Settings
               </Button>
             </SheetTrigger>
             <SheetContent>
@@ -186,39 +209,77 @@ const NotificationsContent = () => {
               />
             </SheetContent>
           </Sheet>
+          <Button variant="outline" size="sm" onClick={markAllAsRead}>
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Mark all as read
+          </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        {filteredNotifications.length === 0 ? (
-          <div className="p-10 text-center">
-            <Bell className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-            <h3 className="text-lg font-medium">No notifications</h3>
-            <p className="text-gray-500">You're all caught up!</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200">
-            {filteredNotifications.map((notification) => (
-              <li 
-                key={notification.id} 
-                className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
-                onClick={() => markAsRead(notification.id)}
-              >
-                {getNotificationIcon(notification.type)}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between">
-                    <p className="font-medium text-gray-900">{notification.title}</p>
-                    <span className="text-sm text-gray-500">
-                      {format(notification.date, 'MMM dd')}
-                    </span>
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="all">
+            All
+            {unreadCount > 0 && (
+              <span className="ml-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                {unreadCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="task">Tasks</TabsTrigger>
+          <TabsTrigger value="project">Projects</TabsTrigger>
+          <TabsTrigger value="system">System</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value={activeTab} className="mt-0">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {filteredNotifications.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>No notifications to display</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {filteredNotifications.map((notification) => (
+                  <div 
+                    key={notification.id}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors flex ${
+                      !notification.read ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="mr-3 mt-1">
+                      {notification.type === 'task' && (
+                        <Clock className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
+                      )}
+                      {notification.type === 'project' && (
+                        <AlertCircle className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
+                      )}
+                      {notification.type === 'comment' && (
+                        <MessageCircle className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
+                      )}
+                      {notification.type === 'system' && (
+                        <Bell className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className={`font-medium ${!notification.read ? 'text-blue-800' : 'text-gray-900'}`}>
+                          {notification.title}
+                        </h3>
+                        <span className="text-xs text-gray-500">
+                          {format(notification.date, 'MMM d, h:mm a')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{notification.message}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
