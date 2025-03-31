@@ -1,3 +1,4 @@
+
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -17,13 +18,15 @@ const Templates: React.FC = () => {
   const { data: templates = [], isLoading: templatesLoading, error: templatesError } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates,
-    onError: (error) => {
-      console.error('Failed to fetch templates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load templates. Please try again later.',
-        variant: 'destructive',
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Failed to fetch templates:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load templates. Please try again later.',
+          variant: 'destructive',
+        });
+      }
     }
   });
 
@@ -31,13 +34,15 @@ const Templates: React.FC = () => {
   const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
-    onError: (error) => {
-      console.error('Failed to fetch clients:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load client data. Some information may be incomplete.',
-        variant: 'destructive',
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Failed to fetch clients:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load client data. Some information may be incomplete.',
+          variant: 'destructive',
+        });
+      }
     }
   });
 
