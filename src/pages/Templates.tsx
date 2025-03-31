@@ -10,36 +10,39 @@ import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { mockData } from '@/services/mock';
 
 const Templates: React.FC = () => {
   const { toast } = useToast();
   
-  // Fetch templates using React Query with error handling
+  // Fetch templates using React Query with error handling and fallback to mock data
   const { data: templates = [], isLoading: templatesLoading, error: templatesError } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates,
+    initialData: mockData.templates, // Use mock data as initial data
     meta: {
       onError: (error: Error) => {
         console.error('Failed to fetch templates:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load templates. Please try again later.',
+          description: 'Failed to load templates. Using mock data instead.',
           variant: 'destructive',
         });
       }
     }
   });
 
-  // Fetch clients for reference
+  // Fetch clients for reference with fallback to mock data
   const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
+    initialData: mockData.clients, // Use mock data as initial data
     meta: {
       onError: (error: Error) => {
         console.error('Failed to fetch clients:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load client data. Some information may be incomplete.',
+          description: 'Failed to load client data. Using mock data instead.',
           variant: 'destructive',
         });
       }
@@ -96,7 +99,7 @@ const Templates: React.FC = () => {
         ) : hasError ? (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow">
             <p className="text-red-700">
-              There was an error loading the data. Please refresh the page or try again later.
+              There was an error loading the data. Using mock data instead.
             </p>
           </div>
         ) : templatesArray.length === 0 ? (

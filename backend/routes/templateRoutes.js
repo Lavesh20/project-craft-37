@@ -9,6 +9,7 @@ router.get('/', async (req, res) => {
     const templates = await Template.find();
     res.json(templates);
   } catch (err) {
+    console.error('Error fetching templates:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -20,6 +21,7 @@ router.get('/:id', async (req, res) => {
     if (!template) return res.status(404).json({ message: 'Template not found' });
     res.json(template);
   } catch (err) {
+    console.error('Error fetching template by ID:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -39,6 +41,7 @@ router.post('/', async (req, res) => {
     const newTemplate = await template.save();
     res.status(201).json(newTemplate);
   } catch (err) {
+    console.error('Error creating template:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -61,6 +64,7 @@ router.patch('/:id', async (req, res) => {
     const updatedTemplate = await template.save();
     res.json(updatedTemplate);
   } catch (err) {
+    console.error('Error updating template:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -76,6 +80,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Template deleted' });
   } catch (err) {
+    console.error('Error deleting template:', err);
     res.status(500).json({ message: err.message });
   }
 });
