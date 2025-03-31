@@ -4,6 +4,16 @@ import { mockData } from './mock';
 // Set base URL from environment
 axios.defaults.baseURL = 'http://localhost:5000/api';
 
+// Add interceptors for error handling
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error);
+    // Return a rejected promise to be handled by the caller
+    return Promise.reject(error);
+  }
+);
+
 // Template endpoints
 export const fetchTemplates = async () => {
   try {
@@ -11,7 +21,9 @@ export const fetchTemplates = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching templates:', error);
-    throw error;
+    // Return mock data instead of throwing
+    console.log('Using mock template data as fallback');
+    return mockData.templates;
   }
 };
 
@@ -21,6 +33,12 @@ export const fetchTemplateById = async (id: string) => {
     return response.data;
   } catch (error) {
     console.error(`Error fetching template ${id}:`, error);
+    // Look up the template in mock data
+    const mockTemplate = mockData.templates.find(t => t.id === id);
+    if (mockTemplate) {
+      console.log(`Using mock data for template ${id}`);
+      return mockTemplate;
+    }
     throw error;
   }
 };
@@ -62,7 +80,9 @@ export const fetchClients = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching clients:', error);
-    throw error;
+    // Return mock data instead of throwing
+    console.log('Using mock client data as fallback');
+    return mockData.clients;
   }
 };
 

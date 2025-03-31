@@ -7,6 +7,7 @@ const Template = require('../models/Template');
 router.get('/', async (req, res) => {
   try {
     const templates = await Template.find();
+    console.log(`Retrieved ${templates.length} templates`);
     res.json(templates);
   } catch (err) {
     console.error('Error fetching templates:', err);
@@ -18,7 +19,10 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const template = await Template.findById(req.params.id);
-    if (!template) return res.status(404).json({ message: 'Template not found' });
+    if (!template) {
+      console.log(`Template not found: ${req.params.id}`);
+      return res.status(404).json({ message: 'Template not found' });
+    }
     res.json(template);
   } catch (err) {
     console.error('Error fetching template by ID:', err);

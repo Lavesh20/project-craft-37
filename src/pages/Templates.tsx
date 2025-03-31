@@ -1,4 +1,3 @@
-
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -15,20 +14,18 @@ import { mockData } from '@/services/mock';
 const Templates: React.FC = () => {
   const { toast } = useToast();
   
-  // Fetch templates using React Query with error handling and fallback to mock data
+  // Fetch templates using React Query with error handling
   const { data: templates = [], isLoading: templatesLoading, error: templatesError } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates,
     initialData: mockData.templates, // Use mock data as initial data
-    meta: {
-      onError: (error: Error) => {
-        console.error('Failed to fetch templates:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load templates. Using mock data instead.',
-          variant: 'destructive',
-        });
-      }
+    onError: (error: Error) => {
+      console.error('Failed to fetch templates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load templates. Using mock data instead.',
+        variant: 'destructive',
+      });
     }
   });
 
@@ -37,15 +34,13 @@ const Templates: React.FC = () => {
     queryKey: ['clients'],
     queryFn: fetchClients,
     initialData: mockData.clients, // Use mock data as initial data
-    meta: {
-      onError: (error: Error) => {
-        console.error('Failed to fetch clients:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load client data. Using mock data instead.',
-          variant: 'destructive',
-        });
-      }
+    onError: (error: Error) => {
+      console.error('Failed to fetch clients:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load client data. Using mock data instead.',
+        variant: 'destructive',
+      });
     }
   });
 
