@@ -4,23 +4,42 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { fetchTemplates, fetchClients } from '@/services/api';
+import { fetchTemplates, fetchClients } from '@/services/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const Templates: React.FC = () => {
-  // Fetch templates using React Query
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { toast } = useToast();
+  
+  // Fetch templates using React Query with error handling
+  const { data: templates = [], isLoading: templatesLoading, error: templatesError } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates,
+    onError: (error) => {
+      console.error('Failed to fetch templates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load templates. Please try again later.',
+        variant: 'destructive',
+      });
+    }
   });
 
   // Fetch clients for reference
-  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+  const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
+    onError: (error) => {
+      console.error('Failed to fetch clients:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load client data. Some information may be incomplete.',
+        variant: 'destructive',
+      });
+    }
   });
 
   // Ensure templates and clients are arrays
@@ -28,6 +47,7 @@ const Templates: React.FC = () => {
   const clientsArray = Array.isArray(clients) ? clients : [];
 
   const isLoading = templatesLoading || clientsLoading;
+  const hasError = templatesError || clientsError;
 
   // Helper function to get client names for a template
   const getClientNames = (clientIds: string[] = []) => {
@@ -68,6 +88,12 @@ const Templates: React.FC = () => {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
+          </div>
+        ) : hasError ? (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow">
+            <p className="text-red-700">
+              There was an error loading the data. Please refresh the page or try again later.
+            </p>
           </div>
         ) : templatesArray.length === 0 ? (
           <div className="bg-white rounded-md shadow p-6">
