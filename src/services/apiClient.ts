@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { 
   Project, 
@@ -186,14 +185,22 @@ export const getMyTasksByProject = async (): Promise<TasksByProject> => {
   
   projects.forEach(project => {
     if (project.tasks && project.tasks.length > 0) {
+      // Get client name by ID if needed
+      let clientName: string | undefined;
+      if (project.clientId) {
+        // In a real implementation, you would fetch the client name from the clients collection
+        // For now, we'll just use a placeholder
+        clientName = `Client: ${project.clientId}`;
+      }
+      
       tasksByProject[project.id] = {
         projectId: project.id,
         projectName: project.name,
-        clientName: project.clientName,
+        clientName: clientName,
         tasks: project.tasks.map(task => ({
           ...task,
           projectName: project.name,
-          clientName: project.clientName,
+          clientName: clientName,
         })),
       };
     }
