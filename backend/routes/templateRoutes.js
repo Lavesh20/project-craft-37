@@ -68,10 +68,12 @@ router.patch('/:id', async (req, res) => {
 // Delete template
 router.delete('/:id', async (req, res) => {
   try {
-    const template = await Template.findById(req.params.id);
-    if (!template) return res.status(404).json({ message: 'Template not found' });
+    const result = await Template.findByIdAndDelete(req.params.id);
     
-    await template.remove();
+    if (!result) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    
     res.json({ message: 'Template deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });

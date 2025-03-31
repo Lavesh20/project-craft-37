@@ -181,6 +181,7 @@ export const getMyTasksByStatus = async (): Promise<TasksByStatus> => {
 
 export const getMyTasksByProject = async (): Promise<TasksByProject> => {
   const projects = await fetchProjects();
+  const clients = await fetchClients();
   const tasksByProject: TasksByProject = {};
   
   projects.forEach(project => {
@@ -188,9 +189,9 @@ export const getMyTasksByProject = async (): Promise<TasksByProject> => {
       // Get client name by ID if needed
       let clientName: string | undefined;
       if (project.clientId) {
-        // In a real implementation, you would fetch the client name from the clients collection
-        // For now, we'll just use a placeholder
-        clientName = `Client: ${project.clientId}`;
+        // Find the client by ID from the clients array
+        const client = clients.find(c => c.id === project.clientId);
+        clientName = client ? client.name : `Client: ${project.clientId}`;
       }
       
       tasksByProject[project.id] = {
