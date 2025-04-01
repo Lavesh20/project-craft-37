@@ -84,13 +84,18 @@ export const deleteProject = async (id: string) => {
 // Template endpoints
 export const fetchTemplates = async () => {
   try {
+    console.log('Fetching templates from API...');
     const response = await axios.get('/templates');
-    return Array.isArray(response.data) ? response.data : [];
+    const templatesData = Array.isArray(response.data) ? response.data : [];
+    console.log(`Successfully fetched ${templatesData.length} templates from API`);
+    return templatesData;
   } catch (error) {
     console.error('Error fetching templates:', error);
     // Return mock data instead of throwing
     console.log('Using mock template data as fallback');
-    return mockData.templates;
+    const mockTemplates = Array.isArray(mockData.templates) ? mockData.templates : [];
+    console.log(`Using ${mockTemplates.length} mock templates`);
+    return mockTemplates;
   }
 };
 
@@ -143,13 +148,18 @@ export const deleteTemplate = async (id: string) => {
 // Client endpoints
 export const fetchClients = async () => {
   try {
+    console.log('Fetching clients from API...');
     const response = await axios.get('/clients');
-    return Array.isArray(response.data) ? response.data : [];
+    const clientsData = Array.isArray(response.data) ? response.data : [];
+    console.log(`Successfully fetched ${clientsData.length} clients from API`);
+    return clientsData;
   } catch (error) {
     console.error('Error fetching clients:', error);
     // Return mock data instead of throwing
     console.log('Using mock client data as fallback');
-    return mockData.clients;
+    const mockClients = Array.isArray(mockData.clients) ? mockData.clients : [];
+    console.log(`Using ${mockClients.length} mock clients`);
+    return mockClients;
   }
 };
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink } from 'lucide-react';
@@ -11,15 +11,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { mockData } from '@/services/mock';
+import { Template, Client } from '@/types';
 
 const Templates: React.FC = () => {
   const { toast } = useToast();
   
   // Fetch templates using React Query with error handling
-  const { data: templates = [], isLoading: templatesLoading, error: templatesError } = useQuery({
+  const { 
+    data: templates = [], 
+    isLoading: templatesLoading, 
+    error: templatesError,
+    refetch: refetchTemplates
+  } = useQuery({
     queryKey: ['templates'],
     queryFn: fetchTemplates,
-    initialData: mockData.templates, // Use mock data as initial data
+    initialData: [],
     meta: {
       onError: (error: any) => {
         console.error('Failed to fetch templates:', error);
@@ -33,10 +39,14 @@ const Templates: React.FC = () => {
   });
 
   // Fetch clients for reference with fallback to mock data
-  const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
+  const { 
+    data: clients = [], 
+    isLoading: clientsLoading, 
+    error: clientsError 
+  } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
-    initialData: mockData.clients, // Use mock data as initial data
+    initialData: [],
     meta: {
       onError: (error: any) => {
         console.error('Failed to fetch clients:', error);
@@ -49,6 +59,16 @@ const Templates: React.FC = () => {
     }
   });
 
+  // Log data for debugging
+  useEffect(() => {
+    console.log('Templates data:', templates);
+    console.log('Templates loading:', templatesLoading);
+    console.log('Templates error:', templatesError);
+    console.log('Clients data:', clients);
+    console.log('Clients loading:', clientsLoading);
+    console.log('Clients error:', clientsError);
+  }, [templates, templatesLoading, templatesError, clients, clientsLoading, clientsError]);
+
   // Ensure templates and clients are arrays
   const templatesArray = Array.isArray(templates) ? templates : [];
   const clientsArray = Array.isArray(clients) ? clients : [];
@@ -58,22 +78,34 @@ const Templates: React.FC = () => {
 
   // Helper function to get client names for a template
   const getClientNames = (clientIds: string[] = []) => {
-    if (!Array.isArray(clientIds) || clientIds.length === 0) return 'No clients';
-    if (clientsArray.length === 0) return 'Loading clients...';
+    if (!clientIds || !Array.isArray(clientIds) || clientIds.length === 0) return 'No clients';
+    if (!clientsArray || clientsArray.length === 0) return 'Loading clients...';
     
-    const templateClients = clientsArray.filter(client => clientIds.includes(client.id));
+    const templateClients = clientsArray.filter(client => 
+      client && client.id && clientIds.includes(client.id)
+    );
+    
     if (!templateClients.length) return 'No clients';
     
     return templateClients.map(client => client.name).join(', ');
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     try {
       return format(parseISO(dateString), 'MMM dd, yyyy');
     } catch (e) {
       return 'Invalid date';
     }
   };
+
+  // Force refetch if there are no templates initially
+  useEffect(() => {
+    if (templatesArray.length === 0 && !templatesLoading) {
+      console.log('No templates found, triggering refetch...');
+      refetchTemplates();
+    }
+  }, [templatesArray.length, templatesLoading, refetchTemplates]);
 
   return (
     <MainLayout>
@@ -101,12 +133,28 @@ const Templates: React.FC = () => {
             <p className="text-red-700">
               There was an error loading the data. Using mock data instead.
             </p>
+            <Button 
+              onClick={() => refetchTemplates()} 
+              variant="outline" 
+              className="mt-2"
+            >
+              Try Again
+            </Button>
           </div>
         ) : templatesArray.length === 0 ? (
           <div className="bg-white rounded-md shadow p-6">
             <p className="text-gray-500 text-center py-8">
               No templates available. Create your first template to get started.
             </p>
+            <div className="flex justify-center">
+              <Button 
+                onClick={() => refetchTemplates()} 
+                variant="outline" 
+                className="mt-2"
+              >
+                Refresh Templates
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-md shadow">
