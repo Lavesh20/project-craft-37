@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -54,9 +53,12 @@ const Clients: React.FC = () => {
     queryFn: fetchTeamMembers
   });
 
+  // Ensure clients data is always an array
+  const clientsArray = Array.isArray(clients) ? clients : [];
+
   // Filter clients based on search and status
   const filteredClients = React.useMemo(() => {
-    return clients.filter(client => {
+    return clientsArray.filter(client => {
       const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = 
         statusFilter === 'all' ? true :
@@ -65,7 +67,7 @@ const Clients: React.FC = () => {
       
       return matchesSearch && matchesStatus;
     });
-  }, [clients, searchQuery, statusFilter]);
+  }, [clientsArray, searchQuery, statusFilter]);
 
   // Handle opening delete confirmation
   const handleDeleteClick = (client: Client) => {

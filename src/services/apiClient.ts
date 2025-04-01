@@ -26,7 +26,7 @@ axios.interceptors.response.use(
 export const fetchTemplates = async () => {
   try {
     const response = await axios.get('/templates');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching templates:', error);
     // Return mock data instead of throwing
@@ -85,7 +85,7 @@ export const deleteTemplate = async (id: string) => {
 export const fetchClients = async () => {
   try {
     const response = await axios.get('/clients');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching clients:', error);
     // Return mock data instead of throwing

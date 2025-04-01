@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchProjects, fetchClients } from '@/services/api';
+import { fetchProjects, fetchClients } from '@/services/apiClient';
 import { Project, Client, FilterOptions, TableColumn } from '@/types';
 import { Filter, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
