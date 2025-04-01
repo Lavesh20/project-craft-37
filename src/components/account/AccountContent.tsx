@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Users, CreditCard, Mail, Edit, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
@@ -15,80 +15,59 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User as UserType, TeamMemberInvite } from '@/types/account';
-import axios from 'axios';
+import { TeamMemberInvite } from '@/types/account';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AccountContent = () => {
   const { toast } = useToast();
+  const { user, loading, updateProfile, logout } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Member' | 'Viewer'>('Member');
   const [pendingInvites, setPendingInvites] = useState<TeamMemberInvite[]>([]);
   
-  // Initial user data (mockup)
-  const [userData, setUserData] = useState<UserType>({
-    id: "user-1",
-    name: "Vyas",
-    email: "laveshvyas20@gmail.com",
-    planStatus: "Free trial",
-    role: "Admin",
-    trialDays: 5,
-    avatar: ""
-  });
-  
   // Form input state
   const [formData, setFormData] = useState({
-    name: userData.name,
-    email: userData.email
+    name: '',
+    email: ''
   });
+  
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email
+      });
+    }
+  }, [user]);
   
   const teamMembers = mockData.teamMembers || [];
 
-  // Future function to fetch user data from backend
-  const fetchUserData = async () => {
-    try {
-      // This will be implemented when backend is available
-      // const response = await axios.get('/api/user/profile');
-      // setUserData(response.data);
-      
-      // For now, we'll use mock data
-      console.log('User data would be fetched from backend');
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch user data",
-        variant: "destructive"
-      });
-    }
-  };
+  // Redirect to login if not authenticated
+  if (!loading && !user) {
+    return <Navigate to="/auth/login" />;
+  }
 
   const handleEditAccount = () => {
-    setFormData({
-      name: userData.name,
-      email: userData.email
-    });
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email
+      });
+    }
     setEditDialogOpen(true);
   };
 
   const handleSaveAccount = async () => {
     try {
-      // This will be implemented when backend is available
-      // await axios.put('/api/user/profile', formData);
-      
-      // For now, update the local state
-      setUserData(prev => ({
-        ...prev,
-        name: formData.name,
-        email: formData.email
-      }));
-      
-      toast({
-        title: "Success",
-        description: "Account details updated successfully",
-      });
-      
-      setEditDialogOpen(false);
+      const success = await updateProfile(formData.name, formData.email);
+      if (success) {
+        setEditDialogOpen(false);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -99,8 +78,6 @@ const AccountContent = () => {
   };
 
   const handleUpgradeAccount = () => {
-    // Future implementation for backend integration
-    // Example: axios.post('/api/billing/upgrade')
     toast({
       title: "Upgrade Account",
       description: "Payment processing will be implemented when backend is available.",
@@ -154,10 +131,6 @@ const AccountContent = () => {
 
   const handleCancelInvite = (inviteId: string) => {
     try {
-      // This will be implemented when backend is available
-      // await axios.delete(`/api/team/invite/${inviteId}`);
-      
-      // For now, update the local state
       setPendingInvites(prev => prev.filter(invite => invite.id !== inviteId));
       
       toast({
@@ -180,10 +153,31 @@ const AccountContent = () => {
     });
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
+          <div className="lg:col-span-1 space-y-6">
+            <Skeleton className="h-40 w-full rounded-lg" />
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-5xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Account</h1>
+        <Button variant="outline" onClick={handleLogout}>Sign Out</Button>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -201,12 +195,12 @@ const AccountContent = () => {
             <CardContent>
               <div className="flex items-center gap-4 mb-6">
                 <Avatar className="h-16 w-16 rounded-full bg-primary text-white text-lg uppercase">
-                  <div>{userData.name.charAt(0)}</div>
+                  <div>{user?.name.charAt(0)}</div>
                 </Avatar>
                 <div>
-                  <h3 className="text-lg font-medium">{userData.name}</h3>
+                  <h3 className="text-lg font-medium">{user?.name}</h3>
                   <p className="text-gray-500 flex items-center">
-                    <Mail className="h-4 w-4 mr-1" /> {userData.email}
+                    <Mail className="h-4 w-4 mr-1" /> {user?.email}
                   </p>
                 </div>
               </div>
@@ -215,21 +209,21 @@ const AccountContent = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="text-sm text-gray-500 mb-1">Plan Status</div>
-                    <div className="font-medium">{userData.planStatus}</div>
+                    <div className="font-medium">{user?.planStatus}</div>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="text-sm text-gray-500 mb-1">Role</div>
-                    <div className="font-medium">{userData.role}</div>
+                    <div className="font-medium">{user?.role}</div>
                   </div>
                 </div>
                 
-                {userData.planStatus === "Free trial" && userData.trialDays && (
+                {user?.planStatus === "Free trial" && user?.trialDays && (
                   <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium">Free trial</h4>
                         <p className="text-sm text-gray-600 mt-1">
-                          Your free trial expires in {userData.trialDays} days
+                          Your free trial expires in {user.trialDays} days
                         </p>
                       </div>
                       <Button onClick={handleUpgradeAccount}>Upgrade account</Button>
@@ -326,7 +320,7 @@ const AccountContent = () => {
       </div>
       
       <div className="mt-8 text-sm text-gray-500 text-center">
-        Last edited {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()} by {userData.name}
+        Last edited {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()} by {user?.name}
       </div>
 
       {/* Edit Account Dialog */}

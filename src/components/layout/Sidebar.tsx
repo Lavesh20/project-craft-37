@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -14,6 +15,7 @@ import {
   LogOut 
 } from 'lucide-react';
 import { mockData } from '@/services/mock';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarLinkProps {
   icon: React.ElementType;
@@ -21,9 +23,31 @@ interface SidebarLinkProps {
   to: string;
   badge?: string | number;
   isActive?: boolean;
+  onClick?: () => void;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ icon: Icon, label, to, badge, isActive }) => {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ icon: Icon, label, to, badge, isActive, onClick }) => {
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className={`flex items-center gap-3 px-4 py-3 text-white transition-all duration-200 hover:bg-opacity-10 hover:bg-white w-full text-left ${
+          isActive ? 'sidebar-active' : ''
+        }`}
+      >
+        <Icon size={20} className="flex-shrink-0" />
+        <span className="flex-grow">{label}</span>
+        {badge && (
+          <span className={`px-2 py-1 text-xs font-medium rounded-md ${
+            typeof badge === 'number' && badge > 0 ? 'bg-red-500' : 'bg-orange-500'
+          }`}>
+            {badge}
+          </span>
+        )}
+      </button>
+    );
+  }
+
   return (
     <Link
       to={to}
@@ -46,6 +70,8 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ icon: Icon, label, to, badge,
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const currentPath = location.pathname;
   
   // Calculate notifications count based on overdue tasks
@@ -74,6 +100,11 @@ const Sidebar: React.FC = () => {
   
   const notificationsCount = calculateNotificationsCount();
 
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/login');
+  };
+
   return (
     <div className="bg-jetpack-blue w-64 h-screen flex flex-col overflow-y-auto">
       <div className="p-4">
@@ -88,10 +119,9 @@ const Sidebar: React.FC = () => {
         <nav className="space-y-1">
           <SidebarLink 
             icon={LayoutDashboard} 
-            label="Planning" 
-            to="/planning" 
-            badge="Beta" 
-            isActive={currentPath === '/planning'} 
+            label="Dashboard" 
+            to="/dashboard" 
+            isActive={currentPath === '/dashboard'} 
           />
           <SidebarLink 
             icon={Users} 
@@ -156,8 +186,8 @@ const Sidebar: React.FC = () => {
           <SidebarLink 
             icon={LogOut} 
             label="Sign Out" 
-            to="/logout" 
-            isActive={currentPath === '/logout'} 
+            to="#" 
+            onClick={handleLogout}
           />
         </nav>
       </div>
