@@ -17,8 +17,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// CORS Configuration - expanded to handle all scenarios
+app.use(cors({
+  origin: ['http://localhost:8080', 'https://lovable.dev', 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 86400 // 24 hours in seconds
+}));
+
 app.use(express.json());
 
 // Connect to MongoDB

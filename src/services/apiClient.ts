@@ -1,8 +1,16 @@
+
 import axios from 'axios';
 import { mockData } from './mock';
 
+// Determine the base URL based on environment
+const isProduction = window.location.hostname !== 'localhost';
+const apiBaseUrl = isProduction 
+  ? (import.meta.env.VITE_API_URL || 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com/api')
+  : 'http://localhost:5000/api';
+
 // Set base URL from environment
-axios.defaults.baseURL = 'http://localhost:5000/api';
+axios.defaults.baseURL = apiBaseUrl;
+axios.defaults.withCredentials = true; // Enable cookies for cross-origin requests if needed
 
 // Add interceptors for error handling
 axios.interceptors.response.use(
