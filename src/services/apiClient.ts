@@ -22,6 +22,65 @@ axios.interceptors.response.use(
   }
 );
 
+// Project endpoints
+export const fetchProjects = async () => {
+  try {
+    const response = await axios.get('/projects');
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    // Return mock data instead of throwing
+    console.log('Using mock project data as fallback');
+    return mockData.projects || [];
+  }
+};
+
+export const fetchProjectById = async (id: string) => {
+  try {
+    const response = await axios.get(`/projects/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching project ${id}:`, error);
+    // Look up the project in mock data
+    const mockProject = mockData.projects?.find(p => p.id === id);
+    if (mockProject) {
+      console.log(`Using mock data for project ${id}`);
+      return mockProject;
+    }
+    throw error;
+  }
+};
+
+export const createProject = async (projectData: any) => {
+  try {
+    const response = await axios.post('/projects', projectData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating project:', error);
+    throw error;
+  }
+};
+
+export const updateProject = async (id: string, projectData: any) => {
+  try {
+    const response = await axios.patch(`/projects/${id}`, projectData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating project ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteProject = async (id: string) => {
+  try {
+    await axios.delete(`/projects/${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting project ${id}:`, error);
+    throw error;
+  }
+};
+
 // Template endpoints
 export const fetchTemplates = async () => {
   try {
