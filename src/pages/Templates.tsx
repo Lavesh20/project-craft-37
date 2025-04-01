@@ -20,8 +20,8 @@ const Templates: React.FC = () => {
     queryKey: ['templates'],
     queryFn: fetchTemplates,
     initialData: mockData.templates, // Use mock data as initial data
-    onSettled: (data, error) => {
-      if (error) {
+    meta: {
+      onError: (error: any) => {
         console.error('Failed to fetch templates:', error);
         toast({
           title: 'Error',
@@ -37,8 +37,8 @@ const Templates: React.FC = () => {
     queryKey: ['clients'],
     queryFn: fetchClients,
     initialData: mockData.clients, // Use mock data as initial data
-    onSettled: (data, error) => {
-      if (error) {
+    meta: {
+      onError: (error: any) => {
         console.error('Failed to fetch clients:', error);
         toast({
           title: 'Error',
