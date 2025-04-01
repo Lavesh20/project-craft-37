@@ -10,7 +10,6 @@ import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { mockData } from '@/services/mock';
 import { Template, Client } from '@/types';
 
 const Templates: React.FC = () => {

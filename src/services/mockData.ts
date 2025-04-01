@@ -1,4 +1,3 @@
-
 import { Project, Task, Template, Client, TeamMember, Contact, Comment, Series, RelativeDueDate, TimeEstimate } from '@/types';
 
 // Initialize empty arrays to hold our mock data
@@ -165,7 +164,7 @@ tasks.push(
   }
 );
 
-// Add some initial templates
+// Add some initial templates with proper structure
 templates.push(
   {
     id: 'template-1',
@@ -176,7 +175,6 @@ templates.push(
     tasks: [
       {
         id: 'template-task-1',
-        templateId: 'template-1',
         name: 'Collect financial data',
         description: 'Gather all relevant financial statements and reports',
         position: 0,
@@ -186,7 +184,6 @@ templates.push(
       },
       {
         id: 'template-task-2',
-        templateId: 'template-1',
         name: 'Analyze revenue trends',
         description: 'Review and analyze revenue patterns',
         position: 1,
@@ -196,7 +193,6 @@ templates.push(
       },
       {
         id: 'template-task-3',
-        templateId: 'template-1',
         name: 'Prepare final report',
         description: 'Compile findings into comprehensive report',
         position: 2,
@@ -217,8 +213,8 @@ templates.push(
     tasks: [
       {
         id: 'template-task-4',
-        templateId: 'template-2',
         name: 'Requirements gathering',
+        description: 'Gather all client requirements for the website',
         position: 0,
         relativeDueDate: { value: 30, unit: 'days', position: 'before' },
         timeEstimate: { value: 6, unit: 'h' },
@@ -226,8 +222,8 @@ templates.push(
       },
       {
         id: 'template-task-5',
-        templateId: 'template-2',
         name: 'Design mockups',
+        description: 'Create design mockups for client approval',
         position: 1,
         relativeDueDate: { value: 20, unit: 'days', position: 'before' },
         timeEstimate: { value: 12, unit: 'h' },

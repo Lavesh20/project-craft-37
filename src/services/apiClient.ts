@@ -88,7 +88,7 @@ export const fetchTemplates = async () => {
     const response = await axios.get('/templates');
     const templatesData = Array.isArray(response.data) ? response.data : [];
     console.log(`Successfully fetched ${templatesData.length} templates from API`);
-    return templatesData;
+    return templatesData.length > 0 ? templatesData : mockData.templates;
   } catch (error) {
     console.error('Error fetching templates:', error);
     // Return mock data instead of throwing

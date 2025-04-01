@@ -42,7 +42,7 @@ if (mockTemplates.length === 0) {
       ],
       clientIds: ['client-1', 'client-2'],
       lastEdited: new Date().toISOString(),
-      createdAt: new Date().toISOString() // Add the missing createdAt property
+      createdAt: new Date().toISOString()
     },
     {
       id: 'template-2',
@@ -66,7 +66,7 @@ if (mockTemplates.length === 0) {
       ],
       clientIds: ['client-3'],
       lastEdited: new Date().toISOString(),
-      createdAt: new Date().toISOString() // Add the missing createdAt property
+      createdAt: new Date().toISOString()
     }
   );
 }
