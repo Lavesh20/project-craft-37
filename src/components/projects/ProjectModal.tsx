@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -250,7 +249,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
                         disabled={isEditMode}
-                        className="flex-1"
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
