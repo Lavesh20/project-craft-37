@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Users, CreditCard, Mail, Edit, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { mockData } from '@/services/mock';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -195,7 +195,7 @@ const AccountContent = () => {
             <CardContent>
               <div className="flex items-center gap-4 mb-6">
                 <Avatar className="h-16 w-16 rounded-full bg-primary text-white text-lg uppercase">
-                  <div>{user?.name.charAt(0)}</div>
+                  {user?.name && <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>}
                 </Avatar>
                 <div>
                   <h3 className="text-lg font-medium">{user?.name}</h3>
@@ -292,7 +292,7 @@ const AccountContent = () => {
                   teamMembers.map((member, index) => (
                     <li key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
                       <Avatar className="h-8 w-8 bg-primary text-white">
-                        <div>{member.name.charAt(0)}</div>
+                        <AvatarFallback>{member.name?.charAt(0) || '?'}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{member.name}</p>

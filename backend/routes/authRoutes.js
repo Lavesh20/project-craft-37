@@ -86,8 +86,7 @@ router.post('/login', async (req, res) => {
       email: user.email,
       role: user.role,
       planStatus: user.planStatus,
-      trialDays: user.trialDays,
-      avatar: user.avatar
+      trialDays: user.trialDays
     };
 
     res.json({ user: userData, token });
@@ -111,8 +110,7 @@ router.get('/me', authMiddleware, async (req, res) => {
       email: user.email,
       role: user.role,
       planStatus: user.planStatus,
-      trialDays: user.trialDays,
-      avatar: user.avatar
+      trialDays: user.trialDays
     };
     
     res.json(userData);
@@ -145,8 +143,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
       email: user.email,
       role: user.role,
       planStatus: user.planStatus,
-      trialDays: user.trialDays,
-      avatar: user.avatar
+      trialDays: user.trialDays
     };
     
     res.json(userData);

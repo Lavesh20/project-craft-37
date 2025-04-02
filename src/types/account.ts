@@ -5,7 +5,6 @@ export interface User {
   email: string;
   role: "Admin" | "Member" | "Viewer";
   planStatus: "Free trial" | "Basic" | "Pro" | "Enterprise";
-  avatar?: string;
   trialDays?: number;
 }
 

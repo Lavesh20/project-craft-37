@@ -1,324 +1,311 @@
+
 import React, { useState, useEffect } from 'react';
-import { 
-  Bell, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
-  MessageCircle,
-  Settings as SettingsIcon,
-  X
-} from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
 import NotificationSettings from './NotificationSettings';
-import { mockData } from '@/services/mock';
-import axios from 'axios';
+import { AccountSettings } from '@/types/account';
+import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/AuthContext';
+import { fetchNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '@/services/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+// Define the notification type
 interface Notification {
-  _id?: string;
-  id?: string;
-  userId: string;
+  id: string;
   type: 'system' | 'task' | 'project' | 'comment';
   title: string;
   message: string;
-  date: Date;
+  date: string;
   read: boolean;
-  entityId: string; // The ID of the project, task, or comment
+  entityId: string;
 }
 
-const fetchNotifications = async (): Promise<Notification[]> => {
-  try {
-    const userId = 'demo-user';
-    const response = await axios.get(`/api/notifications/${userId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch notifications:', error);
-    return generateMockNotifications();
-  }
-};
-
-const markAsReadApi = async (notificationId: string): Promise<Notification> => {
-  const response = await axios.put(`/api/notifications/${notificationId}/read`);
-  return response.data;
-};
-
-const markAllAsReadApi = async (userId: string): Promise<any> => {
-  const response = await axios.put(`/api/notifications/mark-all-read/${userId}`);
-  return response.data;
-};
-
-const generateMockNotifications = (): Notification[] => {
-  const userId = 'demo-user';
-  return [
-    // Task notifications
-    ...mockData.tasks.filter(task => !task.status.includes('Complete')).slice(0, 3).map(task => ({
-      id: `task-${task.id}`,
-      userId,
-      type: 'task' as const,
-      title: task.name,
-      message: `Task "${task.name}" is due soon.`,
-      date: new Date(task.dueDate),
-      read: false,
-      entityId: task.id
-    })),
-    // Project notifications
-    ...mockData.projects.slice(0, 2).map(project => ({
-      id: `project-${project.id}`,
-      userId,
-      type: 'project' as const,
-      title: project.name,
-      message: `Project "${project.name}" deadline is approaching.`,
-      date: new Date(project.dueDate),
-      read: false,
-      entityId: project.id
-    })),
-    // System notifications
-    {
-      id: 'system-trial',
-      userId,
-      type: 'system' as const,
-      title: 'Trial Ending Soon',
-      message: 'Your free trial will end in 5 days. Upgrade now to continue using all features.',
-      date: new Date(),
-      read: false,
-      entityId: 'trial'
-    },
-    {
-      id: 'system-feature',
-      userId,
-      type: 'system' as const,
-      title: 'New Feature Available',
-      message: 'We\'ve added new reporting capabilities! Check it out in the dashboard.',
-      date: new Date(Date.now() - 86400000), // Yesterday
-      read: false,
-      entityId: 'feature'
-    }
-  ];
-};
-
 const NotificationsContent = () => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState({
+  const [showSettings, setShowSettings] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const userId = user?.id || '';
+
+  // Default notification settings
+  const [notificationSettings, setNotificationSettings] = useState<AccountSettings['notifications']>({
     tasks: true,
     projects: true,
     comments: true,
     system: true
   });
-  
-  const queryClient = useQueryClient();
-  const userId = 'demo-user';
 
-  const { 
-    data: notifications = [], 
-    isLoading, 
-    error 
-  } = useQuery({
+  // Query to fetch notifications
+  const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', userId],
-    queryFn: fetchNotifications,
-    initialData: generateMockNotifications(),
-    meta: {
-      onError: (error: Error) => {
-        console.error('Failed to fetch notifications:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load notifications. Using mock data instead.',
-          variant: 'destructive'
-        });
-      }
-    }
+    queryFn: () => user ? fetchMockNotifications(userId) : Promise.resolve([]),
+    enabled: !!userId,
   });
 
+  // Convert notifications to array if it's not already
+  const notificationsArray = Array.isArray(notifications) ? notifications : [];
+
+  // Mutation for marking a notification as read
   const markAsReadMutation = useMutation({
-    mutationFn: markAsReadApi,
+    mutationFn: markNotificationAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
     },
     onError: (error) => {
-      console.error('Failed to mark notification as read:', error);
+      console.error('Error marking notification as read:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to mark notification as read',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to mark notification as read.",
+        variant: "destructive"
       });
     }
   });
 
+  // Mutation for marking all notifications as read
   const markAllAsReadMutation = useMutation({
-    mutationFn: () => markAllAsReadApi(userId),
+    mutationFn: (userId: string) => markAllNotificationsAsRead(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       toast({
-        title: 'Success',
-        description: 'All notifications marked as read',
+        title: "Success",
+        description: "All notifications have been marked as read.",
       });
     },
     onError: (error) => {
-      console.error('Failed to mark all notifications as read:', error);
+      console.error('Error marking all notifications as read:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to mark all notifications as read',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to mark all notifications as read.",
+        variant: "destructive"
       });
     }
   });
 
-  const markAsRead = async (notificationId: string) => {
+  // Handle marking a notification as read
+  const handleMarkAsRead = (notificationId: string) => {
     markAsReadMutation.mutate(notificationId);
   };
 
-  const markAllAsRead = async () => {
-    markAllAsReadMutation.mutate();
-  };
-
-  const handleNotificationClick = async (notification: Notification) => {
-    const notificationId = notification._id || notification.id;
-    if (notificationId) {
-      markAsRead(notificationId);
-    }
-    
-    if (notification.type === 'task') {
-      toast({
-        title: "Navigation",
-        description: `Navigating to task ${notification.entityId} (not implemented)`,
-      });
-    } else if (notification.type === 'project') {
-      toast({
-        title: "Navigation",
-        description: `Navigating to project ${notification.entityId} (not implemented)`,
-      });
-    } else if (notification.type === 'system' && notification.entityId === 'trial') {
-      toast({
-        title: "Navigation",
-        description: "Navigating to account page (not implemented)",
-      });
+  // Handle marking all notifications as read
+  const handleMarkAllAsRead = () => {
+    if (user?.id) {
+      markAllAsReadMutation.mutate(user.id);
     }
   };
 
-  const handleSettingsChange = (settings: typeof notificationSettings) => {
+  // Handle notification settings change
+  const handleSettingsChange = (settings: AccountSettings['notifications']) => {
     setNotificationSettings(settings);
-    setSettingsOpen(false);
-    
+    setShowSettings(false);
     toast({
       title: "Settings Updated",
       description: "Your notification preferences have been saved.",
     });
   };
 
-  const filteredNotifications = activeTab === 'all' 
-    ? notifications 
-    : notifications.filter(notification => notification.type === activeTab);
+  // Mock function to fetch notifications (replace with real API call later)
+  const fetchMockNotifications = async (userId: string): Promise<Notification[]> => {
+    // This would be replaced with a real API call
+    return [
+      {
+        id: '1',
+        type: 'system',
+        title: 'System Maintenance',
+        message: 'The system will be undergoing maintenance tonight from 2-4 AM.',
+        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+        read: false,
+        entityId: 'system-1'
+      },
+      {
+        id: '2',
+        type: 'task',
+        title: 'Task Due Soon',
+        message: 'Your task "Complete financial report" is due tomorrow.',
+        date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        read: false,
+        entityId: 'task-123'
+      },
+      {
+        id: '3',
+        type: 'project',
+        title: 'New Project Created',
+        message: 'A new project "Q4 Marketing Campaign" has been created.',
+        date: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+        read: true,
+        entityId: 'project-456'
+      },
+      {
+        id: '4',
+        type: 'comment',
+        title: 'New Comment',
+        message: 'John Smith commented on "Q3 Financial Report".',
+        date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+        read: true,
+        entityId: 'comment-789'
+      },
+      {
+        id: '5',
+        type: 'task',
+        title: 'Task Assigned',
+        message: 'You have been assigned a new task "Prepare client presentation".',
+        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+        read: false,
+        entityId: 'task-456'
+      },
+    ];
+  };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Filter notifications based on active tab
+  const filteredNotifications = notificationsArray.filter(notification => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'unread') return !notification.read;
+    return notification.type === activeTab;
+  });
+
+  // Count unread notifications
+  const unreadCount = notificationsArray.filter(notification => !notification.read).length;
+
+  // Format date string to relative time
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-64 mb-4" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="text-center p-8">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Notifications</h2>
+          <p className="text-gray-600 mb-4">We encountered a problem while loading your notifications.</p>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['notifications', userId] })}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6 max-w-5xl">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Notifications</h1>
-        <div className="flex space-x-2">
-          <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <div className="flex gap-2">
+          <Sheet open={showSettings} onOpenChange={setShowSettings}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
-                <SettingsIcon className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
+              <Button variant="outline">Settings</Button>
             </SheetTrigger>
             <SheetContent>
               <NotificationSettings 
                 settings={notificationSettings} 
-                onSettingsChange={handleSettingsChange} 
+                onSettingsChange={handleSettingsChange}
               />
             </SheetContent>
           </Sheet>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={markAllAsRead}
-            disabled={markAllAsReadMutation.isPending || unreadCount === 0}
-          >
-            {markAllAsReadMutation.isPending 
-              ? <span>Processing...</span> 
-              : <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark all as read
-                </>
-            }
-          </Button>
+          {unreadCount > 0 && (
+            <Button variant="secondary" onClick={handleMarkAllAsRead}>
+              Mark All as Read
+            </Button>
+          )}
         </div>
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-4">
           <TabsTrigger value="all">
             All
             {unreadCount > 0 && (
-              <span className="ml-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+              <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
                 {unreadCount}
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="unread">Unread</TabsTrigger>
+          <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="task">Tasks</TabsTrigger>
           <TabsTrigger value="project">Projects</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="comment">Comments</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value={activeTab} className="mt-0">
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {isLoading ? (
-              <div className="p-6 flex flex-col items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jetpack-blue mb-3"></div>
-                <p className="text-gray-500">Loading notifications...</p>
-              </div>
-            ) : filteredNotifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No notifications to display</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {filteredNotifications.map((notification) => (
-                  <div 
-                    key={notification._id || notification.id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors flex ${
-                      !notification.read ? 'bg-blue-50' : ''
-                    }`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="mr-3 mt-1">
-                      {notification.type === 'task' && (
-                        <Clock className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
-                      )}
-                      {notification.type === 'project' && (
-                        <AlertCircle className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
-                      )}
-                      {notification.type === 'comment' && (
-                        <MessageCircle className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
-                      )}
-                      {notification.type === 'system' && (
-                        <Bell className={`h-5 w-5 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`} />
-                      )}
+
+        <TabsContent value={activeTab} className="space-y-4">
+          {filteredNotifications.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
+                <p className="text-lg font-medium mb-2">No notifications to display</p>
+                <p className="text-sm">When you receive notifications, they will appear here.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredNotifications.map((notification) => (
+              <Card 
+                key={notification.id} 
+                className={notification.read ? 'opacity-70' : ''}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className={`text-lg font-medium ${!notification.read ? 'font-semibold' : ''}`}>
+                        {notification.title}
+                      </h3>
+                      <p className="text-gray-600 mt-1">{notification.message}</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        {formatRelativeTime(notification.date)}
+                      </p>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h3 className={`font-medium ${!notification.read ? 'text-blue-800' : 'text-gray-900'}`}>
-                          {notification.title}
-                        </h3>
-                        <span className="text-xs text-gray-500">
-                          {format(new Date(notification.date), 'MMM d, h:mm a')}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                    </div>
+                    {!notification.read && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Mark as Read
+                      </Button>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -28,9 +28,6 @@ const userSchema = new mongoose.Schema({
     enum: ['Free trial', 'Basic', 'Pro', 'Enterprise'],
     default: 'Free trial'
   },
-  avatar: {
-    type: String
-  },
   trialDays: {
     type: Number,
     default: 14
