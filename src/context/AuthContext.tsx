@@ -1,8 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types/account';
+import {
+  loginUser,
+  registerUser,
+  getCurrentUser,
+  updateUserProfile
+} from '@/services/apiClient';
+import api from '@/services/apiClient';
 
 // Define types for context
 interface AuthContextType {
@@ -40,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(storedToken);
       
       // Set auth header for all future axios requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       
       // Get current user data
       fetchUserData(storedToken);
@@ -52,23 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to fetch user data
   const fetchUserData = async (authToken: string) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${authToken}`
-        }
-      });
-      
-      // Convert backend response to our User type
-      const userData: User = {
-        id: response.data.id,
-        name: response.data.name,
-        email: response.data.email,
-        role: response.data.role,
-        planStatus: response.data.planStatus,
-        trialDays: response.data.trialDays,
-        avatar: response.data.avatar,
-      };
-      
+      const userData = await getCurrentUser();
       setUser(userData);
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -83,19 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
-      });
-      
-      const { token, user } = response.data;
+      const { token, user } = await loginUser(email, password);
       
       // Store token
       localStorage.setItem('auth_token', token);
       setToken(token);
       
       // Set axios default header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Set user data
       setUser(user);
@@ -123,20 +108,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
-        name,
-        email,
-        password
-      });
-      
-      const { token, user } = response.data;
+      const { token, user } = await registerUser(name, email, password);
       
       // Store token
       localStorage.setItem('auth_token', token);
       setToken(token);
       
       // Set axios default header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Set user data
       setUser(user);
@@ -166,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     setUser(null);
     // Remove axios auth header
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     
     toast({
       title: "Logged out",
@@ -178,13 +157,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (name: string, email: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await axios.put('http://localhost:5000/api/auth/profile', {
-        name,
-        email
-      });
+      const updatedUser = await updateUserProfile({ name, email });
       
       // Update user data
-      setUser(response.data);
+      setUser(updatedUser);
       
       toast({
         title: "Success",

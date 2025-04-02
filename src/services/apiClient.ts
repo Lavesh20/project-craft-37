@@ -1,6 +1,6 @@
-
 import axios from 'axios';
 import { mockData } from './mock';
+import { toast } from '@/hooks/use-toast';
 
 // Determine the base URL based on environment
 const isProduction = window.location.hostname !== 'localhost';
@@ -8,16 +8,57 @@ const apiBaseUrl = isProduction
   ? (import.meta.env.VITE_API_URL || 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com/api')
   : 'http://localhost:5000/api';
 
-// Set base URL from environment
-axios.defaults.baseURL = apiBaseUrl;
-axios.defaults.withCredentials = true; // Enable cookies for cross-origin requests if needed
+// Configure axios defaults
+const api = axios.create({
+  baseURL: apiBaseUrl,
+  withCredentials: true,
+  timeout: 15000, // 15 seconds timeout
+});
+
+// Add request interceptor to include auth token if available
+api.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Add interceptors for error handling
-axios.interceptors.response.use(
+api.interceptors.response.use(
   response => response,
   error => {
-    console.error('API Error:', error);
-    // Return a rejected promise to be handled by the caller
+    if (error.response) {
+      // Server responded with an error status code
+      console.error('API Error:', error.response.status, error.response.data);
+      
+      // Handle authentication errors
+      if (error.response.status === 401) {
+        // Clear token if it's invalid
+        if (localStorage.getItem('auth_token')) {
+          console.log('Authentication token expired or invalid');
+          // Don't automatically log out here to avoid disrupting the user experience
+        }
+      }
+    } else if (error.request) {
+      // Request was made but no response received (server down or network issue)
+      console.error('No response received:', error.request);
+      toast({
+        title: "Network Error",
+        description: "Unable to connect to the server. Please check your connection or try again later.",
+        variant: "destructive"
+      });
+    } else {
+      // Error in setting up the request
+      console.error('Request setup error:', error.message);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -25,8 +66,11 @@ axios.interceptors.response.use(
 // Project endpoints
 export const fetchProjects = async () => {
   try {
-    const response = await axios.get('/projects');
-    return Array.isArray(response.data) ? response.data : [];
+    console.log('Fetching projects from API...');
+    const response = await api.get('/projects');
+    const projectsData = Array.isArray(response.data) ? response.data : [];
+    console.log(`Successfully fetched ${projectsData.length} projects from API`);
+    return projectsData;
   } catch (error) {
     console.error('Error fetching projects:', error);
     // Return mock data instead of throwing
@@ -37,7 +81,8 @@ export const fetchProjects = async () => {
 
 export const fetchProjectById = async (id: string) => {
   try {
-    const response = await axios.get(`/projects/${id}`);
+    console.log(`Fetching project ${id} from API...`);
+    const response = await api.get(`/projects/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching project ${id}:`, error);
@@ -53,7 +98,7 @@ export const fetchProjectById = async (id: string) => {
 
 export const createProject = async (projectData: any) => {
   try {
-    const response = await axios.post('/projects', projectData);
+    const response = await api.post('/projects', projectData);
     return response.data;
   } catch (error) {
     console.error('Error creating project:', error);
@@ -63,7 +108,7 @@ export const createProject = async (projectData: any) => {
 
 export const updateProject = async (id: string, projectData: any) => {
   try {
-    const response = await axios.patch(`/projects/${id}`, projectData);
+    const response = await api.patch(`/projects/${id}`, projectData);
     return response.data;
   } catch (error) {
     console.error(`Error updating project ${id}:`, error);
@@ -73,7 +118,7 @@ export const updateProject = async (id: string, projectData: any) => {
 
 export const deleteProject = async (id: string) => {
   try {
-    await axios.delete(`/projects/${id}`);
+    await api.delete(`/projects/${id}`);
     return { success: true };
   } catch (error) {
     console.error(`Error deleting project ${id}:`, error);
@@ -85,7 +130,7 @@ export const deleteProject = async (id: string) => {
 export const fetchTemplates = async () => {
   try {
     console.log('Fetching templates from API...');
-    const response = await axios.get('/templates');
+    const response = await api.get('/templates');
     const templatesData = Array.isArray(response.data) ? response.data : [];
     console.log(`Successfully fetched ${templatesData.length} templates from API`);
     return templatesData.length > 0 ? templatesData : mockData.templates;
@@ -101,7 +146,7 @@ export const fetchTemplates = async () => {
 
 export const fetchTemplateById = async (id: string) => {
   try {
-    const response = await axios.get(`/templates/${id}`);
+    const response = await api.get(`/templates/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching template ${id}:`, error);
@@ -115,41 +160,11 @@ export const fetchTemplateById = async (id: string) => {
   }
 };
 
-export const createTemplate = async (templateData: any) => {
-  try {
-    const response = await axios.post('/templates', templateData);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating template:', error);
-    throw error;
-  }
-};
-
-export const updateTemplate = async (id: string, templateData: any) => {
-  try {
-    const response = await axios.patch(`/templates/${id}`, templateData);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating template ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteTemplate = async (id: string) => {
-  try {
-    await axios.delete(`/templates/${id}`);
-    return { success: true };
-  } catch (error) {
-    console.error(`Error deleting template ${id}:`, error);
-    throw error;
-  }
-};
-
 // Client endpoints
 export const fetchClients = async () => {
   try {
     console.log('Fetching clients from API...');
-    const response = await axios.get('/clients');
+    const response = await api.get('/clients');
     const clientsData = Array.isArray(response.data) ? response.data : [];
     console.log(`Successfully fetched ${clientsData.length} clients from API`);
     return clientsData;
@@ -163,10 +178,82 @@ export const fetchClients = async () => {
   }
 };
 
+// Authentication endpoints
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+export const registerUser = async (name: string, email: string, password: string) => {
+  try {
+    const response = await api.post('/auth/register', { name, email, password });
+    return response.data;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
+};
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get('/auth/me');
+    return response.data;
+  } catch (error) {
+    console.error('Get current user error:', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (userData: any) => {
+  try {
+    const response = await api.put('/auth/profile', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Update profile error:', error);
+    throw error;
+  }
+};
+
+// Other endpoints remain the same but use the api instance
+export const createTemplate = async (templateData: any) => {
+  try {
+    const response = await api.post('/templates', templateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating template:', error);
+    throw error;
+  }
+};
+
+export const updateTemplate = async (id: string, templateData: any) => {
+  try {
+    const response = await api.patch(`/templates/${id}`, templateData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating template ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteTemplate = async (id: string) => {
+  try {
+    await api.delete(`/templates/${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting template ${id}:`, error);
+    throw error;
+  }
+};
+
 // Notification endpoints
 export const fetchNotifications = async (userId: string) => {
   try {
-    const response = await axios.get(`/notifications/${userId}`);
+    const response = await api.get(`/notifications/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -176,7 +263,7 @@ export const fetchNotifications = async (userId: string) => {
 
 export const markNotificationAsRead = async (notificationId: string) => {
   try {
-    const response = await axios.put(`/notifications/${notificationId}/read`);
+    const response = await api.put(`/notifications/${notificationId}/read`);
     return response.data;
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -186,7 +273,7 @@ export const markNotificationAsRead = async (notificationId: string) => {
 
 export const markAllNotificationsAsRead = async (userId: string) => {
   try {
-    const response = await axios.put(`/notifications/mark-all-read/${userId}`);
+    const response = await api.put(`/notifications/mark-all-read/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
@@ -196,10 +283,13 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 
 export const createNotification = async (notificationData: any) => {
   try {
-    const response = await axios.post('/notifications', notificationData);
+    const response = await api.post('/notifications', notificationData);
     return response.data;
   } catch (error) {
     console.error('Error creating notification:', error);
     throw error;
   }
 };
+
+// Export the axios instance for direct use when needed
+export default api;

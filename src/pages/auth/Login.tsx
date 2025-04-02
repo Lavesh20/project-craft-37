@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('login');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -112,6 +120,18 @@ const Login = () => {
     }
   };
 
+  // For demo purposes, we'll provide test login credentials
+  const fillDemoCredentials = () => {
+    setLoginData({
+      email: 'demo@example.com',
+      password: 'password123'
+    });
+    toast({
+      title: "Demo Credentials",
+      description: "Demo credentials filled. Click Sign In to continue.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
       <header className="container mx-auto p-6">
@@ -205,6 +225,19 @@ const Login = () => {
                           </>
                         )}
                       </Button>
+                      
+                      <div className="mt-4 w-full">
+                        <Separator className="my-4" />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="w-full" 
+                          onClick={fillDemoCredentials}
+                        >
+                          Use Demo Account
+                        </Button>
+                      </div>
+                      
                       <div className="mt-4 text-center text-sm text-gray-500">
                         Don't have an account?{' '}
                         <button 
