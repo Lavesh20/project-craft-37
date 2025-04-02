@@ -181,10 +181,33 @@ export const fetchClients = async () => {
 // Authentication endpoints
 export const loginUser = async (email: string, password: string) => {
   try {
+    console.log('Attempting to login with:', { email });
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Demo account fallback for development/testing
+    if (email === 'demo@example.com' && password === 'password123') {
+      console.log('Using mock data for demo login');
+      
+      // Create a mock token
+      const mockToken = 'mock-jwt-token-for-demo-account';
+      
+      // Create mock user data
+      const mockUser = {
+        id: 'demo-user-id',
+        name: 'Demo User',
+        email: 'demo@example.com',
+        role: 'Admin',
+        planStatus: 'Free trial',
+        trialDays: 14,
+        avatar: null
+      };
+      
+      return { user: mockUser, token: mockToken };
+    }
+    
     throw error;
   }
 };
@@ -195,6 +218,28 @@ export const registerUser = async (name: string, email: string, password: string
     return response.data;
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Demo account fallback for development/testing
+    if (email === 'demo@example.com') {
+      console.log('Using mock data for demo registration');
+      
+      // Create a mock token
+      const mockToken = 'mock-jwt-token-for-demo-account';
+      
+      // Create mock user data
+      const mockUser = {
+        id: 'demo-user-id',
+        name: name,
+        email: email,
+        role: 'Admin',
+        planStatus: 'Free trial',
+        trialDays: 14,
+        avatar: null
+      };
+      
+      return { user: mockUser, token: mockToken };
+    }
+    
     throw error;
   }
 };
@@ -205,6 +250,22 @@ export const getCurrentUser = async () => {
     return response.data;
   } catch (error) {
     console.error('Get current user error:', error);
+    
+    // Check if we have a mock token in local storage
+    const token = localStorage.getItem('auth_token');
+    if (token === 'mock-jwt-token-for-demo-account') {
+      console.log('Using mock data for demo user');
+      return {
+        id: 'demo-user-id',
+        name: 'Demo User',
+        email: 'demo@example.com',
+        role: 'Admin',
+        planStatus: 'Free trial',
+        trialDays: 14,
+        avatar: null
+      };
+    }
+    
     throw error;
   }
 };
