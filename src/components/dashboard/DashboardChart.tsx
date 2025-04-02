@@ -80,24 +80,27 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ projects }) => {
     });
   }, [projects]);
   
-  // Chart config for colors
+  // Chart config for colors - Added dark theme value to each entry to fix TypeScript error
   const chartConfig = {
     completed: {
       label: "Completed",
       theme: {
         light: "#22c55e", // Green color
+        dark: "#22c55e"   // Same color for dark mode
       }
     },
     inProgress: {
       label: "In Progress",
       theme: {
         light: "#3b82f6", // Blue color
+        dark: "#3b82f6"   // Same color for dark mode
       }
     },
     notStarted: {
       label: "Not Started",
       theme: {
         light: "#6b7280", // Gray color
+        dark: "#6b7280"   // Same color for dark mode
       }
     },
   };
