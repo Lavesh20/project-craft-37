@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -196,7 +197,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-4 md:p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold">
             {isEditMode ? 'Edit Project' : 'New Project'}
@@ -204,7 +205,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -237,21 +238,22 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="clientId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Client <span className="text-red-500">*</span></FormLabel>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
                         disabled={isEditMode}
+                        className="flex-1"
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select an option" />
                           </SelectTrigger>
                         </FormControl>
@@ -267,7 +269,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="text-blue-500 text-xs"
+                        className="text-blue-500 text-xs whitespace-nowrap"
                       >
                         Create a client
                       </Button>
@@ -336,15 +338,15 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                     <RadioGroup
                       onValueChange={(value) => field.onChange(value === 'true')}
                       defaultValue={field.value ? 'true' : 'false'}
-                      className="flex"
+                      className="flex flex-wrap gap-2"
                     >
-                      <div className="flex items-center space-x-2 flex-1">
+                      <div className="flex items-center space-x-2 flex-1 min-w-[140px]">
                         <RadioGroupItem value="true" id="repeating-yes" />
                         <label htmlFor="repeating-yes" className="flex-grow text-center py-2 border rounded-md cursor-pointer">
                           Yes
                         </label>
                       </div>
-                      <div className="flex items-center space-x-2 flex-1">
+                      <div className="flex items-center space-x-2 flex-1 min-w-[140px]">
                         <RadioGroupItem value="false" id="repeating-no" />
                         <label htmlFor="repeating-no" className="flex-grow text-center py-2 border rounded-md cursor-pointer bg-gray-50">
                           No, this is a one-off
@@ -358,7 +360,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
             />
             
             {watchedRepeating && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="frequency"
@@ -455,7 +457,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="single"
                         selected={field.value}
@@ -543,13 +545,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ onClose, onCreated, project
               />
             )}
             
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose} className="w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="bg-jetpack-blue hover:bg-blue-700 w-full md:w-auto"
+                className="bg-jetpack-blue hover:bg-blue-700 w-full sm:w-auto"
                 disabled={createProjectMutation.isPending || updateProjectMutation.isPending}
               >
                 {isEditMode ? 'Save Changes' : 'Create Project'}

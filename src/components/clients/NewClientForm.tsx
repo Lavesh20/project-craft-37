@@ -116,9 +116,9 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-        <Card className="p-6 shadow-sm border border-gray-100">
-          <div className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4 max-h-[90vh] overflow-y-auto">
+        <Card className="p-4 md:p-6 shadow-sm border border-gray-100">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -148,7 +148,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
                   <FormControl>
                     <Textarea
                       placeholder="Enter description"
-                      className="min-h-24 focus-visible:ring-jetpack-blue"
+                      className="min-h-24 focus-visible:ring-jetpack-blue resize-none"
                       {...field}
                     />
                   </FormControl>
@@ -162,9 +162,9 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
           </div>
         </Card>
         
-        <Card className="p-6 shadow-sm border border-gray-100">
+        <Card className="p-4 md:p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Contact Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="primaryContactName"
@@ -250,7 +250,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
           </div>
         </Card>
         
-        <Card className="p-6 shadow-sm border border-gray-100">
+        <Card className="p-4 md:p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Additional Information</h3>
           <FormField
             control={form.control}
@@ -262,27 +262,27 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
                   <RadioGroup
                     onValueChange={field.onChange}
                     value={field.value}
-                    className="flex flex-row space-x-4"
+                    className="flex flex-wrap gap-2"
                   >
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem className="flex items-center space-x-2 flex-1 min-w-[100px]">
                       <FormControl>
                         <RadioGroupItem value="None" />
                       </FormControl>
                       <FormLabel className="font-normal">None</FormLabel>
                     </FormItem>
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem className="flex items-center space-x-2 flex-1 min-w-[100px]">
                       <FormControl>
                         <RadioGroupItem value="Low" />
                       </FormControl>
                       <FormLabel className="font-normal">Low</FormLabel>
                     </FormItem>
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem className="flex items-center space-x-2 flex-1 min-w-[100px]">
                       <FormControl>
                         <RadioGroupItem value="Medium" />
                       </FormControl>
                       <FormLabel className="font-normal">Medium</FormLabel>
                     </FormItem>
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem className="flex items-center space-x-2 flex-1 min-w-[100px]">
                       <FormControl>
                         <RadioGroupItem value="High" />
                       </FormControl>
@@ -301,7 +301,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
             render={() => (
               <FormItem>
                 <FormLabel className="text-base">Services</FormLabel>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 bg-gray-50 p-4 rounded-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 bg-gray-50 p-4 rounded-md overflow-hidden">
                   {availableServices.map((service) => (
                     <FormField
                       key={service.value}
@@ -365,7 +365,7 @@ const NewClientForm: React.FC<NewClientFormProps> = ({
           />
         </Card>
         
-        <div className="flex flex-col md:flex-row gap-3 pt-4 border-t">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
           <Button 
             type="submit"
             disabled={createClientMutation.isPending}

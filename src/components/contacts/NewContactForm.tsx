@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Card } from '@/components/ui/card';
 
 // Define form schema
 const contactSchema = z.object({
@@ -123,83 +123,88 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
-          <Input
-            id="name"
-            placeholder="John Doe"
-            {...register('name')}
-            className={errors.name ? 'border-red-300' : ''}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="john.doe@example.com"
-            {...register('email')}
-            className={errors.email ? 'border-red-300' : ''}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            placeholder="(555) 123-4567"
-            {...register('phone')}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="client">Associated Client</Label>
-          <Select
-            value={selectedClientId}
-            onValueChange={(value) => setValue('clientId', value)}
-            disabled={clientsLoading || preselectedClientId !== undefined}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a client (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No client</SelectItem>
-              {clients.map(client => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {selectedClientId && selectedClientId !== "none" && (
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isPrimaryContact"
-              checked={watch('isPrimaryContact')}
-              onCheckedChange={handlePrimaryContactChange}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-h-[90vh] overflow-y-auto">
+      <Card className="p-4 md:p-6 shadow-sm">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+            <Input
+              id="name"
+              placeholder="John Doe"
+              {...register('name')}
+              className={errors.name ? 'border-red-300' : ''}
             />
-            <Label htmlFor="isPrimaryContact" className="cursor-pointer">
-              Set as primary contact for this client
-            </Label>
-            {isCreatingPrimaryContact && (
-              <p className="text-amber-600 text-sm">
-                Note: This will replace the current primary contact, if one exists.
-              </p>
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
-        )}
 
+          <div>
+            <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="john.doe@example.com"
+              {...register('email')}
+              className={errors.email ? 'border-red-300' : ''}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              placeholder="(555) 123-4567"
+              {...register('phone')}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="client">Associated Client</Label>
+            <Select
+              value={selectedClientId}
+              onValueChange={(value) => setValue('clientId', value)}
+              disabled={clientsLoading || preselectedClientId !== undefined}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a client (optional)" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px]">
+                <SelectItem value="none">No client</SelectItem>
+                {clients.map(client => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedClientId && selectedClientId !== "none" && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isPrimaryContact"
+                checked={watch('isPrimaryContact')}
+                onCheckedChange={handlePrimaryContactChange}
+              />
+              <Label htmlFor="isPrimaryContact" className="cursor-pointer">
+                Set as primary contact for this client
+              </Label>
+              {isCreatingPrimaryContact && (
+                <p className="text-amber-600 text-sm">
+                  Note: This will replace the current primary contact, if one exists.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card className="p-4 md:p-6 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">Address Information</h3>
         <div>
           <Label htmlFor="street">Street Address</Label>
           <Input
@@ -209,7 +214,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div>
             <Label htmlFor="city">City</Label>
             <Input
@@ -235,13 +240,13 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
             />
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="flex justify-end space-x-4 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-4 space-y-2 sm:space-y-0 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="bg-jetpack-blue hover:bg-blue-700">
+        <Button type="submit" disabled={isSubmitting} className="bg-jetpack-blue hover:bg-blue-700 w-full sm:w-auto">
           {isSubmitting ? 'Creating...' : 'Create Contact'}
         </Button>
       </div>
