@@ -115,12 +115,14 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ projects }) => {
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}
+            // Using props directly instead of defaultProps
           />
           <YAxis 
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}
             allowDecimals={false}
+            // Using props directly instead of defaultProps
           />
           <Tooltip content={<ChartTooltipContent />} />
           <Legend content={<ChartLegendContent />} verticalAlign="top" />
