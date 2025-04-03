@@ -104,13 +104,16 @@ router.get('/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
+    // Include all necessary user data
     const userData = {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
       planStatus: user.planStatus,
-      trialDays: user.trialDays
+      trialDays: user.trialDays,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin
     };
     
     res.json(userData);

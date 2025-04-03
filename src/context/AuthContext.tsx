@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types/account';
@@ -58,12 +57,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to fetch user data
   const fetchUserData = async (authToken: string) => {
     try {
+      console.log('Fetching user data with token:', authToken);
       const userData = await getCurrentUser();
+      console.log('User data received:', userData);
       setUser(userData);
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Clear token if invalid
-      logout();
+      // For demo purposes, create demo user if token is the mock token
+      if (authToken === 'mock-jwt-token-for-demo-account') {
+        console.log('Creating demo user for mock token');
+        setUser({
+          id: 'demo-user-id',
+          name: 'Demo User',
+          email: 'demo@example.com',
+          role: 'Admin',
+          planStatus: 'Free trial',
+          trialDays: 14
+        });
+      } else {
+        // Clear token if invalid
+        logout();
+      }
     } finally {
       setLoading(false);
     }

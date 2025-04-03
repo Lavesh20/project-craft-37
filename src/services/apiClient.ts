@@ -246,7 +246,9 @@ export const registerUser = async (name: string, email: string, password: string
 
 export const getCurrentUser = async () => {
   try {
+    console.log('Fetching current user data from API...');
     const response = await api.get('/auth/me');
+    console.log('Successfully fetched user data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Get current user error:', error);
@@ -255,15 +257,18 @@ export const getCurrentUser = async () => {
     const token = localStorage.getItem('auth_token');
     if (token === 'mock-jwt-token-for-demo-account') {
       console.log('Using mock data for demo user');
-      return {
+      const mockUser = {
         id: 'demo-user-id',
         name: 'Demo User',
         email: 'demo@example.com',
         role: 'Admin',
         planStatus: 'Free trial',
         trialDays: 14,
-        avatar: null
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
       };
+      console.log('Returning mock user data:', mockUser);
+      return mockUser;
     }
     
     throw error;
