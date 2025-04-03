@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { User, Users, CreditCard, Mail, Edit, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { mockData } from '@/services/mock';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -193,16 +192,11 @@ const AccountContent = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4 mb-6">
-                <Avatar className="h-16 w-16 rounded-full bg-primary text-white text-lg uppercase">
-                  {user?.name && <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>}
-                </Avatar>
-                <div>
-                  <h3 className="text-lg font-medium">{user?.name}</h3>
-                  <p className="text-gray-500 flex items-center">
-                    <Mail className="h-4 w-4 mr-1" /> {user?.email}
-                  </p>
-                </div>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium">{user?.name}</h3>
+                <p className="text-gray-500 flex items-center">
+                  <Mail className="h-4 w-4 mr-1" /> {user?.email}
+                </p>
               </div>
               
               <div className="space-y-4">
@@ -291,11 +285,8 @@ const AccountContent = () => {
                 ) : (
                   teamMembers.map((member, index) => (
                     <li key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                      <Avatar className="h-8 w-8 bg-primary text-white">
-                        <AvatarFallback>{member.name?.charAt(0) || '?'}</AvatarFallback>
-                      </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{member.name}</p>
+                        <p className="font-medium truncate">{member.name || 'Team Member'}</p>
                         <p className="text-sm text-gray-500 truncate">{member.email || "No email"}</p>
                       </div>
                       <div className="text-xs bg-gray-100 px-2 py-1 rounded">
@@ -320,7 +311,7 @@ const AccountContent = () => {
       </div>
       
       <div className="mt-8 text-sm text-gray-500 text-center">
-        Last edited {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()} by {user?.name}
+        Last edited {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()} by {user?.name || 'User'}
       </div>
 
       {/* Edit Account Dialog */}
