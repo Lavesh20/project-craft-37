@@ -96,7 +96,7 @@ router.delete('/:id', async (req, res) => {
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Contact not found' });
     
-    await contact.remove();
+    await Contact.findByIdAndDelete(req.params.id);
     res.json({ message: 'Contact deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
