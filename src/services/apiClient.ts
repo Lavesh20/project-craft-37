@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { mockData } from './mock';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // Configure API URL based on environment
-const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-const apiBaseUrl = isProduction ? '/api' : '/api'; // Using proxied API path
+const apiBaseUrl = '/api'; // Using proxied API path from vite.config.ts
 
 // Configure axios defaults
 const api = axios.create({
@@ -20,6 +19,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`, config.data);
     return config;
   },
   error => {
@@ -30,7 +30,10 @@ api.interceptors.request.use(
 
 // Add interceptors for error handling
 api.interceptors.response.use(
-  response => response,
+  response => {
+    console.log('API Response:', response.status, response.data);
+    return response;
+  },
   error => {
     if (error.response) {
       // Server responded with an error status code
@@ -47,6 +50,7 @@ api.interceptors.response.use(
     } else if (error.request) {
       // Request was made but no response received (server down or network issue)
       console.error('No response received:', error.request);
+      const { toast } = useToast();
       toast({
         title: "Network Error",
         description: "Unable to connect to the server. Please check your connection or try again later.",
@@ -71,7 +75,6 @@ export const fetchProjects = async () => {
     return projectsData;
   } catch (error) {
     console.error('Error fetching projects:', error);
-    // Return mock data instead of throwing
     console.log('Using mock project data as fallback');
     return mockData.projects || [];
   }
@@ -136,7 +139,6 @@ export const fetchTemplates = async () => {
     return templatesData;
   } catch (error) {
     console.error('Error fetching templates:', error);
-    // Return mock data instead of throwing
     console.log('Using mock template data as fallback');
     return mockData.templates || [];
   }
@@ -168,7 +170,6 @@ export const fetchClients = async () => {
     return clientsData;
   } catch (error) {
     console.error('Error fetching clients:', error);
-    // Return mock data instead of throwing
     console.log('Using mock client data as fallback');
     return mockData.clients || [];
   }
@@ -208,6 +209,7 @@ export const loginUser = async (email: string, password: string) => {
   try {
     console.log('Attempting to login with:', { email });
     const response = await api.post('/auth/login', { email, password });
+    console.log('Login successful:', response.data);
     return response.data;
   } catch (error) {
     console.error('Login error:', error);
@@ -302,7 +304,9 @@ export const getCurrentUser = async () => {
 
 export const updateUserProfile = async (userData: any) => {
   try {
+    console.log('Updating user profile with data:', userData);
     const response = await api.put('/auth/profile', userData);
+    console.log('Profile updated successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Update profile error:', error);
@@ -310,7 +314,7 @@ export const updateUserProfile = async (userData: any) => {
   }
 };
 
-// Other endpoints remain the same but use the api instance
+// Other endpoints remain but use the api instance
 export const createTemplate = async (templateData: any) => {
   try {
     console.log('Creating template with data:', templateData);
@@ -360,6 +364,7 @@ export const fetchContacts = async () => {
   try {
     console.log('Fetching contacts from API...');
     const response = await api.get('/contacts');
+    console.log('Contacts fetched successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching contacts:', error);

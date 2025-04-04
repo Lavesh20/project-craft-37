@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 // Auth provider component
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +42,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Initialize auth state from localStorage on component mount
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');
+    console.log('AuthProvider initialized, stored token:', storedToken ? 'exists' : 'none');
+    
     if (storedToken) {
       setToken(storedToken);
       
