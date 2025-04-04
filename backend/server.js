@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5000;
 
 // CORS Configuration - expanded to handle all scenarios
 app.use(cors({
-  origin: ['http://localhost:8080', 'https://lovable.dev', 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com'],
+  origin: ['http://localhost:8081', 'https://lovable.dev', 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
