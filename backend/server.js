@@ -19,15 +19,15 @@ const PORT = process.env.PORT || 5000;
 
 // Improved CORS Configuration to accept requests from frontend
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081'],
+  origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
   maxAge: 86400 // 24 hours in seconds
 }));
 
-// Parse JSON requests
-app.use(express.json());
+// Parse JSON requests with increased size limit
+app.use(express.json({ limit: '10mb' }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URL)
@@ -41,21 +41,36 @@ mongoose.connect(process.env.MONGODB_URL)
     console.error('Make sure your MongoDB server is running and MONGODB_URL is correct in .env');
   });
 
-// Enhanced logging middleware
+// Enhanced logging middleware with more details for POST requests
 app.use((req, res, next) => {
   const start = Date.now();
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  const timestamp = new Date().toISOString();
   
-  // Log request body for POST/PUT/PATCH requests
+  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  
+  // Detailed logging for POST/PUT/PATCH requests
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    console.log('Request Body:', JSON.stringify(req.body));
+    console.log(`[${timestamp}] Request Body:`, JSON.stringify(req.body, null, 2));
+    console.log(`[${timestamp}] Content-Type:`, req.headers['content-type']);
+    console.log(`[${timestamp}] Authorization:`, req.headers['authorization'] ? 'Present' : 'Not present');
   }
   
   // Add response logging
   const originalSend = res.send;
   res.send = function(body) {
     const duration = Date.now() - start;
-    console.log(`${new Date().toISOString()} - Completed ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+    console.log(`[${timestamp}] Completed ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+    
+    // Log response for debugging
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      try {
+        const responseBody = typeof body === 'string' ? JSON.parse(body) : body;
+        console.log(`[${timestamp}] Response:`, JSON.stringify(responseBody, null, 2));
+      } catch (e) {
+        console.log(`[${timestamp}] Response: (non-JSON)`, body);
+      }
+    }
+    
     return originalSend.call(this, body);
   };
   

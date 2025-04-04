@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { mockData } from './mock';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +11,9 @@ const api = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
   timeout: 15000, // 15 seconds timeout
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 // Add request interceptor to include auth token if available
@@ -19,11 +23,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`, config.data);
+    
+    // Better request logging
+    const method = config.method?.toUpperCase() || 'UNKNOWN';
+    const url = `${config.baseURL}${config.url}`;
+    console.log(`[API Request] ${method} ${url}`, config.data ? config.data : '');
+    
     return config;
   },
   error => {
-    console.error('Request error:', error);
+    console.error('[API Request Error]:', error);
     return Promise.reject(error);
   }
 );
@@ -31,13 +40,13 @@ api.interceptors.request.use(
 // Add interceptors for error handling
 api.interceptors.response.use(
   response => {
-    console.log('API Response:', response.status, response.data);
+    console.log('[API Response]:', response.status, response.config.url, response.data);
     return response;
   },
   error => {
     if (error.response) {
       // Server responded with an error status code
-      console.error('API Error:', error.response.status, error.response.data);
+      console.error('[API Error]:', error.response.status, error.response.config?.url, error.response.data);
       
       // Handle authentication errors
       if (error.response.status === 401) {
@@ -49,16 +58,20 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       // Request was made but no response received (server down or network issue)
-      console.error('No response received:', error.request);
-      const { toast } = useToast();
-      toast({
-        title: "Network Error",
-        description: "Unable to connect to the server. Please check your connection or try again later.",
-        variant: "destructive"
-      });
+      console.error('[Network Error] No response received:', error.config?.url);
+      try {
+        const { toast } = useToast();
+        toast({
+          title: "Network Error",
+          description: "Unable to connect to the server. Please check your connection or try again later.",
+          variant: "destructive"
+        });
+      } catch (e) {
+        console.error('Could not show toast notification');
+      }
     } else {
       // Error in setting up the request
-      console.error('Request setup error:', error.message);
+      console.error('[Request Setup Error]:', error.message);
     }
     
     return Promise.reject(error);
