@@ -4,9 +4,7 @@ import { toast } from '@/hooks/use-toast';
 
 // Determine the base URL based on environment
 const isProduction = window.location.hostname !== 'localhost';
-const apiBaseUrl = isProduction 
-  ? (import.meta.env.VITE_API_URL || 'https://1fa22f85-447a-4ac4-baf3-1c30d8f930e8.lovableproject.com/api')
-  : 'http://localhost:5000/api';
+const apiBaseUrl = 'http://localhost:5000/api';
 
 // Configure axios defaults
 const api = axios.create({
@@ -99,6 +97,8 @@ export const fetchProjectById = async (id: string) => {
 export const createProject = async (projectData: any) => {
   try {
     const response = await api.post('/projects', projectData);
+    console.log(response)
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('Error creating project:', error);
