@@ -2,9 +2,9 @@ import axios from 'axios';
 import { mockData } from './mock';
 import { toast } from '@/hooks/use-toast';
 
-// Determine the base URL based on environment
-const isProduction = window.location.hostname !== 'localhost';
-const apiBaseUrl = 'http://localhost:5000/api';
+// Configure API URL based on environment
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const apiBaseUrl = isProduction ? '/api' : '/api'; // Using proxied API path
 
 // Configure axios defaults
 const api = axios.create({
@@ -96,9 +96,9 @@ export const fetchProjectById = async (id: string) => {
 
 export const createProject = async (projectData: any) => {
   try {
+    console.log('Creating project with data:', projectData);
     const response = await api.post('/projects', projectData);
-    console.log(response)
-    console.log(response.data);
+    console.log('Project created successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error creating project:', error);
@@ -133,14 +133,12 @@ export const fetchTemplates = async () => {
     const response = await api.get('/templates');
     const templatesData = Array.isArray(response.data) ? response.data : [];
     console.log(`Successfully fetched ${templatesData.length} templates from API`);
-    return templatesData.length > 0 ? templatesData : mockData.templates;
+    return templatesData;
   } catch (error) {
     console.error('Error fetching templates:', error);
     // Return mock data instead of throwing
     console.log('Using mock template data as fallback');
-    const mockTemplates = Array.isArray(mockData.templates) ? mockData.templates : [];
-    console.log(`Using ${mockTemplates.length} mock templates`);
-    return mockTemplates;
+    return mockData.templates || [];
   }
 };
 
@@ -172,9 +170,36 @@ export const fetchClients = async () => {
     console.error('Error fetching clients:', error);
     // Return mock data instead of throwing
     console.log('Using mock client data as fallback');
-    const mockClients = Array.isArray(mockData.clients) ? mockData.clients : [];
-    console.log(`Using ${mockClients.length} mock clients`);
-    return mockClients;
+    return mockData.clients || [];
+  }
+};
+
+export const createClient = async (clientData: any) => {
+  try {
+    console.log('Creating client with data:', clientData);
+    const response = await api.post('/clients', clientData);
+    console.log('Client created successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating client:', error);
+    throw error;
+  }
+};
+
+export const fetchClientById = async (id: string) => {
+  try {
+    console.log(`Fetching client ${id} from API...`);
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching client ${id}:`, error);
+    // Look up client in mock data
+    const mockClient = mockData.clients?.find(c => c.id === id);
+    if (mockClient) {
+      console.log(`Using mock data for client ${id}`);
+      return mockClient;
+    }
+    throw error;
   }
 };
 
@@ -288,7 +313,9 @@ export const updateUserProfile = async (userData: any) => {
 // Other endpoints remain the same but use the api instance
 export const createTemplate = async (templateData: any) => {
   try {
+    console.log('Creating template with data:', templateData);
     const response = await api.post('/templates', templateData);
+    console.log('Template created successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error creating template:', error);
@@ -313,6 +340,30 @@ export const deleteTemplate = async (id: string) => {
   } catch (error) {
     console.error(`Error deleting template ${id}:`, error);
     throw error;
+  }
+};
+
+// Contact endpoints
+export const createContact = async (contactData: any) => {
+  try {
+    console.log('Creating contact with data:', contactData);
+    const response = await api.post('/contacts', contactData);
+    console.log('Contact created successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating contact:', error);
+    throw error;
+  }
+};
+
+export const fetchContacts = async () => {
+  try {
+    console.log('Fetching contacts from API...');
+    const response = await api.get('/contacts');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    return mockData.contacts || [];
   }
 };
 

@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import {
   createBrowserRouter,
@@ -23,9 +22,8 @@ import Notifications from '@/pages/Notifications';
 import Account from '@/pages/Account';
 import Login from '@/pages/auth/Login';
 import Dashboard from '@/pages/Dashboard';
-import { toast } from 'sonner';
-import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/context/AuthContext';
 
 // Error boundary as a class component
 class ErrorBoundary extends Component<{ children: ReactNode }> {
@@ -37,7 +35,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
-    toast.error("Something went wrong. Please refresh the page and try again.");
   }
 
   render() {
@@ -193,14 +190,12 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <>
-      <ErrorBoundary>
-        <AuthProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </AuthProvider>
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
