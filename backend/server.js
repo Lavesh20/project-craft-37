@@ -17,9 +17,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Improved CORS Configuration to accept requests from frontend
+// Improved CORS Configuration to accept requests from frontend (updated to include port 8081)
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
+  origin: ['http://localhost:8081', 'http://127.0.0.1:8081'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
@@ -53,6 +53,7 @@ app.use((req, res, next) => {
     console.log(`[${timestamp}] Request Body:`, JSON.stringify(req.body, null, 2));
     console.log(`[${timestamp}] Content-Type:`, req.headers['content-type']);
     console.log(`[${timestamp}] Authorization:`, req.headers['authorization'] ? 'Present' : 'Not present');
+    console.log(`[${timestamp}] Origin:`, req.headers['origin'] || 'No origin header');
   }
   
   // Add response logging
@@ -100,4 +101,5 @@ app.get('/api/test', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api`);
+  console.log(`Frontend should be using http://localhost:8081 to connect`);
 });
