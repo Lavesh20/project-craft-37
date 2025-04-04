@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { mockData } from './mock';
 import { toast } from '@/hooks/use-toast';
@@ -365,16 +364,6 @@ export const fetchContacts = async () => {
   } catch (error) {
     console.error('Error fetching contacts:', error);
     return mockData.contacts || [];
-  }
-};
-
-export const updateUserProfile = async (userData: any) => {
-  try {
-    const response = await api.put('/auth/profile', userData);
-    return response.data;
-  } catch (error) {
-    console.error('Update profile error:', error);
-    throw error;
   }
 };
 
