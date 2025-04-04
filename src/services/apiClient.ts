@@ -1,9 +1,10 @@
+
 import axios from 'axios';
 import { mockData } from './mock';
 import { useToast } from '@/hooks/use-toast';
 
 // Configure API URL based on environment
-const apiBaseUrl = '/api'; // Using proxied API path from vite.config.ts
+const apiBaseUrl = '/api'; // We're using the proxy defined in vite.config.ts
 
 // Configure axios defaults
 const api = axios.create({
@@ -25,8 +26,8 @@ api.interceptors.request.use(
     
     // Better request logging
     const method = config.method?.toUpperCase() || 'UNKNOWN';
-    const url = `${config.baseURL}${config.url}`;
-    console.log(`[API Request] ${method} ${url}`, config.data ? config.data : '');
+    console.log(`[API Request] ${method} ${config.url}`, config.data ? config.data : '');
+    console.log(`[API Headers]`, config.headers);
     
     return config;
   },

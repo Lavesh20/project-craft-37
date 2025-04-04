@@ -50,10 +50,12 @@ app.use((req, res, next) => {
   
   // Detailed logging for POST/PUT/PATCH requests
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    console.log(`[${timestamp}] Request URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
     console.log(`[${timestamp}] Request Body:`, JSON.stringify(req.body, null, 2));
     console.log(`[${timestamp}] Content-Type:`, req.headers['content-type']);
     console.log(`[${timestamp}] Authorization:`, req.headers['authorization'] ? 'Present' : 'Not present');
     console.log(`[${timestamp}] Origin:`, req.headers['origin'] || 'No origin header');
+    console.log(`[${timestamp}] Referer:`, req.headers['referer'] || 'No referer header');
   }
   
   // Add response logging
@@ -100,6 +102,10 @@ app.get('/api/test', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`API available at http://localhost:${PORT}/api`);
+  console.log(`API available at http://localhost:${PORT}`);
   console.log(`Frontend should be using http://localhost:8081 to connect`);
+  console.log(`API Routes accessible at:`);
+  console.log(` - Auth: http://localhost:${PORT}/api/auth`);
+  console.log(` - Projects: http://localhost:${PORT}/api/projects`);
+  console.log(` - Clients: http://localhost:${PORT}/api/clients`);
 });
