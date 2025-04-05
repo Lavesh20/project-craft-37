@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import axios from 'axios';
 import { Project } from '@/types';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { updateProject } from '@/services/api';
 import { toast } from 'sonner';
 
 interface ProjectHeaderProps {
@@ -15,6 +15,27 @@ interface ProjectHeaderProps {
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onEdit, onProjectUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Direct API call to update project status
+  const updateProject = async (id: string, projectData: Partial<Project>): Promise<Project> => {
+    try {
+      console.log(`Updating project ${id} with data:`, projectData);
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.patch(`/api/projects/${id}`, projectData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      
+      console.log('Project updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating project ${id}:`, error);
+      throw error;
+    }
+  };
 
   const handleStatusChange = async (newStatus: 'Not Started' | 'In Progress' | 'Complete') => {
     if (newStatus === project.status) return;

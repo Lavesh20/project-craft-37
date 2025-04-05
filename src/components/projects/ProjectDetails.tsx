@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { fetchProject, fetchTemplate } from '@/services/api';
+import axios from 'axios';
 import { Project, Template } from '@/types';
 import ProjectHeader from './ProjectHeader';
 import ProjectInfo from './ProjectInfo';
@@ -19,7 +19,47 @@ const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Use tanstack query for data fetching
+  // Function to fetch project directly with axios
+  const fetchProject = async (id: string): Promise<Project> => {
+    try {
+      console.log(`Fetching project ${id} directly from component...`);
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.get(`/api/projects/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      console.log('Project data received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      // Use mock data as fallback for development
+      console.log('Using mock project data as fallback');
+      throw error;
+    }
+  };
+
+  // Function to fetch template directly with axios
+  const fetchTemplate = async (templateId: string): Promise<Template> => {
+    try {
+      console.log(`Fetching template ${templateId} directly from component...`);
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.get(`/api/templates/${templateId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      console.log('Template data received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching template:', error);
+      throw error;
+    }
+  };
+
+  // Use tanstack query for data fetching with direct axios functions
   const { data: projectData, isLoading: projectLoading, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectId ? fetchProject(projectId) : undefined,
