@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchTemplate, fetchClients, fetchTeamMembers } from '@/services/api';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Plus, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -19,11 +18,81 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TemplateEditForm from '@/components/templates/TemplateEditForm';
 import { toast } from "sonner";
+import { Template, TeamMember, Client } from '@/types';
 
 const TemplateDetails: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Direct API function to fetch template
+  const fetchTemplate = async (id: string): Promise<Template> => {
+    try {
+      console.log(`Fetching template ${id}...`);
+      const token = localStorage.getItem('auth_token');
+      const controller = new AbortController();
+      
+      const response = await axios.get(`/api/templates/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Template fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching template ${id}:`, error);
+      throw error;
+    }
+  };
+
+  // Direct API function to fetch clients
+  const fetchClients = async (): Promise<Client[]> => {
+    try {
+      console.log('Fetching clients...');
+      const token = localStorage.getItem('auth_token');
+      const controller = new AbortController();
+      
+      const response = await axios.get('/api/clients', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Clients fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      throw error;
+    }
+  };
+
+  // Direct API function to fetch team members
+  const fetchTeamMembers = async (): Promise<TeamMember[]> => {
+    try {
+      console.log('Fetching team members...');
+      const token = localStorage.getItem('auth_token');
+      const controller = new AbortController();
+      
+      const response = await axios.get('/api/team-members', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Team members fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      throw error;
+    }
+  };
   
   // Fetch template data
   const { data: template, isLoading: isLoadingTemplate, error } = useQuery({
@@ -177,7 +246,7 @@ const TemplateDetails: React.FC = () => {
                 <h2 className="text-lg font-semibold mb-2">Task List</h2>
                 
                 <div className="border rounded-md divide-y">
-                  {template.tasks.map((task) => {
+                  {template.tasks && template.tasks.map((task) => {
                     const assignee = getAssignee(task.assigneeId);
                     
                     return (
@@ -216,7 +285,7 @@ const TemplateDetails: React.FC = () => {
                     );
                   })}
                   
-                  {template.tasks.length === 0 && (
+                  {!template.tasks || template.tasks.length === 0 && (
                     <div className="p-6 text-center text-muted-foreground">
                       No tasks have been created for this template.
                     </div>

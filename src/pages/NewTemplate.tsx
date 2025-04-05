@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { createTemplate, fetchTeamMembers } from '@/services/api';
+import axios from 'axios';
 import { CreateTemplateFormData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -27,6 +27,53 @@ const NewTemplate: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Direct API function for creating a template
+  const createTemplate = async (templateData: CreateTemplateFormData): Promise<any> => {
+    try {
+      console.log('Creating template with data:', templateData);
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.post('/api/templates', templateData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      
+      console.log('Template created successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating template:', error);
+      throw error;
+    }
+  };
+
+  // Direct API function for fetching team members
+  const fetchTeamMembers = async (): Promise<any[]> => {
+    try {
+      const controller = new AbortController();
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.get('/api/team-members', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Team members fetched:', response.data);
+      return response.data;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log('Request canceled:', error.message);
+      } else {
+        console.error('Error fetching team members:', error);
+      }
+      throw error;
+    }
+  };
   
   // Fetch team members with proper error handling
   const { data: teamMembersData, isLoading: teamMembersLoading } = useQuery({

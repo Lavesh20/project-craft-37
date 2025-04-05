@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
-import { fetchProjects, fetchClients, deleteProject } from '@/services/api';
-import { Briefcase, Plus, MoreVertical, Search, Filter, Building2, Calendar, User, Trash } from 'lucide-react';
+import { Briefcase, Plus, MoreVertical, Search, Filter, Building2, Calendar, Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import ProjectModal from '@/components/projects/ProjectModal';
 import MainLayout from '@/components/layout/MainLayout';
-import { Project } from '@/types';
+import { Project, Client } from '@/types';
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +34,80 @@ const Projects: React.FC = () => {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'not-started' | 'in-progress' | 'complete'>('all');
+
+  // Direct API function for fetching projects
+  const fetchProjects = async (): Promise<Project[]> => {
+    try {
+      console.log('Fetching projects...');
+      const token = localStorage.getItem('auth_token');
+      const controller = new AbortController();
+      
+      const response = await axios.get('/api/projects', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Projects fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log('Request canceled:', error.message);
+      } else {
+        console.error('Error fetching projects:', error);
+      }
+      throw error;
+    }
+  };
+
+  // Direct API function for fetching clients
+  const fetchClients = async (): Promise<Client[]> => {
+    try {
+      console.log('Fetching clients...');
+      const token = localStorage.getItem('auth_token');
+      const controller = new AbortController();
+      
+      const response = await axios.get('/api/clients', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        signal: controller.signal
+      });
+      
+      console.log('Clients fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log('Request canceled:', error.message);
+      } else {
+        console.error('Error fetching clients:', error);
+      }
+      throw error;
+    }
+  };
+
+  // Direct API function for deleting a project
+  const deleteProject = async (projectId: string): Promise<void> => {
+    try {
+      console.log(`Deleting project ${projectId}...`);
+      const token = localStorage.getItem('auth_token');
+      
+      await axios.delete(`/api/projects/${projectId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      
+      console.log(`Project ${projectId} deleted successfully`);
+    } catch (error) {
+      console.error(`Error deleting project ${projectId}:`, error);
+      throw error;
+    }
+  };
 
   // Fetch projects data
   const { 
