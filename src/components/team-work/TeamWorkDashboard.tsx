@@ -39,8 +39,9 @@ const TeamWorkDashboard = () => {
           signal: controller.signal
         });
         
-        setTeamMembers(teamMembersResponse.data || []);
-        setTasks(tasksResponse.data || []);
+        // Ensure we always set arrays even if the API returns null or undefined
+        setTeamMembers(teamMembersResponse.data ? Array.isArray(teamMembersResponse.data) ? teamMembersResponse.data : [] : []);
+        setTasks(tasksResponse.data ? Array.isArray(tasksResponse.data) ? tasksResponse.data : [] : []);
         setError(null);
       } catch (err) {
         // Only set error if the request wasn't aborted
@@ -73,9 +74,11 @@ const TeamWorkDashboard = () => {
   };
 
   const getTasksForTeamMember = (teamMemberId: string, status: 'overdue' | 'upcoming') => {
+    // Ensure tasks is always an array before filtering
+    const tasksArray = Array.isArray(tasks) ? tasks : [];
     const today = new Date();
     
-    return tasks.filter(task => {
+    return tasksArray.filter(task => {
       const dueDate = new Date(task.dueDate);
       
       if (teamMemberId === 'unassigned') {
@@ -139,7 +142,7 @@ const TeamWorkDashboard = () => {
               />
               
               {/* Then show tasks for each team member */}
-              {teamMembers.map(member => (
+              {(Array.isArray(teamMembers) ? teamMembers : []).map(member => (
                 <TeamMemberTasks 
                   key={member.id} 
                   teamMember={member} 
@@ -158,7 +161,7 @@ const TeamWorkDashboard = () => {
               />
               
               {/* Then show tasks for each team member */}
-              {teamMembers.map(member => (
+              {(Array.isArray(teamMembers) ? teamMembers : []).map(member => (
                 <TeamMemberTasks 
                   key={member.id} 
                   teamMember={member} 

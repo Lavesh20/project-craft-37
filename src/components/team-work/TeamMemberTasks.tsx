@@ -50,8 +50,9 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
           signal: controller.signal
         });
         
-        setProjects(projectsResponse.data || []);
-        setClients(clientsResponse.data || []);
+        // Ensure we always set arrays
+        setProjects(projectsResponse.data ? Array.isArray(projectsResponse.data) ? projectsResponse.data : [] : []);
+        setClients(clientsResponse.data ? Array.isArray(clientsResponse.data) ? clientsResponse.data : [] : []);
         setError(null);
       } catch (err) {
         // Only set error if the request wasn't aborted
@@ -76,17 +77,19 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
 
   // Ensure we have arrays
   const tasksArray = Array.isArray(tasks) ? tasks : [];
+  const projectsArray = Array.isArray(projects) ? projects : [];
+  const clientsArray = Array.isArray(clients) ? clients : [];
 
   const getProjectName = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projectsArray.find(p => p.id === projectId);
     return project?.name || 'Unknown Project';
   };
 
   const getClientName = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projectsArray.find(p => p.id === projectId);
     if (!project || !project.clientId) return 'No Client';
     
-    const client = clients.find(c => c.id === project.clientId);
+    const client = clientsArray.find(c => c.id === project.clientId);
     return client?.name || 'Unknown Client';
   };
 
