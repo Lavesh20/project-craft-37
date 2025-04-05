@@ -26,6 +26,9 @@ const apiRequest = async (method: string, url: string, data?: any, headers?: any
     } else if (method === 'DELETE') {
       const response = await axios.delete(url, config);
       return response.data;
+    } else if (method === 'PATCH') {
+      const response = await axios.patch(url, data, config);
+      return response.data;
     }
     
     throw new Error(`Unsupported method: ${method}`);
@@ -44,6 +47,7 @@ export const deleteClient = (id: string) => apiRequest('DELETE', `/api/clients/$
 export const getClientContacts = (clientId: string) => apiRequest('GET', `/api/clients/${clientId}/contacts`);
 export const getClientProjects = (clientId: string) => apiRequest('GET', `/api/clients/${clientId}/projects`);
 export const getClientSeries = (clientId: string) => apiRequest('GET', `/api/clients/${clientId}/series`);
+export const getClientTemplates = (clientId: string) => apiRequest('GET', `/api/clients/${clientId}/templates`);
 
 // Project related API functions
 export const fetchProjects = () => apiRequest('GET', '/api/projects');
@@ -66,7 +70,7 @@ export const deleteTemplate = (id: string) => apiRequest('DELETE', `/api/templat
 
 // Contact related API functions
 export const fetchContacts = () => apiRequest('GET', '/api/contacts');
-export const getContact = (id: string) => apiRequest('GET', `/api/contacts/${id}`);
+export const fetchContact = (id: string) => apiRequest('GET', `/api/contacts/${id}`);
 export const createContact = (contactData: any) => apiRequest('POST', '/api/contacts', contactData);
 export const updateContact = (id: string, data: any) => apiRequest('PUT', `/api/contacts/${id}`, data);
 export const deleteContact = (id: string) => apiRequest('DELETE', `/api/contacts/${id}`);

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -40,6 +39,10 @@ const Dashboard = () => {
     queryFn: fetchClients
   });
 
+  // Make sure we provide default arrays for all data
+  const projectsData = Array.isArray(projects) ? projects : [];
+  const clientsData = Array.isArray(clients) ? clients : [];
+
   // Show error toast if data fetching fails
   useEffect(() => {
     if (projectsError || clientsError) {
@@ -56,7 +59,7 @@ const Dashboard = () => {
   
   // Calculate dashboard metrics
   const calculateMetrics = () => {
-    if (!Array.isArray(projects)) return { overdue: 0, dueToday: 0, dueWeek: 0, completed: 0 };
+    if (!Array.isArray(projectsData)) return { overdue: 0, dueToday: 0, dueWeek: 0, completed: 0 };
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -64,22 +67,22 @@ const Dashboard = () => {
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
     
-    const overdue = projects.filter(project => {
+    const overdue = projectsData.filter(project => {
       const dueDate = new Date(project.dueDate);
       return dueDate < today && project.status !== 'Completed';
     }).length;
     
-    const dueToday = projects.filter(project => {
+    const dueToday = projectsData.filter(project => {
       const dueDate = new Date(project.dueDate);
       return dueDate.toDateString() === today.toDateString();
     }).length;
     
-    const dueWeek = projects.filter(project => {
+    const dueWeek = projectsData.filter(project => {
       const dueDate = new Date(project.dueDate);
       return dueDate > today && dueDate <= endOfWeek;
     }).length;
     
-    const completed = projects.filter(project => 
+    const completed = projectsData.filter(project => 
       project.status === 'Completed'
     ).length;
     
@@ -87,25 +90,25 @@ const Dashboard = () => {
   };
   
   const calculateProjectStatus = () => {
-    if (!Array.isArray(projects)) return { active: 0, onTrack: 0, atRisk: 0, delayed: 0 };
+    if (!Array.isArray(projectsData)) return { active: 0, onTrack: 0, atRisk: 0, delayed: 0 };
     
-    const active = projects.filter(p => p.status !== 'Completed').length;
-    const onTrack = projects.filter(p => p.status === 'In Progress').length;
-    const atRisk = projects.filter(p => p.status === 'At Risk').length;
-    const delayed = projects.filter(p => p.status === 'Delayed').length;
+    const active = projectsData.filter(p => p.status !== 'Completed').length;
+    const onTrack = projectsData.filter(p => p.status === 'In Progress').length;
+    const atRisk = projectsData.filter(p => p.status === 'At Risk').length;
+    const delayed = projectsData.filter(p => p.status === 'Delayed').length;
     
     return { active, onTrack, atRisk, delayed };
   };
   
   const calculateClientMetrics = () => {
-    if (!Array.isArray(clients)) return { total: 0, active: 0, new: 0, attention: 0 };
+    if (!Array.isArray(clientsData)) return { total: 0, active: 0, new: 0, attention: 0 };
     
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     
-    const total = clients.length;
+    const total = clientsData.length;
     const active = total > 0 ? Math.floor(total * 0.75) : 0; // Assuming 75% are active
-    const newClients = clients.filter(client => {
+    const newClients = clientsData.filter(client => {
       return new Date(client.createdAt || Date.now()) > oneMonthAgo;
     }).length;
     const attention = total > 0 ? Math.floor(total * 0.1) : 0; // Assuming 10% need attention
@@ -265,7 +268,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-80 w-full">
-                    <DashboardChart projects={projects} />
+                    <DashboardChart projects={projectsData} />
                   </div>
                 </CardContent>
               </Card>

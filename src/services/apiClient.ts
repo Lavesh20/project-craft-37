@@ -43,6 +43,38 @@ export const logoutUser = () => {
   localStorage.removeItem('auth_token');
 };
 
+// Project related API functions
+export const fetchProjects = async () => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.get('/api/projects', {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    return response.data || [];
+  } catch (error) {
+    console.error('Fetch projects error:', error);
+    return [];
+  }
+};
+
+// Client related API functions
+export const fetchClients = async () => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.get('/api/clients', {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    return response.data || [];
+  } catch (error) {
+    console.error('Fetch clients error:', error);
+    return [];
+  }
+};
+
 // Notification related API functions
 export const fetchNotifications = async (userId: string) => {
   const token = localStorage.getItem('auth_token');
@@ -63,7 +95,7 @@ export const fetchNotifications = async (userId: string) => {
 
 export const markNotificationAsRead = async (notificationId: string) => {
   const token = localStorage.getItem('auth_token');
-  if (!token) return;
+  if (!token) return null;
   
   try {
     const response = await axios.put(`/api/notifications/${notificationId}/read`, {}, {
@@ -80,7 +112,7 @@ export const markNotificationAsRead = async (notificationId: string) => {
 
 export const markAllNotificationsAsRead = async (userId: string) => {
   const token = localStorage.getItem('auth_token');
-  if (!token) return;
+  if (!token) return null;
   
   try {
     const response = await axios.put(`/api/notifications/${userId}/read-all`, {}, {

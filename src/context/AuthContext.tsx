@@ -1,49 +1,26 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User } from '@/types/account';
-
-// Direct API functions
-const loginUser = async (email: string, password: string) => {
-  try {
-    const response = await axios.post('/api/auth/login', { email, password });
-    return response.data;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
-};
-
-const getCurrentUser = async (): Promise<User | null> => {
-  const token = localStorage.getItem('auth_token');
-  if (!token) return null;
-  
-  try {
-    const response = await axios.get('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Get current user error:', error);
-    localStorage.removeItem('auth_token');
-    return null;
-  }
-};
+import { loginUser, registerUser, getCurrentUser } from '@/services/apiClient';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  register: (userData: any) => Promise<void>;
+  updateProfile: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: async () => {},
-  logout: () => {}
+  logout: () => {},
+  register: async () => {},
+  updateProfile: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -80,6 +57,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const register = async (userData: any) => {
+    try {
+      const response = await registerUser(userData);
+      localStorage.setItem('auth_token', response.token);
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  };
+
+  const updateProfile = async (userData: Partial<User>) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token || !user) throw new Error('Not authenticated');
+      
+      const response = await axios.put(`/api/auth/profile`, userData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      setUser({...user, ...response.data});
+      return response.data;
+    } catch (error) {
+      console.error('Update profile failed:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('auth_token');
     setUser(null);
@@ -87,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,43 +3,18 @@ import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import AccountContent from '@/components/account/AccountContent';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '@/context/AuthContext';
 import { User } from '@/types/account';
 
 const Account = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('auth_token');
-        
-        if (!token) {
-          navigate('/auth/login');
-          return;
-        }
-        
-        const response = await axios.get('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        setUser(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setLoading(false);
-        // If authentication fails, redirect to login
-        navigate('/auth/login');
-      }
-    };
-    
-    fetchUserData();
-  }, [navigate]);
+    if (!loading && !user) {
+      navigate('/auth/login');
+    }
+  }, [loading, user, navigate]);
   
   // If loading, show a loading indicator
   if (loading) {
