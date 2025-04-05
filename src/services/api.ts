@@ -88,3 +88,8 @@ export const getMyTasksByProject = (date: string) => apiRequest('GET', `/api/my-
 export const getProjectComments = (projectId: string) => apiRequest('GET', `/api/projects/${projectId}/comments`);
 export const createComment = (projectId: string, content: string) => 
   apiRequest('POST', `/api/projects/${projectId}/comments`, { content });
+
+// Notification related API functions
+export const fetchNotifications = (userId: string) => apiRequest('GET', `/api/notifications/${userId}`);
+export const markNotificationAsRead = (notificationId: string) => apiRequest('PUT', `/api/notifications/${notificationId}/read`);
+export const markAllNotificationsAsRead = (userId: string) => apiRequest('PUT', `/api/notifications/${userId}/read-all`);

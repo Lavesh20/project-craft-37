@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,15 @@ const Login: React.FC = () => {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +38,7 @@ const Login: React.FC = () => {
       setIsLoading(true);
       await login(email, password);
       toast.success("Login successful");
+      navigate('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Invalid credentials. Please try again.");
@@ -48,10 +57,9 @@ const Login: React.FC = () => {
     
     try {
       setIsLoading(true);
-      const result = await register({ name, email, password });
-      if (result) {
-        toast.success("Registration successful");
-      }
+      await register({ name, email, password });
+      toast.success("Registration successful");
+      navigate('/dashboard');
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("Registration failed. Please try again.");

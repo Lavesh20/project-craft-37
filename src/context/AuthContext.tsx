@@ -1,6 +1,5 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User } from '@/types/account';
 import { loginUser, registerUser, getCurrentUser } from '@/services/apiClient';
@@ -26,7 +25,6 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -50,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('auth_token', response.token);
       const userData = await getCurrentUser();
       setUser(userData);
-      navigate('/dashboard');
+      return response;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -63,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('auth_token', response.token);
       const currentUser = await getCurrentUser();
       setUser(currentUser);
-      navigate('/dashboard');
+      return response;
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -93,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('auth_token');
     setUser(null);
-    navigate('/auth/login');
+    window.location.href = '/auth/login';
   };
 
   return (

@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import AccountContent from '@/components/account/AccountContent';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { User } from '@/types/account';
 
 const Account = () => {
   const { user, loading } = useAuth();
