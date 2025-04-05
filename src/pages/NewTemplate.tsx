@@ -29,7 +29,7 @@ const NewTemplate: React.FC = () => {
   const { toast } = useToast();
 
   // Direct API function for creating a template
-  const createTemplate = async (templateData: CreateTemplateFormData): Promise<any> => {
+  const createTemplate = async (templateData: CreateTemplateFormData) => {
     try {
       console.log('Creating template with data:', templateData);
       const token = localStorage.getItem('auth_token');
@@ -50,7 +50,7 @@ const NewTemplate: React.FC = () => {
   };
 
   // Direct API function for fetching team members
-  const fetchTeamMembers = async (): Promise<any[]> => {
+  const fetchTeamMembers = async () => {
     try {
       const controller = new AbortController();
       const token = localStorage.getItem('auth_token');
@@ -64,14 +64,14 @@ const NewTemplate: React.FC = () => {
       });
       
       console.log('Team members fetched:', response.data);
-      return response.data;
+      return response.data || [];
     } catch (error) {
       if (axios.isCancel(error)) {
         console.log('Request canceled:', error.message);
       } else {
         console.error('Error fetching team members:', error);
       }
-      throw error;
+      return [];
     }
   };
   
@@ -121,7 +121,7 @@ const NewTemplate: React.FC = () => {
   const onSubmit = (data: FormData) => {
     createTemplateMutation.mutate({
       name: data.name,
-      description: data.description,
+      description: data.description || '',
       teamMemberIds: data.teamMemberIds
     });
   };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -64,10 +65,10 @@ const TemplateDetails: React.FC = () => {
       });
       
       console.log('Clients fetched successfully:', response.data);
-      return response.data;
+      return response.data || [];
     } catch (error) {
       console.error('Error fetching clients:', error);
-      throw error;
+      return [];
     }
   };
 
@@ -87,10 +88,10 @@ const TemplateDetails: React.FC = () => {
       });
       
       console.log('Team members fetched successfully:', response.data);
-      return response.data;
+      return response.data || [];
     } catch (error) {
       console.error('Error fetching team members:', error);
-      throw error;
+      return [];
     }
   };
   
@@ -102,14 +103,16 @@ const TemplateDetails: React.FC = () => {
   });
   
   // Fetch clients and team members data
-  const { data: clients } = useQuery({
+  const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
+    initialData: [],
   });
   
-  const { data: teamMembers } = useQuery({
+  const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers,
+    initialData: [],
   });
   
   // Format relative due date
@@ -130,11 +133,11 @@ const TemplateDetails: React.FC = () => {
   
   // Get associated clients
   const getAssociatedClients = () => {
-    if (!template || !clients) return [];
+    if (!template || !template.clientIds || !clients) return [];
     return clients.filter((client) => template.clientIds?.includes(client.id));
   };
   
-  const handleEditSuccess = (updatedTemplate: any) => {
+  const handleEditSuccess = (updatedTemplate: Template) => {
     setIsEditing(false);
     toast.success("Template updated successfully");
   };
@@ -181,6 +184,7 @@ const TemplateDetails: React.FC = () => {
   
   const associatedClients = getAssociatedClients();
   const assignedTeamMembers = teamMembers?.filter((member) => template.teamMemberIds?.includes(member.id)) || [];
+  const templateTasks = template.tasks || [];
   
   return (
     <div className="p-6">
@@ -229,7 +233,7 @@ const TemplateDetails: React.FC = () => {
                       <div key={member.id} className="flex items-center gap-2 p-2 bg-accent rounded-md">
                         <Avatar className="size-6">
                           <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                            {member.name && member.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         </Avatar>
                         <span className="text-sm">{member.name}</span>
@@ -246,46 +250,50 @@ const TemplateDetails: React.FC = () => {
                 <h2 className="text-lg font-semibold mb-2">Task List</h2>
                 
                 <div className="border rounded-md divide-y">
-                  {template.tasks && template.tasks.map((task) => {
-                    const assignee = getAssignee(task.assigneeId);
-                    
-                    return (
-                      <div key={task.id} className="flex items-center p-4 group">
-                        <div className="mr-2 text-muted-foreground cursor-grab">
-                          <GripVertical size={20} />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="font-medium">{task.name}</div>
-                          {task.description && (
-                            <div className="text-sm text-muted-foreground mt-1">{task.description}</div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-sm px-2 py-1 bg-accent rounded">
-                            {formatRelativeDueDate(
-                              task.relativeDueDate.value,
-                              task.relativeDueDate.position
+                  {templateTasks.length > 0 ? (
+                    templateTasks.map((task) => {
+                      const assignee = getAssignee(task.assigneeId);
+                      
+                      return (
+                        <div key={task.id} className="flex items-center p-4 group">
+                          <div className="mr-2 text-muted-foreground cursor-grab">
+                            <GripVertical size={20} />
+                          </div>
+                          <div className="flex-grow">
+                            <div className="font-medium">{task.name}</div>
+                            {task.description && (
+                              <div className="text-sm text-muted-foreground mt-1">{task.description}</div>
                             )}
                           </div>
-                          <div className="text-sm px-2 py-1 bg-accent rounded">
-                            {formatTimeEstimate(
-                              task.timeEstimate.value,
-                              task.timeEstimate.unit as 'h' | 'm' // Force the type to be only 'h' or 'm'
-                            )}
-                          </div>
-                          {assignee && (
-                            <Avatar className="size-8">
-                              <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
-                                {assignee.name.split(' ').map(n => n[0]).join('')}
+                          <div className="flex items-center gap-4">
+                            {task.relativeDueDate && (
+                              <div className="text-sm px-2 py-1 bg-accent rounded">
+                                {formatRelativeDueDate(
+                                  task.relativeDueDate.value,
+                                  task.relativeDueDate.position
+                                )}
                               </div>
-                            </Avatar>
-                          )}
+                            )}
+                            {task.timeEstimate && (
+                              <div className="text-sm px-2 py-1 bg-accent rounded">
+                                {formatTimeEstimate(
+                                  task.timeEstimate.value,
+                                  task.timeEstimate.unit as 'h' | 'm'
+                                )}
+                              </div>
+                            )}
+                            {assignee && (
+                              <Avatar className="size-8">
+                                <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
+                                  {assignee.name && assignee.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                              </Avatar>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {!template.tasks || template.tasks.length === 0 && (
+                      );
+                    })
+                  ) : (
                     <div className="p-6 text-center text-muted-foreground">
                       No tasks have been created for this template.
                     </div>
