@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User } from '@/types/account';
+import { User, UserUpdatePayload } from '@/types/account';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,7 @@ const AccountContent: React.FC<AccountContentProps> = ({ user }) => {
     }
     
     // Only include the fields we want to update
-    const dataToUpdate: Partial<User> = {
+    const dataToUpdate: UserUpdatePayload = {
       name: formData.name,
     };
     

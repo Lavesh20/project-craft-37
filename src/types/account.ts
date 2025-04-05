@@ -8,6 +8,13 @@ export interface User {
   trialDays?: number;
 }
 
+export interface UserUpdatePayload {
+  name?: string;
+  email?: string;
+  password?: string;
+  currentPassword?: string;
+}
+
 export interface TeamMemberInvite {
   id: string;
   email: string;

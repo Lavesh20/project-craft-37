@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
-import { User } from '@/types/account';
+import { User, UserUpdatePayload } from '@/types/account';
 import { loginUser, registerUser, getCurrentUser } from '@/services/apiClient';
 
 interface AuthContextType {
@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (userData: any) => Promise<void>;
-  updateProfile: (userData: Partial<User>) => Promise<void>;
+  updateProfile: (userData: UserUpdatePayload) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (userData: Partial<User>) => {
+  const updateProfile = async (userData: UserUpdatePayload) => {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token || !user) throw new Error('Not authenticated');
