@@ -1,69 +1,29 @@
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeamMemberTasks from './TeamMemberTasks';
-import { TeamMember, Task } from '@/types';
+import { fetchTeamMembers, getTasks } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
 import TrialBanner from '../layout/TrialBanner';
-import { toast } from 'sonner';
 
 const TeamWorkDashboard = () => {
   const [activeTab, setActiveTab] = useState<'overdue' | 'upcoming'>('overdue');
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    // Create an AbortController to cancel requests when component unmounts
-    const controller = new AbortController();
-    
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem('auth_token');
-        const headers = {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        };
-        
-        // Fetch team members
-        const teamMembersResponse = await axios.get('/api/team-members', {
-          headers,
-          signal: controller.signal
-        });
-        
-        // Fetch tasks
-        const tasksResponse = await axios.get('/api/tasks', {
-          headers,
-          signal: controller.signal
-        });
-        
-        // Ensure we always set arrays even if the API returns null or undefined
-        setTeamMembers(teamMembersResponse.data ? Array.isArray(teamMembersResponse.data) ? teamMembersResponse.data : [] : []);
-        setTasks(tasksResponse.data ? Array.isArray(tasksResponse.data) ? tasksResponse.data : [] : []);
-        setError(null);
-      } catch (err) {
-        // Only set error if the request wasn't aborted
-        if (axios.isCancel(err)) {
-          console.log('Request canceled:', err.message);
-        } else {
-          console.error('Error fetching data:', err);
-          setError('Failed to load data');
-          toast.error('Failed to load team work data');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchData();
-    
-    // Cleanup function to abort any in-flight requests when component unmounts
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const { data: teamMembers = [], isLoading: teamMembersLoading } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: fetchTeamMembers,
+  });
+
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: getTasks,
+  });
+
+  const isLoading = teamMembersLoading || tasksLoading;
+
+  // Ensure we have arrays
+  const teamMembersArray = Array.isArray(teamMembers) ? teamMembers : [];
+  const tasksArray = Array.isArray(tasks) ? tasks : [];
 
   // Create a special "Unassigned" category
   const unassignedMember = {
@@ -74,8 +34,6 @@ const TeamWorkDashboard = () => {
   };
 
   const getTasksForTeamMember = (teamMemberId: string, status: 'overdue' | 'upcoming') => {
-    // Ensure tasks is always an array before filtering
-    const tasksArray = Array.isArray(tasks) ? tasks : [];
     const today = new Date();
     
     return tasksArray.filter(task => {
@@ -108,70 +66,64 @@ const TeamWorkDashboard = () => {
       <div className="px-6">
         <h1 className="text-2xl font-bold mb-6">Team Work</h1>
         
-        {error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
-            {error}
-          </div>
-        ) : (
-          <Tabs 
-            defaultValue="overdue" 
-            onValueChange={(value) => setActiveTab(value as 'overdue' | 'upcoming')}
-            className="space-y-4"
-          >
-            <TabsList className="bg-gray-100 p-1">
-              <TabsTrigger 
-                value="overdue" 
-                className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Overdue Work
-              </TabsTrigger>
-              <TabsTrigger 
-                value="upcoming" 
-                className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Upcoming Work
-              </TabsTrigger>
-            </TabsList>
+        <Tabs 
+          defaultValue="overdue" 
+          onValueChange={(value) => setActiveTab(value as 'overdue' | 'upcoming')}
+          className="space-y-4"
+        >
+          <TabsList className="bg-gray-100 p-1">
+            <TabsTrigger 
+              value="overdue" 
+              className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Overdue Work
+            </TabsTrigger>
+            <TabsTrigger 
+              value="upcoming" 
+              className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Upcoming Work
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overdue" className="space-y-6 mt-4">
+            {/* Show Unassigned tasks first */}
+            <TeamMemberTasks 
+              teamMember={unassignedMember} 
+              tasks={getTasksForTeamMember('unassigned', 'overdue')} 
+              isLoading={isLoading} 
+            />
             
-            <TabsContent value="overdue" className="space-y-6 mt-4">
-              {/* Show Unassigned tasks first */}
+            {/* Then show tasks for each team member */}
+            {teamMembersArray.map(member => (
               <TeamMemberTasks 
-                teamMember={unassignedMember} 
-                tasks={getTasksForTeamMember('unassigned', 'overdue')} 
+                key={member.id} 
+                teamMember={member} 
+                tasks={getTasksForTeamMember(member.id, 'overdue')} 
                 isLoading={isLoading} 
               />
-              
-              {/* Then show tasks for each team member */}
-              {(Array.isArray(teamMembers) ? teamMembers : []).map(member => (
-                <TeamMemberTasks 
-                  key={member.id} 
-                  teamMember={member} 
-                  tasks={getTasksForTeamMember(member.id, 'overdue')} 
-                  isLoading={isLoading} 
-                />
-              ))}
-            </TabsContent>
+            ))}
+          </TabsContent>
+          
+          <TabsContent value="upcoming" className="space-y-6 mt-4">
+            {/* Show Unassigned tasks first */}
+            <TeamMemberTasks 
+              teamMember={unassignedMember} 
+              tasks={getTasksForTeamMember('unassigned', 'upcoming')} 
+              isLoading={isLoading} 
+            />
             
-            <TabsContent value="upcoming" className="space-y-6 mt-4">
-              {/* Show Unassigned tasks first */}
+            {/* Then show tasks for each team member */}
+            {teamMembersArray.map(member => (
               <TeamMemberTasks 
-                teamMember={unassignedMember} 
-                tasks={getTasksForTeamMember('unassigned', 'upcoming')} 
+                key={member.id} 
+                teamMember={member} 
+                tasks={getTasksForTeamMember(member.id, 'upcoming')} 
                 isLoading={isLoading} 
               />
-              
-              {/* Then show tasks for each team member */}
-              {(Array.isArray(teamMembers) ? teamMembers : []).map(member => (
-                <TeamMemberTasks 
-                  key={member.id} 
-                  teamMember={member} 
-                  tasks={getTasksForTeamMember(member.id, 'upcoming')} 
-                  isLoading={isLoading} 
-                />
-              ))}
-            </TabsContent>
-          </Tabs>
-        )}
+            ))}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

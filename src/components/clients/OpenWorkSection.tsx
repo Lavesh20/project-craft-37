@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { getClientSeries, getClientProjects } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,37 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface OpenWorkSectionProps {
   clientId: string;
 }
-
-// Direct API functions
-const getClientSeries = async (clientId: string) => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get(`/api/clients/${clientId}/series`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching client series:', error);
-    return [];
-  }
-};
-
-const getClientProjects = async (clientId: string) => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get(`/api/clients/${clientId}/projects`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching client projects:', error);
-    return [];
-  }
-};
 
 // Mock types for series
 interface Series {
@@ -68,9 +38,8 @@ const OpenWorkSection: React.FC<OpenWorkSectionProps> = ({ clientId }) => {
   });
 
   // Calculate pagination for series
-  const seriesArray = Array.isArray(series) ? series : [];
-  const totalPages = Math.ceil(seriesArray.length / itemsPerPage);
-  const paginatedSeries = seriesArray.slice(
+  const totalPages = Math.ceil(series.length / itemsPerPage);
+  const paginatedSeries = series.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );

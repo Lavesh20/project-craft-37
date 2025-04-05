@@ -1,7 +1,13 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import { 
+  fetchClientContacts, 
+  associateContactWithClient, 
+  removeContactFromClient, 
+  fetchContacts 
+} from '@/services/api';
 import { Contact } from '@/types';
 import { PlusCircle, User, Phone, Mail, ExternalLink, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,87 +31,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
-  const fetchClientContacts = async (clientId: string): Promise<Contact[]> => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get(`/api/clients/${clientId}/contacts`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Client contacts fetched:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching contacts for client ${clientId}:`, error);
-      throw error;
-    }
-  };
-
-  const fetchContacts = async (): Promise<Contact[]> => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/contacts', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('All contacts fetched:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
-      throw error;
-    }
-  };
-
-  const associateContactWithClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<void> => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      
-      await axios.post(`/api/clients/${clientId}/contacts`, 
-        { contactId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          }
-        }
-      );
-      
-      console.log(`Contact ${contactId} associated with client ${clientId}`);
-    } catch (error) {
-      console.error(`Error associating contact ${contactId} with client ${clientId}:`, error);
-      throw error;
-    }
-  };
-
-  const removeContactFromClient = async ({ contactId, clientId }: { contactId: string, clientId: string }): Promise<void> => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      
-      await axios.delete(`/api/clients/${clientId}/contacts/${contactId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
-      
-      console.log(`Contact ${contactId} removed from client ${clientId}`);
-    } catch (error) {
-      console.error(`Error removing contact ${contactId} from client ${clientId}:`, error);
-      throw error;
-    }
-  };
-
+  // Fetch contacts for this client
   const { 
     data: clientContacts = [], 
     isLoading: clientContactsLoading,
@@ -114,6 +40,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     queryFn: () => fetchClientContacts(clientId),
   });
 
+  // Fetch all contacts for the add dialog
   const { 
     data: allContacts = [], 
     isLoading: allContactsLoading,
@@ -123,6 +50,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     enabled: isAddContactDialogOpen,
   });
 
+  // Mutation to associate a contact with this client
   const associateContactMutation = useMutation({
     mutationFn: associateContactWithClient,
     onSuccess: () => {
@@ -137,6 +65,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     },
   });
 
+  // Mutation to remove a contact from this client
   const removeContactMutation = useMutation({
     mutationFn: removeContactFromClient,
     onSuccess: () => {
@@ -151,17 +80,20 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     },
   });
 
+  // Handler for adding selected contacts to client
   const handleAddContacts = () => {
     if (selectedContacts.length === 0) {
       toast.error('Please select at least one contact');
       return;
     }
 
+    // Associate each selected contact with this client
     selectedContacts.forEach(contactId => {
       associateContactMutation.mutate({ contactId, clientId });
     });
   };
 
+  // Handler for removing a contact from client
   const handleRemoveContact = () => {
     if (!contactToRemove) return;
     
@@ -171,6 +103,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     });
   };
 
+  // Get available contacts (not already associated with this client)
   const getAvailableContacts = () => {
     if (!Array.isArray(allContacts) || !Array.isArray(clientContacts)) return [];
     
@@ -181,6 +114,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     );
   };
 
+  // Toggle contact selection
   const toggleContactSelection = (contactId: string) => {
     if (selectedContacts.includes(contactId)) {
       setSelectedContacts(selectedContacts.filter(id => id !== contactId));
@@ -189,6 +123,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
     }
   };
 
+  // Handler for opening remove contact dialog
   const openRemoveDialog = (contact: Contact) => {
     setContactToRemove(contact);
     setIsRemoveContactDialogOpen(true);
@@ -344,6 +279,7 @@ const ClientContacts: React.FC<ClientContactsProps> = ({ clientId }) => {
         )}
       </CardContent>
 
+      {/* Dialog for confirming contact removal */}
       <Dialog 
         open={isRemoveContactDialogOpen} 
         onOpenChange={setIsRemoveContactDialogOpen}

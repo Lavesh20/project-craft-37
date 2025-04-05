@@ -1,44 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { format, parseISO } from 'date-fns';
 import { Project, Task } from '@/types';
 import { CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { updateTask, deleteTask } from '@/services/api';
 import { toast } from 'sonner';
 import TaskModal from './TaskModal';
 import { useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-
-const updateTask = async (id: string, data: any) => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.put(`/api/tasks/${id}`, data, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating task ${id}:`, error);
-    throw error;
-  }
-};
-
-const deleteTask = async (id: string) => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.delete(`/api/tasks/${id}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error deleting task ${id}:`, error);
-    throw error;
-  }
-};
 
 interface TaskListProps {
   projectId: string;
@@ -54,9 +24,11 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    // Sort tasks by position
     if (!tasks) return;
     
     const sortedTasks = [...tasks].sort((a, b) => {
+      // Make sure tasks have position property
       const posA = a.position !== undefined ? a.position : 0;
       const posB = b.position !== undefined ? b.position : 0;
       return posA - posB;
@@ -85,6 +57,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
+    // Update positions
     const updatedItems = items.map((item, index) => ({
       ...item,
       position: index
@@ -96,6 +69,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
 
   const handleReorder = async (tasks: Task[]) => {
     try {
+      // Update each task with its new position
       for (const task of tasks) {
         await updateTask(task.id, task);
       }
@@ -103,6 +77,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, tasks, refetchProject, p
     } catch (error) {
       console.error('Failed to reorder tasks:', error);
       toast.error('Failed to reorder tasks');
+      // Refresh project data to reset order
       refetchProject();
     }
   };

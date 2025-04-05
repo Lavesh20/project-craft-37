@@ -2,9 +2,9 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import axios from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Client, TeamMember } from '@/types';
+import { updateClient, fetchTeamMembers } from '@/services/api';
+import { Client } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,49 +61,6 @@ interface ClientEditFormProps {
 const ClientEditForm: React.FC<ClientEditFormProps> = ({ client, onCancel, onSuccess }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Direct API function for updating client
-  const updateClient = async (clientId: string, clientData: Client): Promise<Client> => {
-    try {
-      console.log(`Updating client ${clientId} with data:`, clientData);
-      const token = localStorage.getItem('auth_token');
-      
-      const response = await axios.put(`/api/clients/${clientId}`, clientData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
-      
-      console.log('Client updated successfully:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating client ${clientId}:`, error);
-      throw error;
-    }
-  };
-
-  // Direct API function for fetching team members
-  const fetchTeamMembers = async (): Promise<TeamMember[]> => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/team-members', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Team members fetched:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching team members:', error);
-      throw error;
-    }
-  };
 
   // Fetch team members for assignee selection
   const { data: teamMembers = [] } = useQuery({

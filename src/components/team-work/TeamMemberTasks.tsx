@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { TeamMember, Task, Project, Client } from '@/types';
+import React from 'react';
+import { TeamMember, Task } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { Check, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProjects, fetchClients } from '@/services/api';
 import { Link } from 'react-router-dom';
 
 interface TeamMemberTasksProps {
@@ -16,80 +17,33 @@ interface TeamMemberTasksProps {
 const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({ 
   teamMember, 
   tasks = [], 
-  isLoading: initialLoading 
+  isLoading 
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: projectsData, isLoading: projectsLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: fetchProjects,
+  });
 
-  useEffect(() => {
-    // Create an AbortController to cancel requests when component unmounts
-    const controller = new AbortController();
-    
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('auth_token');
-        
-        // Fetch projects
-        const projectsResponse = await axios.get('/api/projects', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          },
-          signal: controller.signal
-        });
-        
-        // Fetch clients
-        const clientsResponse = await axios.get('/api/clients', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          },
-          signal: controller.signal
-        });
-        
-        // Ensure we always set arrays
-        setProjects(projectsResponse.data ? Array.isArray(projectsResponse.data) ? projectsResponse.data : [] : []);
-        setClients(clientsResponse.data ? Array.isArray(clientsResponse.data) ? clientsResponse.data : [] : []);
-        setError(null);
-      } catch (err) {
-        // Only set error if the request wasn't aborted
-        if (axios.isCancel(err)) {
-          console.log('Request canceled:', err.message);
-        } else {
-          console.error('Error fetching data:', err);
-          setError('Failed to load data');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-    
-    // Cleanup function to abort any in-flight requests when component unmounts
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const { data: clientsData, isLoading: clientsLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: fetchClients,
+  });
 
   // Ensure we have arrays
+  const projects = Array.isArray(projectsData) ? projectsData : [];
+  const clients = Array.isArray(clientsData) ? clientsData : [];
   const tasksArray = Array.isArray(tasks) ? tasks : [];
-  const projectsArray = Array.isArray(projects) ? projects : [];
-  const clientsArray = Array.isArray(clients) ? clients : [];
 
   const getProjectName = (projectId: string) => {
-    const project = projectsArray.find(p => p.id === projectId);
+    const project = projects.find(p => p.id === projectId);
     return project?.name || 'Unknown Project';
   };
 
   const getClientName = (projectId: string) => {
-    const project = projectsArray.find(p => p.id === projectId);
+    const project = projects.find(p => p.id === projectId);
     if (!project || !project.clientId) return 'No Client';
     
-    const client = clientsArray.find(c => c.id === project.clientId);
+    const client = clients.find(c => c.id === project.clientId);
     return client?.name || 'Unknown Client';
   };
 
@@ -101,7 +55,7 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
     }
   };
 
-  if (loading || initialLoading) {
+  if (isLoading || projectsLoading || clientsLoading) {
     return (
       <div className="bg-white rounded-md shadow">
         <div className="px-4 py-3 border-b">
@@ -110,19 +64,6 @@ const TeamMemberTasks: React.FC<TeamMemberTasksProps> = ({
         <div className="p-8 flex flex-col items-center justify-center">
           <Skeleton className="h-4 w-full max-w-md mb-2" />
           <Skeleton className="h-4 w-full max-w-md" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-md shadow">
-        <div className="px-4 py-3 border-b flex items-center gap-2">
-          <h2 className="text-md font-semibold">{teamMember.name}</h2>
-        </div>
-        <div className="p-8 text-center text-red-500">
-          {error}
         </div>
       </div>
     );

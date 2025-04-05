@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import axios from 'axios';
+import { createContact, fetchClients } from '@/services/api';
 import { CreateContactFormData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,50 +47,6 @@ const NewContactForm: React.FC<NewContactFormProps> = ({
 }) => {
   const [isCreatingPrimaryContact, setIsCreatingPrimaryContact] = useState(false);
   const queryClient = useQueryClient();
-
-  // Direct API function for creating a contact
-  const createContact = async (contactData: CreateContactFormData): Promise<any> => {
-    try {
-      console.log('Creating new contact with data:', contactData);
-      const token = localStorage.getItem('auth_token');
-      
-      const response = await axios.post('/api/contacts', contactData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
-      
-      console.log('Contact created successfully:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating contact:', error);
-      throw error;
-    }
-  };
-
-  // Direct API function for fetching clients
-  const fetchClients = async (): Promise<any[]> => {
-    try {
-      console.log('Fetching clients...');
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/clients', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Clients fetched successfully:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      throw error;
-    }
-  };
 
   // Set up form with react-hook-form and zod validation
   const { 

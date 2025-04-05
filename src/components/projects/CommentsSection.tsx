@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { Comment, TeamMember } from '@/types';
+import { fetchComments, createComment, fetchTeamMembers } from '@/services/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 interface CommentsSectionProps {
   projectId: string;
@@ -15,61 +15,28 @@ interface CommentsSectionProps {
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId }) => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load comments and team members
+  // Fetch team members for user info
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: fetchTeamMembers
+  });
+
+  // Load comments
   useEffect(() => {
-    // Create an AbortController to cancel requests when component unmounts
-    const controller = new AbortController();
-    
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('auth_token');
-        const headers = {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        };
-        
-        // Fetch comments for this project
-        const commentsResponse = await axios.get(`/api/projects/${projectId}/comments`, {
-          headers,
-          signal: controller.signal
-        });
-        
-        // Fetch team members for user info
-        const teamMembersResponse = await axios.get('/api/team-members', {
-          headers,
-          signal: controller.signal
-        });
-        
-        setComments(commentsResponse.data || []);
-        setTeamMembers(teamMembersResponse.data || []);
-        setError(null);
-      } catch (err) {
-        // Only set error if the request wasn't aborted
-        if (axios.isCancel(err)) {
-          console.log('Request canceled:', err.message);
-        } else {
-          console.error('Error fetching data:', err);
-          setError('Failed to load comments');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-    
-    // Cleanup function to abort any in-flight requests when component unmounts
-    return () => {
-      controller.abort();
-    };
+    loadComments();
   }, [projectId]);
+
+  const loadComments = async () => {
+    try {
+      const data = await fetchComments(projectId);
+      setComments(data);
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+    }
+  };
 
   // Handle new comment submission
   const handleSubmitComment = async () => {
@@ -77,34 +44,11 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId }) => {
     
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('auth_token');
-      
-      // Create new comment
-      await axios.post(`/api/projects/${projectId}/comments`, 
-        { content: newComment, projectId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          }
-        }
-      );
-      
+      await createComment(projectId, newComment);
       setNewComment('');
-      
-      // Refresh comments
-      const response = await axios.get(`/api/projects/${projectId}/comments`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
-      
-      setComments(response.data || []);
-      toast.success('Comment added successfully');
+      loadComments(); // Refresh comments
     } catch (error) {
       console.error('Failed to create comment:', error);
-      toast.error('Failed to add comment');
     } finally {
       setSubmitting(false);
     }
@@ -127,39 +71,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId }) => {
 
   // Get current user (for now, hardcoded to user-1)
   const currentUser = getTeamMemberById('user-1');
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Comments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">Loading comments...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Comments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 text-red-500">{error}</div>
-          <Button 
-            onClick={() => window.location.reload()}
-            variant="outline" 
-            className="mx-auto block mt-2"
-          >
-            Retry
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -185,7 +96,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId }) => {
               disabled={!newComment.trim() || submitting}
               className="bg-jetpack-blue hover:bg-blue-700"
             >
-              {submitting ? 'Posting...' : 'Comment'}
+              Comment
             </Button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,25 +27,9 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateClientFormData, TeamMember } from '@/types';
-import axios from 'axios';
+import { createClient } from '@/services/api';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
-
-const createClient = async (clientData: CreateClientFormData) => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.post('/api/clients', clientData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating client:', error);
-    throw error;
-  }
-};
 
 const formSchema = z.object({
   name: z.string().min(1, 'Client name is required'),

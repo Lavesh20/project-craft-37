@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, CheckCircle } from 'lucide-react';
@@ -5,56 +6,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import axios from 'axios';
+import {
+  getMyOverdueTasks,
+  getMyTasksByStatus,
+  getMyTasksByProject
+} from '@/services/api';
 import { MyWorkTask, TasksByStatus, TasksByProject } from '@/types';
 import OverdueTasksView from './OverdueTasksView';
 import TasksByStatusView from './TasksByStatusView';
 import TasksByProjectView from './TasksByProjectView';
-
-const getMyOverdueTasks = async (): Promise<MyWorkTask[]> => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get('/api/my-work/overdue-tasks', {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data || [];
-  } catch (error) {
-    console.error('Error fetching overdue tasks:', error);
-    return [];
-  }
-};
-
-const getMyTasksByStatus = async (date: string): Promise<TasksByStatus> => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get(`/api/my-work/tasks-by-status?date=${date}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data || {};
-  } catch (error) {
-    console.error('Error fetching tasks by status:', error);
-    return {};
-  }
-};
-
-const getMyTasksByProject = async (date: string): Promise<TasksByProject> => {
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get(`/api/my-work/tasks-by-project?date=${date}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
-    return response.data || {};
-  } catch (error) {
-    console.error('Error fetching tasks by project:', error);
-    return {};
-  }
-};
 
 const MyWorkDashboard = () => {
   const { toast } = useToast();
@@ -67,7 +27,7 @@ const MyWorkDashboard = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [selectedDate, activeTab]);
+  }, [selectedDate, activeTab]); // Added activeTab as dependency to refetch when tab changes
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -90,6 +50,7 @@ const MyWorkDashboard = () => {
         variant: 'destructive',
       });
       
+      // Initialize with empty values in case of error
       if (activeTab === 'overdue') {
         setOverdueTasks([]);
       } else if (activeTab === 'status') {
@@ -104,7 +65,7 @@ const MyWorkDashboard = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    fetchTasks();
+    // fetchTasks will be called by the useEffect since activeTab is now a dependency
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {

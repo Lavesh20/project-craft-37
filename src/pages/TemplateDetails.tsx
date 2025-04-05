@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { fetchTemplate, fetchClients, fetchTeamMembers } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Plus, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -19,81 +19,11 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TemplateEditForm from '@/components/templates/TemplateEditForm';
 import { toast } from "sonner";
-import { Template, TeamMember, Client } from '@/types';
 
 const TemplateDetails: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Direct API function to fetch template
-  const fetchTemplate = async (id: string): Promise<Template> => {
-    try {
-      console.log(`Fetching template ${id}...`);
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get(`/api/templates/${id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Template fetched successfully:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching template ${id}:`, error);
-      throw error;
-    }
-  };
-
-  // Direct API function to fetch clients
-  const fetchClients = async (): Promise<Client[]> => {
-    try {
-      console.log('Fetching clients...');
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/clients', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Clients fetched successfully:', response.data);
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      return [];
-    }
-  };
-
-  // Direct API function to fetch team members
-  const fetchTeamMembers = async (): Promise<TeamMember[]> => {
-    try {
-      console.log('Fetching team members...');
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/team-members', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Team members fetched successfully:', response.data);
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching team members:', error);
-      return [];
-    }
-  };
   
   // Fetch template data
   const { data: template, isLoading: isLoadingTemplate, error } = useQuery({
@@ -103,16 +33,14 @@ const TemplateDetails: React.FC = () => {
   });
   
   // Fetch clients and team members data
-  const { data: clients = [] } = useQuery({
+  const { data: clients } = useQuery({
     queryKey: ['clients'],
     queryFn: fetchClients,
-    initialData: [],
   });
   
-  const { data: teamMembers = [] } = useQuery({
+  const { data: teamMembers } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: fetchTeamMembers,
-    initialData: [],
   });
   
   // Format relative due date
@@ -133,11 +61,11 @@ const TemplateDetails: React.FC = () => {
   
   // Get associated clients
   const getAssociatedClients = () => {
-    if (!template || !template.clientIds || !clients) return [];
+    if (!template || !clients) return [];
     return clients.filter((client) => template.clientIds?.includes(client.id));
   };
   
-  const handleEditSuccess = (updatedTemplate: Template) => {
+  const handleEditSuccess = (updatedTemplate: any) => {
     setIsEditing(false);
     toast.success("Template updated successfully");
   };
@@ -184,7 +112,6 @@ const TemplateDetails: React.FC = () => {
   
   const associatedClients = getAssociatedClients();
   const assignedTeamMembers = teamMembers?.filter((member) => template.teamMemberIds?.includes(member.id)) || [];
-  const templateTasks = template.tasks || [];
   
   return (
     <div className="p-6">
@@ -233,7 +160,7 @@ const TemplateDetails: React.FC = () => {
                       <div key={member.id} className="flex items-center gap-2 p-2 bg-accent rounded-md">
                         <Avatar className="size-6">
                           <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
-                            {member.name && member.name.split(' ').map(n => n[0]).join('')}
+                            {member.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         </Avatar>
                         <span className="text-sm">{member.name}</span>
@@ -250,50 +177,46 @@ const TemplateDetails: React.FC = () => {
                 <h2 className="text-lg font-semibold mb-2">Task List</h2>
                 
                 <div className="border rounded-md divide-y">
-                  {templateTasks.length > 0 ? (
-                    templateTasks.map((task) => {
-                      const assignee = getAssignee(task.assigneeId);
-                      
-                      return (
-                        <div key={task.id} className="flex items-center p-4 group">
-                          <div className="mr-2 text-muted-foreground cursor-grab">
-                            <GripVertical size={20} />
-                          </div>
-                          <div className="flex-grow">
-                            <div className="font-medium">{task.name}</div>
-                            {task.description && (
-                              <div className="text-sm text-muted-foreground mt-1">{task.description}</div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4">
-                            {task.relativeDueDate && (
-                              <div className="text-sm px-2 py-1 bg-accent rounded">
-                                {formatRelativeDueDate(
-                                  task.relativeDueDate.value,
-                                  task.relativeDueDate.position
-                                )}
-                              </div>
-                            )}
-                            {task.timeEstimate && (
-                              <div className="text-sm px-2 py-1 bg-accent rounded">
-                                {formatTimeEstimate(
-                                  task.timeEstimate.value,
-                                  task.timeEstimate.unit as 'h' | 'm'
-                                )}
-                              </div>
-                            )}
-                            {assignee && (
-                              <Avatar className="size-8">
-                                <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
-                                  {assignee.name && assignee.name.split(' ').map(n => n[0]).join('')}
-                                </div>
-                              </Avatar>
-                            )}
-                          </div>
+                  {template.tasks.map((task) => {
+                    const assignee = getAssignee(task.assigneeId);
+                    
+                    return (
+                      <div key={task.id} className="flex items-center p-4 group">
+                        <div className="mr-2 text-muted-foreground cursor-grab">
+                          <GripVertical size={20} />
                         </div>
-                      );
-                    })
-                  ) : (
+                        <div className="flex-grow">
+                          <div className="font-medium">{task.name}</div>
+                          {task.description && (
+                            <div className="text-sm text-muted-foreground mt-1">{task.description}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-sm px-2 py-1 bg-accent rounded">
+                            {formatRelativeDueDate(
+                              task.relativeDueDate.value,
+                              task.relativeDueDate.position
+                            )}
+                          </div>
+                          <div className="text-sm px-2 py-1 bg-accent rounded">
+                            {formatTimeEstimate(
+                              task.timeEstimate.value,
+                              task.timeEstimate.unit as 'h' | 'm' // Force the type to be only 'h' or 'm'
+                            )}
+                          </div>
+                          {assignee && (
+                            <Avatar className="size-8">
+                              <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-xs uppercase">
+                                {assignee.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                            </Avatar>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {template.tasks.length === 0 && (
                     <div className="p-6 text-center text-muted-foreground">
                       No tasks have been created for this template.
                     </div>

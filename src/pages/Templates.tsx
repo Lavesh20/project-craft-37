@@ -1,9 +1,10 @@
+
 import React, { useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { fetchTemplates, fetchClients } from '@/services/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -13,52 +14,6 @@ import { Template, Client } from '@/types';
 
 const Templates: React.FC = () => {
   const { toast } = useToast();
-  
-  // Direct API function to fetch templates with error handling
-  const fetchTemplates = async (): Promise<Template[]> => {
-    try {
-      console.log('Fetching templates...');
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/templates', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Templates fetched successfully:', response.data);
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      throw error;
-    }
-  };
-
-  // Direct API function to fetch clients with error handling
-  const fetchClients = async (): Promise<Client[]> => {
-    try {
-      console.log('Fetching clients...');
-      const token = localStorage.getItem('auth_token');
-      const controller = new AbortController();
-      
-      const response = await axios.get('/api/clients', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        signal: controller.signal
-      });
-      
-      console.log('Clients fetched successfully:', response.data);
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      throw error;
-    }
-  };
   
   // Fetch templates using React Query with error handling
   const { 
