@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Tabs,
@@ -14,9 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
-import { fetchNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '@/services/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BellRing } from 'lucide-react';
+import axios from 'axios';
 
 // Define the notification type
 interface Notification {
@@ -28,6 +27,56 @@ interface Notification {
   read: boolean;
   entityId: string;
 }
+
+// Direct API functions
+const fetchNotifications = async (userId: string): Promise<Notification[]> => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return [];
+    
+    const response = await axios.get(`/api/notifications/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return [];
+  }
+};
+
+const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    
+    await axios.put(`/api/notifications/${notificationId}/read`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    throw error;
+  }
+};
+
+const markAllNotificationsAsRead = async (userId: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    
+    await axios.put(`/api/notifications/${userId}/read-all`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    throw error;
+  }
+};
 
 const NotificationsContent = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -116,7 +165,7 @@ const NotificationsContent = () => {
 
   // Mutation for marking a notification as read
   const markAsReadMutation = useMutation({
-    mutationFn: markNotificationAsRead,
+    mutationFn: (id: string) => markNotificationAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
     },

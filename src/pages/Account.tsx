@@ -4,9 +4,10 @@ import MainLayout from '@/components/layout/MainLayout';
 import AccountContent from '@/components/account/AccountContent';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { User } from '@/types/account';
 
 const Account = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
@@ -57,7 +58,7 @@ const Account = () => {
   // If not authenticated and not loading, content will handle redirect
   return (
     <MainLayout>
-      <AccountContent user={user} />
+      {user && <AccountContent user={user} />}
     </MainLayout>
   );
 };

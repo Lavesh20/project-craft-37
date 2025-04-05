@@ -1,219 +1,96 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { User } from '@/types/account';
-import {
-  loginUser,
-  registerUser,
-  getCurrentUser,
-  updateUserProfile
-} from '@/services/apiClient';
-import api from '@/services/apiClient';
 
-// Define types for context
+// Direct API functions
+const loginUser = async (email: string, password: string) => {
+  try {
+    const response = await axios.post('/api/auth/login', { email, password });
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+const getCurrentUser = async (): Promise<User | null> => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return null;
+  
+  try {
+    const response = await axios.get('/api/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Get current user error:', error);
+    localStorage.removeItem('auth_token');
+    return null;
+  }
+};
+
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (name: string, email: string) => Promise<boolean>;
 }
 
-// Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  token: null,
   loading: true,
-  login: async () => false,
-  register: async () => false,
-  logout: () => {},
-  updateProfile: async () => false,
+  login: async () => {},
+  logout: () => {}
 });
 
-// Auth provider component
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Initialize auth state from localStorage on component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    console.log('AuthProvider initialized, stored token:', storedToken ? 'exists' : 'none');
-    
-    if (storedToken) {
-      setToken(storedToken);
-      
-      // Set auth header for all future axios requests
-      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      
-      // Get current user data
-      fetchUserData(storedToken);
-    } else {
-      setLoading(false);
-    }
+    const checkAuthStatus = async () => {
+      try {
+        const userData = await getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthStatus();
   }, []);
 
-  // Function to fetch user data
-  const fetchUserData = async (authToken: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      console.log('Fetching user data with token:', authToken);
+      const response = await loginUser(email, password);
+      localStorage.setItem('auth_token', response.token);
       const userData = await getCurrentUser();
-      console.log('User data received:', userData);
       setUser(userData);
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      // For demo purposes, create demo user if token is the mock token
-      if (authToken === 'mock-jwt-token-for-demo-account') {
-        console.log('Creating demo user for mock token');
-        setUser({
-          id: 'demo-user-id',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          role: 'Admin',
-          planStatus: 'Free trial',
-          trialDays: 14
-        });
-      } else {
-        // Clear token if invalid
-        logout();
-      }
-    } finally {
-      setLoading(false);
+      console.error('Login failed:', error);
+      throw error;
     }
   };
 
-  // Login function
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const { token, user } = await loginUser(email, password);
-      
-      // Store token
-      localStorage.setItem('auth_token', token);
-      setToken(token);
-      
-      // Set axios default header
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Set user data
-      setUser(user);
-      
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-      });
-      
-      return true;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Login failed. Please try again.';
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Register function
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const { token, user } = await registerUser(name, email, password);
-      
-      // Store token
-      localStorage.setItem('auth_token', token);
-      setToken(token);
-      
-      // Set axios default header
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Set user data
-      setUser(user);
-      
-      toast({
-        title: "Success",
-        description: "Account created successfully",
-      });
-      
-      return true;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Registration failed. Please try again.';
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout function
   const logout = () => {
     localStorage.removeItem('auth_token');
-    setToken(null);
     setUser(null);
-    // Remove axios auth header
-    delete api.defaults.headers.common['Authorization'];
-    
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-  };
-
-  // Update profile function
-  const updateProfile = async (name: string, email: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const updatedUser = await updateUserProfile({ name, email });
-      
-      // Update user data
-      setUser(updatedUser);
-      
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-      
-      return true;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Profile update failed. Please try again.';
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
+    navigate('/auth/login');
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        login,
-        register,
-        logout,
-        updateProfile
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use Auth context
 export const useAuth = () => useContext(AuthContext);

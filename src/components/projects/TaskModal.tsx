@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { createTask, updateTask, fetchTeamMembers } from '@/services/api';
 import { CreateTaskFormData, Task, TeamMember } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +9,55 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { Calendar } from 'lucide-react';
+import axios from 'axios';
+
+// Direct API functions
+const createTask = async (taskData: CreateTaskFormData) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.post('/api/tasks', taskData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating task:', error);
+    throw error;
+  }
+};
+
+const updateTask = async (id: string, data: any) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.put(`/api/tasks/${id}`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating task ${id}:`, error);
+    throw error;
+  }
+};
+
+const fetchTeamMembers = async (): Promise<TeamMember[]> => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.get('/api/team-members', {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    return [];
+  }
+};
 
 interface TaskModalProps {
   projectId: string;
@@ -44,7 +91,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ projectId, onClose, onSuccess, ta
         const teamMembersData = await fetchTeamMembers();
         setTeamMembers(teamMembersData);
         
-        // If in edit mode, populate form with task data
         if (taskToEdit) {
           setFormData({
             name: taskToEdit.name,
