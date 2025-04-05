@@ -4,8 +4,8 @@ import { format, parseISO } from 'date-fns';
 import { Project } from '@/types';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { updateProject } from '@/services/api';
 import { toast } from 'sonner';
+import { api } from '@/context/AuthContext';
 
 interface ProjectHeaderProps {
   project: Project;
@@ -15,6 +15,16 @@ interface ProjectHeaderProps {
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onEdit, onProjectUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const updateProject = async (id: string, projectData: any) => {
+    try {
+      const response = await api.patch(`/projects/${id}`, projectData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating project ${id}:`, error);
+      throw error;
+    }
+  };
 
   const handleStatusChange = async (newStatus: 'Not Started' | 'In Progress' | 'Complete') => {
     if (newStatus === project.status) return;

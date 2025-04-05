@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import AccountContent from '@/components/account/AccountContent';
 import { useAuth } from '@/context/AuthContext';
